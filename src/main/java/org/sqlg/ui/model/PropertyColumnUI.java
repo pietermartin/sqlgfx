@@ -1,6 +1,7 @@
 package org.sqlg.ui.model;
 
 import javafx.beans.property.*;
+import org.umlg.sqlg.structure.SqlgGraph;
 import org.umlg.sqlg.structure.topology.PropertyColumn;
 
 public final class PropertyColumnUI implements ISqlgTopologyUI {
@@ -9,16 +10,16 @@ public final class PropertyColumnUI implements ISqlgTopologyUI {
     private final EdgeLabelUI edgeLabelUI;
     private final SimpleObjectProperty<PropertyColumn> propertyColumn;
     //PropertyDefinition
-    private final SimpleStringProperty name;
-    private final SimpleStringProperty propertyType;
+    private SimpleStringProperty name;
+    private SimpleStringProperty propertyType;
     //multiplicity
-    private final SimpleLongProperty lower;
-    private final SimpleLongProperty upper;
-    private final SimpleBooleanProperty unique;
-    private final SimpleBooleanProperty ordered;
-    private final SimpleStringProperty defaultLiteral;
-    private final SimpleStringProperty checkConstraint;
-    private final SimpleBooleanProperty delete;
+    private SimpleLongProperty lower;
+    private SimpleLongProperty upper;
+    private SimpleBooleanProperty unique;
+    private SimpleBooleanProperty ordered;
+    private SimpleStringProperty defaultLiteral;
+    private SimpleStringProperty checkConstraint;
+    private SimpleBooleanProperty delete;
 
     public PropertyColumnUI(VertexLabelUI vertexLabelUI, EdgeLabelUI edgeLabelUI, PropertyColumn propertyColumn) {
         assert ((vertexLabelUI != null && edgeLabelUI == null) || (vertexLabelUI == null && edgeLabelUI != null)) : "vertexLabelUI or edgeLabelUI must be null";
@@ -26,15 +27,36 @@ public final class PropertyColumnUI implements ISqlgTopologyUI {
         this.vertexLabelUI = vertexLabelUI;
         this.edgeLabelUI = edgeLabelUI;
         this.propertyColumn = new SimpleObjectProperty<>(propertyColumn);
-        this.name = new SimpleStringProperty(propertyColumn.getName());
-        this.propertyType = new SimpleStringProperty(propertyColumn.getPropertyType().name());
-        this.lower = new SimpleLongProperty(propertyColumn.getPropertyDefinition().multiplicity().lower());
-        this.upper = new SimpleLongProperty(propertyColumn.getPropertyDefinition().multiplicity().upper());
-        this.unique = new SimpleBooleanProperty(propertyColumn.getPropertyDefinition().multiplicity().unique());
-        this.ordered = new SimpleBooleanProperty(propertyColumn.getPropertyDefinition().multiplicity().ordered());
-        this.defaultLiteral = new SimpleStringProperty(propertyColumn.getPropertyDefinition().defaultLiteral());
-        this.checkConstraint = new SimpleStringProperty(propertyColumn.getPropertyDefinition().checkConstraint());
-        this.delete = new SimpleBooleanProperty(false);
+        init(propertyColumn);
+    }
+
+    private void init(PropertyColumn propertyColumn) {
+        if (this.name == null) {
+            this.name = new SimpleStringProperty(propertyColumn.getName());
+            this.propertyType = new SimpleStringProperty(propertyColumn.getPropertyType().name());
+            this.lower = new SimpleLongProperty(propertyColumn.getPropertyDefinition().multiplicity().lower());
+            this.upper = new SimpleLongProperty(propertyColumn.getPropertyDefinition().multiplicity().upper());
+            this.unique = new SimpleBooleanProperty(propertyColumn.getPropertyDefinition().multiplicity().unique());
+            this.ordered = new SimpleBooleanProperty(propertyColumn.getPropertyDefinition().multiplicity().ordered());
+            this.defaultLiteral = new SimpleStringProperty(propertyColumn.getPropertyDefinition().defaultLiteral());
+            this.checkConstraint = new SimpleStringProperty(propertyColumn.getPropertyDefinition().checkConstraint());
+            this.delete = new SimpleBooleanProperty(false);
+        } else {
+            this.name.set(propertyColumn.getName());
+            this.propertyType.set(propertyColumn.getPropertyType().name());
+            this.lower.set(propertyColumn.getPropertyDefinition().multiplicity().lower());
+            this.upper.set(propertyColumn.getPropertyDefinition().multiplicity().upper());
+            this.unique.set(propertyColumn.getPropertyDefinition().multiplicity().unique());
+            this.ordered.set(propertyColumn.getPropertyDefinition().multiplicity().ordered());
+            this.defaultLiteral.set(propertyColumn.getPropertyDefinition().defaultLiteral());
+            this.checkConstraint.set(propertyColumn.getPropertyDefinition().checkConstraint());
+            this.delete.set(false);
+        }
+    }
+
+    public void reset() {
+        PropertyColumn _propertyColumn = getVertexLabelUI().getVertexLabel().getProperty(this.propertyColumn.getValue().getName()).orElseThrow();
+        init(_propertyColumn);
     }
 
     public PropertyColumn getPropertyColumn() {
@@ -176,6 +198,43 @@ public final class PropertyColumnUI implements ISqlgTopologyUI {
     @Override
     public void remove() {
         getPropertyColumn().remove();
+    }
+
+    public void selectInTree(String name) {
+        GraphConfiguration graphConfiguration;
+        if (getVertexLabelUI() != null) {
+            graphConfiguration = this.getVertexLabelUI().getSchemaUI().getGraphConfiguration();
+            GraphGroup graphGroup = graphConfiguration.getGraphGroup();
+            graphConfiguration
+                    .getLeftPaneController()
+                    .selectPropertyColumn(
+                            graphGroup,
+                            graphConfiguration,
+                            getVertexLabelUI().getSchemaUI().getSchema(),
+                            getVertexLabelUI().getVertexLabel(),
+                            name
+                    );
+        } else {
+            graphConfiguration = this.getEdgeLabelUI().getSchemaUI().getGraphConfiguration();
+            GraphGroup graphGroup = graphConfiguration.getGraphGroup();
+            graphConfiguration
+                    .getLeftPaneController()
+                    .selectPropertyColumn(
+                            graphGroup,
+                            graphConfiguration,
+                            getEdgeLabelUI().getSchemaUI().getSchema(),
+                            getEdgeLabelUI().getEdgeLabel(),
+                            name
+                    );
+        }
+    }
+
+    private SqlgGraph sqlgGraph() {
+        if (this.vertexLabelUI != null) {
+            return this.vertexLabelUI.getSchemaUI().getGraphConfiguration().getSqlgGraph();
+        } else {
+            return this.edgeLabelUI.getSchemaUI().getGraphConfiguration().getSqlgGraph();
+        }
     }
 
 }

@@ -74,6 +74,8 @@ public class SchemaTableViewController extends BaseController {
         buttonBar.getButtons().addAll(save, cancel);
         VBox vBox = new VBox(5, tableView, buttonBar);
         vBox.setPadding(new Insets(0, 0, 5, 0));
+        VBox.setVgrow(vBox, Priority.ALWAYS);
+        VBox.setVgrow(tableView, Priority.ALWAYS);
         VBox.setVgrow(buttonBar, Priority.NEVER);
 
         save.disableProperty().bind(Bindings.createBooleanBinding(() -> !this.editToggleSwitch.selectedProperty().get(), this.editToggleSwitch.selectedProperty()));
@@ -83,8 +85,7 @@ public class SchemaTableViewController extends BaseController {
         cancel.setOnAction(x -> {
 
         });
-        TitledPane titledPane = new TitledPane("Schemas", vBox);
-        this.root.getChildren().add(titledPane);
+        this.root.getChildren().add(vBox);
     }
 
     private void save() {

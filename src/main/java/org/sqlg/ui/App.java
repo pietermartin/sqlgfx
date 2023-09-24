@@ -51,7 +51,8 @@ public class App extends Application {
         //noinspection DataFlowIssue
         scene.getStylesheets().add(App.class.getResource("styles.css").toExternalForm());
         stage.setScene(scene);
-        stage.getIcons().add(new Image("file:///home/pieter/Downloads/idea-IU-223.8617.56/bin/idea.png"));
+        //noinspection DataFlowIssue
+        stage.getIcons().add(new Image(App.class.getResource("sqlg.png").toExternalForm()));
         stage.setOnCloseRequest(event -> primaryController2.close());
         stage.show();
     }
@@ -93,18 +94,45 @@ public class App extends Application {
             }});
             PropertyColumn a1PropertyColumn = aVertexLabel.getProperty("a1").orElseThrow();
             aVertexLabel.ensureIndexExists(IndexType.UNIQUE, List.of(a1PropertyColumn));
-            VertexLabel bVertexLabel = bSchema.ensureVertexLabelExist("B");
-            aVertexLabel.ensureEdgeLabelExist("ab", bVertexLabel, new LinkedHashMap<>() {{
+
+            VertexLabel aaVertexLabel = aSchema.ensureVertexLabelExist("AA", new LinkedHashMap<>() {{
                 put(
-                        "ab1",
+                        "a1",
                         PropertyDefinition.of(
                                 PropertyType.STRING,
                                 Multiplicity.of(1, 1, true),
-                                "'ab'",
-                                "(" + sqlgGraph.getSqlDialect().maybeWrapInQoutes("ab1") + " <> 'a')")
+                                "'aa'",
+                                "(" + sqlgGraph.getSqlDialect().maybeWrapInQoutes("a1") + " <> 'a')")
                 );
-
             }});
+
+            VertexLabel bVertexLabel = bSchema.ensureVertexLabelExist("B");
+            aVertexLabel.ensureEdgeLabelExist(
+                    "ab",
+                    bVertexLabel,
+                    new LinkedHashMap<>() {{
+                        put(
+                                "ab1",
+                                PropertyDefinition.of(
+                                        PropertyType.STRING,
+                                        Multiplicity.of(1, 1, true),
+                                        "'ab'",
+                                        "(" + sqlgGraph.getSqlDialect().maybeWrapInQoutes("ab1") + " <> 'a')")
+                        );
+                    }});
+            aaVertexLabel.ensureEdgeLabelExist(
+                    "ab",
+                    bVertexLabel,
+                    new LinkedHashMap<>() {{
+                        put(
+                                "ab1",
+                                PropertyDefinition.of(
+                                        PropertyType.STRING,
+                                        Multiplicity.of(1, 1, true),
+                                        "'ab'",
+                                        "(" + sqlgGraph.getSqlDialect().maybeWrapInQoutes("ab1") + " <> 'a')")
+                        );
+                    }});
             sqlgGraph.tx().commit();
 
             Vertex a = sqlgGraph.addVertex(T.label, "A.A");

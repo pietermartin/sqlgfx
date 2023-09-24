@@ -23,7 +23,6 @@ import org.controlsfx.control.tableview2.cell.TextField2TableCell;
 import org.controlsfx.dialog.ExceptionDialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sqlg.ui.TopologyTreeItem;
 import org.sqlg.ui.model.IndexUI;
 import org.sqlg.ui.model.PropertyColumnUI;
 import org.umlg.sqlg.structure.Multiplicity;
@@ -32,11 +31,8 @@ import org.umlg.sqlg.structure.PropertyType;
 import org.umlg.sqlg.structure.SqlgGraph;
 import org.umlg.sqlg.structure.topology.AbstractLabel;
 import org.umlg.sqlg.structure.topology.IndexType;
-import org.umlg.sqlg.structure.topology.PropertyColumn;
 
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Consumer;
 
 public class ControllerUtil {
@@ -45,21 +41,16 @@ public class ControllerUtil {
 
     public static <R> void savePropertyColumns(
             SqlgGraph sqlgGraph,
-            AbstractLabel abstractLabel,
             ObservableList<PropertyColumnUI> items,
             Callback<Boolean, R> onSuccess,
             Callback<Exception, R> onFailure
     ) {
         try {
-            Map<String, PropertyColumnUI> deleted = new HashMap<>();
-            Map<String, PropertyColumnUI> changed = new HashMap<>();
             for (PropertyColumnUI propertyColumnUI : items) {
                 if (propertyColumnUI.isDelete()) {
                     propertyColumnUI.getPropertyColumn().remove();
-                    deleted.put(propertyColumnUI.getName(), propertyColumnUI);
                 } else if (!propertyColumnUI.getName().equals(propertyColumnUI.getPropertyColumn().getName())) {
                     propertyColumnUI.getPropertyColumn().rename(propertyColumnUI.getName());
-                    changed.put(propertyColumnUI.getName(), propertyColumnUI);
                 }
                 if (!propertyColumnUI.isDelete() &&
                         (propertyColumnUI.getLower() != propertyColumnUI.getPropertyColumn().getPropertyDefinition().multiplicity().lower() ||
@@ -77,21 +68,16 @@ public class ControllerUtil {
                             propertyColumnUI.getDefaultLiteral(),
                             propertyColumnUI.getCheckConstraint()
                     );
+                    AbstractLabel abstractLabel = propertyColumnUI.getPropertyColumn().getParentLabel();
+                    String propertyName = propertyColumnUI.getPropertyColumn().getName();
                     propertyColumnUI.getPropertyColumn().updatePropertyDefinition(updatedPropertyDefinition);
-                    changed.put(propertyColumnUI.getName(), propertyColumnUI);
+                    propertyColumnUI.setPropertyColumn(abstractLabel.getProperty(propertyName).get());
                 }
             }
             sqlgGraph.tx().commit();
-            for (PropertyColumnUI propertyColumnUI : changed.values()) {
-                PropertyColumn changedPropertyColumn = abstractLabel.getProperty(propertyColumnUI.getName()).orElseThrow();
-                propertyColumnUI.setPropertyColumn(changedPropertyColumn);
-            }
-            for (String name : deleted.keySet()) {
-                PropertyColumnUI deletedPropertyColumnUI = deleted.get(name);
-                items.remove(deletedPropertyColumnUI);
-            }
             onSuccess.call(true);
         } catch (Exception e) {
+            sqlgGraph.tx().rollback();
             LOGGER.error(e.getMessage(), e);
             onFailure.call(e);
         } finally {
@@ -187,11 +173,13 @@ public class ControllerUtil {
         VBox vBox = new VBox(5, tableView, buttonBar);
         vBox.setPadding(new Insets(0, 0, 5, 0));
         VBox.setVgrow(buttonBar, Priority.NEVER);
+        VBox.setVgrow(tableView, Priority.ALWAYS);
+        VBox.setVgrow(vBox, Priority.ALWAYS);
 
         save.disableProperty().bind(Bindings.createBooleanBinding(() -> !editableProperty.get(), editableProperty));
         save.setOnAction(saveAction);
         cancel.setOnAction(cancelAction);
-        return new TitledPane(TopologyTreeItem.PROPERTY_COLUMNS, vBox);
+        return vBox;
     }
 
 

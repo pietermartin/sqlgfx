@@ -1,14 +1,15 @@
 package org.sqlg.ui.controller;
 
+import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sqlg.ui.model.*;
+import org.sqlg.ui.model.ISqlgTopologyUI;
+import org.sqlg.ui.model.VertexLabelUI;
 import org.umlg.sqlg.structure.SqlgGraph;
-import org.umlg.sqlg.structure.topology.Schema;
 import org.umlg.sqlg.structure.topology.VertexLabel;
 
 import java.util.Collection;
@@ -31,12 +32,14 @@ public class VertexLabelFormController extends AbstractLabelControllerName {
 
     @Override
     protected void delete() {
-        SchemaUI schemaUI = this.vertexLabelUI.getSchemaUI();
-        GraphConfiguration graphConfiguration = schemaUI.getGraphConfiguration();
-        GraphGroup graphGroup = graphConfiguration.getGraphGroup();
         this.vertexLabelUI.getSchemaUI().getVertexLabelUIs().remove(this.vertexLabelUI);
         this.vertexLabelUI.getVertexLabel().remove();
-        this.leftPaneController.deleteVertexLabel(graphGroup, graphConfiguration, schemaUI.getSchema(), this.vertexLabelUI.getVertexLabel());
+    }
+
+    @Override
+    protected void cancelName() {
+        this.vertexLabelUI.refresh();
+        this.sqlgTreeDataFormNameTxt.setText(this.vertexLabelUI.getName());
     }
 
     @Override
@@ -45,12 +48,9 @@ public class VertexLabelFormController extends AbstractLabelControllerName {
             SqlgGraph sqlgGraph = getSqlgGraph();
             try {
                 VertexLabel vertexLabel = this.vertexLabelUI.getVertexLabel();
-                Schema schema = vertexLabel.getSchema();
-                this.vertexLabelUI.getVertexLabel().rename(this.sqlgTreeDataFormNameTxt.getText());
+                vertexLabel.rename(this.sqlgTreeDataFormNameTxt.getText());
                 sqlgGraph.tx().commit();
-                VertexLabel renamedVertexLabel = schema.getVertexLabel(this.sqlgTreeDataFormNameTxt.getText()).orElseThrow();
-                this.vertexLabelUI.setVertexLabel(renamedVertexLabel);
-                this.leftPaneController.refreshTree();
+                Platform.runLater(() -> this.vertexLabelUI.selectInTree(this.sqlgTreeDataFormNameTxt.getText()));
                 showDialog(
                         Alert.AlertType.INFORMATION,
                         "Success",
@@ -79,7 +79,6 @@ public class VertexLabelFormController extends AbstractLabelControllerName {
                 this.editToggleSwitch.selectedProperty(),
                 event -> ControllerUtil.savePropertyColumns(
                         getSqlgGraph(),
-                        vertexLabelUI.getVertexLabel(),
                         vertexLabelUI.getPropertyColumnUIs(),
                         result -> {
                             assert result : "expected true";

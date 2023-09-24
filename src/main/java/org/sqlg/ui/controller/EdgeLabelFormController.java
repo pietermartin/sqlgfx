@@ -1,23 +1,19 @@
 package org.sqlg.ui.controller;
 
+import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sqlg.ui.model.*;
+import org.sqlg.ui.model.EdgeLabelUI;
+import org.sqlg.ui.model.ISqlgTopologyUI;
 import org.umlg.sqlg.structure.SqlgGraph;
 import org.umlg.sqlg.structure.topology.EdgeLabel;
-import org.umlg.sqlg.structure.topology.EdgeRole;
-import org.umlg.sqlg.structure.topology.Schema;
-import org.umlg.sqlg.structure.topology.VertexLabel;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class EdgeLabelFormController extends AbstractLabelControllerName {
 
@@ -36,33 +32,8 @@ public class EdgeLabelFormController extends AbstractLabelControllerName {
 
     @Override
     protected void delete() {
-        SchemaUI schemaUI = this.edgeLabelUI.getSchemaUI();
-        GraphConfiguration graphConfiguration = schemaUI.getGraphConfiguration();
-        GraphGroup graphGroup = graphConfiguration.getGraphGroup();
         EdgeLabel edgeLabel = this.edgeLabelUI.getEdgeLabel();
         edgeLabel.remove();
-        for (EdgeRole outEdgeRole : edgeLabel.getOutEdgeRoles()) {
-            this.leftPaneController.deleteEdgeRole(
-                    graphGroup,
-                    graphConfiguration,
-                    outEdgeRole,
-                    Direction.OUT
-            );
-        }
-        for (EdgeRole inEdgeRole : edgeLabel.getInEdgeRoles()) {
-            this.leftPaneController.deleteEdgeRole(
-                    graphGroup,
-                    graphConfiguration,
-                    inEdgeRole,
-                    Direction.IN
-            );
-        }
-        this.leftPaneController.deleteEdgeLabel(
-                graphGroup,
-                graphConfiguration,
-                schemaUI.getSchema(),
-                edgeLabel
-        );
     }
 
     @Override
@@ -70,42 +41,10 @@ public class EdgeLabelFormController extends AbstractLabelControllerName {
         if (!this.edgeLabelUI.getEdgeLabel().getName().equals(this.sqlgTreeDataFormNameTxt.getText())) {
             SqlgGraph sqlgGraph = getSqlgGraph();
             try {
-                SchemaUI schemaUI = this.edgeLabelUI.getSchemaUI();
                 EdgeLabel edgeLabel = this.edgeLabelUI.getEdgeLabel();
-                Schema schema = edgeLabel.getSchema();
-
                 edgeLabel.rename(this.sqlgTreeDataFormNameTxt.getText());
                 sqlgGraph.tx().commit();
-                EdgeLabel renamedEdgeLabel = schema.getEdgeLabel(this.sqlgTreeDataFormNameTxt.getText()).orElseThrow();
-                this.edgeLabelUI.setEdgeLabel(renamedEdgeLabel);
-
-                for (EdgeRole outEdgeRole : renamedEdgeLabel.getOutEdgeRoles()) {
-                    VertexLabel vertexLabel = outEdgeRole.getVertexLabel();
-                    Set<EdgeRoleUI> edgeRoleUIs = schemaUI.getVertexLabelUIs().stream()
-                            .filter(v -> v.getVertexLabel().equals(vertexLabel))
-                            .flatMap(v -> v.getOutEdgeRoleUIs().stream())
-                            .filter(er -> er.getEdgeRole().getEdgeLabel().getName().equals(edgeLabel.getName()))
-                            .collect(Collectors.toSet());
-                    for (EdgeRoleUI edgeRoleUI : edgeRoleUIs) {
-                        edgeRoleUI.setEdgeRole(outEdgeRole);
-                    }
-                }
-                //in edge roles could be in a different schema so need to go through them all
-                for (EdgeRole inEdgeRole : renamedEdgeLabel.getInEdgeRoles()) {
-                    VertexLabel vertexLabel = inEdgeRole.getVertexLabel();
-                    for (SchemaUI otherSchemaUi : schemaUI.getGraphConfiguration().getSchemaUis()) {
-                        Set<EdgeRoleUI> edgeRoleUIs = otherSchemaUi.getVertexLabelUIs().stream()
-                                .filter(v -> v.getVertexLabel().equals(vertexLabel))
-                                .flatMap(v -> v.getInEdgeRoleUIs().stream())
-                                .filter(er -> er.getEdgeRole().getEdgeLabel().getName().equals(edgeLabel.getName()))
-                                .collect(Collectors.toSet());
-                        for (EdgeRoleUI edgeRoleUI : edgeRoleUIs) {
-                            edgeRoleUI.setEdgeRole(inEdgeRole);
-                        }
-                    }
-                }
-
-                this.leftPaneController.refreshTree();
+                Platform.runLater(() -> this.edgeLabelUI.selectInTree(this.sqlgTreeDataFormNameTxt.getText()));
                 showDialog(
                         Alert.AlertType.INFORMATION,
                         "Success",
@@ -135,7 +74,6 @@ public class EdgeLabelFormController extends AbstractLabelControllerName {
                 this.editToggleSwitch.selectedProperty(),
                 event -> ControllerUtil.savePropertyColumns(
                         getSqlgGraph(),
-                        edgeLabelUI.getEdgeLabel(),
                         edgeLabelUI.getPropertyColumnUIs(),
                         result -> {
                             assert result : "expected true";

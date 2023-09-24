@@ -4,7 +4,10 @@ import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
@@ -14,7 +17,6 @@ import javafx.scene.layout.VBox;
 import org.controlsfx.control.ToggleSwitch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sqlg.ui.TopologyTreeItem;
 import org.sqlg.ui.model.SchemaUI;
 import org.sqlg.ui.model.VertexLabelUI;
 
@@ -75,7 +77,9 @@ public class VertexLabelTableViewController extends BaseController {
         buttonBar.getButtons().addAll(save, cancel);
         VBox vBox = new VBox(5, tableView, buttonBar);
         vBox.setPadding(new Insets(0, 0, 5, 0));
+        VBox.setVgrow(tableView, Priority.ALWAYS);
         VBox.setVgrow(buttonBar, Priority.NEVER);
+        VBox.setVgrow(vBox, Priority.ALWAYS);
 
         save.disableProperty().bind(Bindings.createBooleanBinding(() -> !this.editToggleSwitch.selectedProperty().get(), this.editToggleSwitch.selectedProperty()));
         save.setOnAction(x -> {
@@ -84,8 +88,7 @@ public class VertexLabelTableViewController extends BaseController {
         cancel.setOnAction(x -> {
 
         });
-        TitledPane titledPane = new TitledPane(TopologyTreeItem.VERTEX_LABELS, vBox);
-        this.root.getChildren().add(titledPane);
+        this.root.getChildren().add(vBox);
     }
 
     private void save() {

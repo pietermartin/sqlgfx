@@ -65,7 +65,7 @@ public class TopologyTreeItem extends TreeItem<ISqlgTopologyUI> {
                 return true;
             }
             case PartitionUI partitionUI -> {
-                return true;
+                return false;
             }
         }
     }
@@ -153,9 +153,9 @@ public class TopologyTreeItem extends TreeItem<ISqlgTopologyUI> {
                 return metaVertexLabelTreeItems;
             }
             case EdgeLabelUI edgeLabelUI -> {
-                ObservableList<TreeItem<ISqlgTopologyUI>> edgeLabelMetaChildrenTreeItems = FXCollections.observableArrayList();
+                ObservableList<TreeItem<ISqlgTopologyUI>> metaEdgeLabelTreeItems = FXCollections.observableArrayList();
                 TreeItem<ISqlgTopologyUI> metaPropertyColumn = new TreeItem<>(new MetaTopology(PROPERTY_COLUMNS, edgeLabelUI));
-                edgeLabelMetaChildrenTreeItems.add(metaPropertyColumn);
+                metaEdgeLabelTreeItems.add(metaPropertyColumn);
 
                 ObservableList<TreeItem<ISqlgTopologyUI>> propertyColumnTreeItems = FXCollections.observableArrayList();
                 for (PropertyColumnUI propertyColumnUI : edgeLabelUI.getPropertyColumnUIs()) {
@@ -163,8 +163,24 @@ public class TopologyTreeItem extends TreeItem<ISqlgTopologyUI> {
                 }
                 metaPropertyColumn.getChildren().addAll(propertyColumnTreeItems);
 
+                TreeItem<ISqlgTopologyUI> metaOutEdgeRoles = new TreeItem<>(new MetaTopology(OUT_EDGE_ROLES, edgeLabelUI));
+                metaEdgeLabelTreeItems.add(metaOutEdgeRoles);
+                ObservableList<TreeItem<ISqlgTopologyUI>> outEdgeRoleTreeItems = FXCollections.observableArrayList();
+                for (EdgeRoleUI outEdgeRoleUI : edgeLabelUI.getOutEdgeRoleUIs()) {
+                    outEdgeRoleTreeItems.add(new TopologyTreeItem(outEdgeRoleUI));
+                }
+                metaOutEdgeRoles.getChildren().addAll(outEdgeRoleTreeItems);
+
+                TreeItem<ISqlgTopologyUI> metaInEdgeRoles = new TreeItem<>(new MetaTopology(IN_EDGE_ROLES, edgeLabelUI));
+                metaEdgeLabelTreeItems.add(metaInEdgeRoles);
+                ObservableList<TreeItem<ISqlgTopologyUI>> inEdgeRoleTreeItems = FXCollections.observableArrayList();
+                for (EdgeRoleUI inEdgeRoleUI : edgeLabelUI.getInEdgeRoleUIs()) {
+                    inEdgeRoleTreeItems.add(new TopologyTreeItem(inEdgeRoleUI));
+                }
+                metaInEdgeRoles.getChildren().addAll(inEdgeRoleTreeItems);
+
                 TreeItem<ISqlgTopologyUI> metaIndex = new TreeItem<>(new MetaTopology(INDEXES, edgeLabelUI));
-                edgeLabelMetaChildrenTreeItems.add(metaIndex);
+                metaEdgeLabelTreeItems.add(metaIndex);
                 ObservableList<TreeItem<ISqlgTopologyUI>> indexTreeItems = FXCollections.observableArrayList();
                 for (Index index : edgeLabelUI.getEdgeLabel().getIndexes().values()) {
                     indexTreeItems.add(new TopologyTreeItem(new IndexUI(null, edgeLabelUI, index)));
@@ -172,13 +188,13 @@ public class TopologyTreeItem extends TreeItem<ISqlgTopologyUI> {
                 metaIndex.getChildren().addAll(indexTreeItems);
 
                 TreeItem<ISqlgTopologyUI> metaPartition = new TreeItem<>(new MetaTopology(PARTITIONS, edgeLabelUI));
-                edgeLabelMetaChildrenTreeItems.add(metaPartition);
+                metaEdgeLabelTreeItems.add(metaPartition);
                 ObservableList<TreeItem<ISqlgTopologyUI>> partitionTreeItems = FXCollections.observableArrayList();
                 for (PartitionUI partitionUI: edgeLabelUI.getPartitionUIs()) {
                     partitionTreeItems.add(new TopologyTreeItem(partitionUI));
                 }
                 metaPartition.getChildren().addAll(partitionTreeItems);
-                return edgeLabelMetaChildrenTreeItems;
+                return metaEdgeLabelTreeItems;
             }
             case EdgeRoleUI edgeRoleUI -> {
             }

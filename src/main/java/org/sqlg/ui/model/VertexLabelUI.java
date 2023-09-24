@@ -12,44 +12,19 @@ public final class VertexLabelUI implements ISqlgTopologyUI {
 
     private final SchemaUI schemaUI;
     private final SimpleObjectProperty<VertexLabel> vertexLabel;
-    private final ObservableList<PropertyColumnUI> propertyColumnUIs;
-    private final ObservableList<EdgeRoleUI> outEdgeRoleUIs;
-    private final ObservableList<EdgeRoleUI> inEdgeRoleUIs;
-    private final ObservableList<IndexUI> indexUIs;
-    private final ObservableList<PartitionUI> partitionUIs;
+    private ObservableList<PropertyColumnUI> propertyColumnUIs;
+    private ObservableList<EdgeRoleUI> outEdgeRoleUIs;
+    private ObservableList<EdgeRoleUI> inEdgeRoleUIs;
+    private ObservableList<IndexUI> indexUIs;
+    private ObservableList<PartitionUI> partitionUIs;
 
-    private final SimpleStringProperty name;
-    private final SimpleBooleanProperty delete;
+    private SimpleStringProperty name;
+    private SimpleBooleanProperty delete;
 
     public VertexLabelUI(SchemaUI schemaUI, VertexLabel vertexLabel) {
         this.schemaUI = schemaUI;
         this.vertexLabel = new SimpleObjectProperty<>(vertexLabel);
-        this.name = new SimpleStringProperty(vertexLabel.getName());
-        this.propertyColumnUIs = FXCollections.observableArrayList();
-        for (PropertyColumn propertyColumn : vertexLabel.getProperties().values()) {
-            this.propertyColumnUIs.add(new PropertyColumnUI(this, null, propertyColumn));
-        }
-        this.outEdgeRoleUIs = FXCollections.observableArrayList();
-        for (EdgeRole outEdgeRole : vertexLabel.getOutEdgeRoles().values()) {
-            this.outEdgeRoleUIs.add(new EdgeRoleUI(this, outEdgeRole));
-        }
-        this.inEdgeRoleUIs = FXCollections.observableArrayList();
-        for (EdgeRole inEdgeRole : vertexLabel.getInEdgeRoles().values()) {
-            this.inEdgeRoleUIs.add(new EdgeRoleUI(this, inEdgeRole));
-        }
-        this.indexUIs = FXCollections.observableArrayList();
-        for (Index index : vertexLabel.getIndexes().values()) {
-            this.indexUIs.add(
-                    new IndexUI(this, null, index)
-            );
-        }
-        this.partitionUIs = FXCollections.observableArrayList();
-        for (Partition partition : vertexLabel.getPartitions().values()) {
-            this.partitionUIs.add(
-                    new PartitionUI(this, null, partition)
-            );
-        }
-        this.delete = new SimpleBooleanProperty(false);
+        init(vertexLabel);
     }
 
     public VertexLabel getVertexLabel() {
@@ -122,6 +97,52 @@ public final class VertexLabelUI implements ISqlgTopologyUI {
     public void remove() {
         getVertexLabel().remove();
         getSchemaUI().getVertexLabelUIs().remove(this);
+    }
+
+    private void init(VertexLabel vertexLabel) {
+        this.name = new SimpleStringProperty(vertexLabel.getName());
+        this.propertyColumnUIs = FXCollections.observableArrayList();
+        for (PropertyColumn propertyColumn : vertexLabel.getProperties().values()) {
+            this.propertyColumnUIs.add(new PropertyColumnUI(this, null, propertyColumn));
+        }
+        this.outEdgeRoleUIs = FXCollections.observableArrayList();
+        for (EdgeRole outEdgeRole : vertexLabel.getOutEdgeRoles().values()) {
+            this.outEdgeRoleUIs.add(new EdgeRoleUI(this, null, outEdgeRole));
+        }
+        this.inEdgeRoleUIs = FXCollections.observableArrayList();
+        for (EdgeRole inEdgeRole : vertexLabel.getInEdgeRoles().values()) {
+            this.inEdgeRoleUIs.add(new EdgeRoleUI(this, null, inEdgeRole));
+        }
+        this.indexUIs = FXCollections.observableArrayList();
+        for (Index index : vertexLabel.getIndexes().values()) {
+            this.indexUIs.add(
+                    new IndexUI(this, null, index)
+            );
+        }
+        this.partitionUIs = FXCollections.observableArrayList();
+        for (Partition partition : vertexLabel.getPartitions().values()) {
+            this.partitionUIs.add(
+                    new PartitionUI(this, null, partition)
+            );
+        }
+        this.delete = new SimpleBooleanProperty(false);
+    }
+
+    public void refresh() {
+        init(this.vertexLabel.get());
+    }
+
+    public void selectInTree(String name) {
+        GraphConfiguration graphConfiguration = this.getSchemaUI().getGraphConfiguration();
+        GraphGroup graphGroup = graphConfiguration.getGraphGroup();
+        graphConfiguration
+                .getLeftPaneController()
+                .selectVertexLabel(
+                        graphGroup,
+                        graphConfiguration,
+                        getSchemaUI().getSchema(),
+                        name
+                );
     }
 
 }

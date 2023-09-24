@@ -1,3 +1,17 @@
 .button {
     -fx-text-fill: blue;
 }
+
+/*.titled-pane > .title {*/
+/*    -fx-border-width: 0 1 0 1;*/
+/*    -fx-border-color: red;*/
+/*    !*-fx-background-color: -fx-box-border, -fx-inner-border, -fx-body-color;*!*/
+/*    !*-fx-background-insets: 0, 1, 2;*!*/
+/*    !*-fx-background-radius: 5 5 0 0, 4 4 0 0, 3 3 0 0;*!*/
+/*    !*-fx-padding: 0.166667em 0.833333em 0.25em 0.833333em; !* 2 10 3 10 *!*!*/
+/*}*/
+
+.titled-pane > .content {
+    -fx-border-width: 0;
+    /*-fx-border-color: red;*/
+}

@@ -6,6 +6,7 @@ import org.umlg.sqlg.structure.topology.EdgeRole;
 
 public final class EdgeRoleUI implements ISqlgTopologyUI {
 
+    private final EdgeLabelUI edgeLabelUI;
     private final VertexLabelUI vertexLabelUI;
     private final SimpleObjectProperty<EdgeRole> edgeRole;
     private final SimpleStringProperty name;
@@ -17,8 +18,9 @@ public final class EdgeRoleUI implements ISqlgTopologyUI {
     private final SimpleBooleanProperty ordered;
     private final SimpleBooleanProperty delete;
 
-    public EdgeRoleUI(VertexLabelUI vertexLabelUI, EdgeRole edgeRole) {
+    public EdgeRoleUI(VertexLabelUI vertexLabelUI, EdgeLabelUI edgeLabelUI, EdgeRole edgeRole) {
         this.vertexLabelUI = vertexLabelUI;
+        this.edgeLabelUI = edgeLabelUI;
         this.edgeRole = new SimpleObjectProperty<>(edgeRole);
         this.direction = new SimpleObjectProperty<>(edgeRole.getDirection());
         this.name = new SimpleStringProperty(edgeRole.getName());

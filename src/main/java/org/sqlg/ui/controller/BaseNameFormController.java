@@ -45,13 +45,16 @@ public abstract class BaseNameFormController extends BaseController {
         Label label = new Label("name");
         nameHBox.setAlignment(Pos.CENTER);
 
+        //Do not bind the name property as deletion happens via the old name.
         this.sqlgTreeDataFormNameTxt = new TextField(this.sqlgTopologyUI.getName());
+
         this.sqlgTreeDataFormNameTxt.setMaxWidth(Double.MAX_VALUE);
         Button rename = new Button("Rename");
         Button delete = new Button("Delete");
+        Button cancel = new Button("Cancel");
         HBox.setHgrow(this.sqlgTreeDataFormNameTxt, Priority.ALWAYS);
 
-        nameHBox.getChildren().addAll(label, this.sqlgTreeDataFormNameTxt, rename, delete);
+        nameHBox.getChildren().addAll(label, this.sqlgTreeDataFormNameTxt, rename, delete, cancel);
 
         sqlgTreeDataFormNameTxt.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
 
@@ -59,6 +62,7 @@ public abstract class BaseNameFormController extends BaseController {
 
         rename.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
         delete.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
+        cancel.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
 
         this.root.getChildren().add(editBox);
         this.root.getChildren().add(nameHBox);
@@ -76,6 +80,15 @@ public abstract class BaseNameFormController extends BaseController {
                 sqlgGraph.tx().rollback();
             }
         });
+        cancel.setOnAction(event -> {
+            SqlgGraph sqlgGraph = getSqlgGraph();
+            try {
+                cancelName();
+                sqlgGraph.tx().commit();
+            } finally {
+                sqlgGraph.tx().rollback();
+            }
+        });
     }
 
     protected abstract SqlgGraph getSqlgGraph();
@@ -83,6 +96,10 @@ public abstract class BaseNameFormController extends BaseController {
     protected abstract void rename();
 
     protected void delete() {
+
+    }
+
+    protected void cancelName() {
 
     }
 

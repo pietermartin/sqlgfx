@@ -1,22 +1,29 @@
 package org.sqlg.ui.controller;
 
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.util.StringConverter;
+import javafx.util.converter.LongStringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sqlg.ui.model.*;
+import org.sqlg.ui.model.ISqlgTopologyUI;
+import org.sqlg.ui.model.PropertyColumnUI;
+import org.umlg.sqlg.structure.Multiplicity;
+import org.umlg.sqlg.structure.PropertyDefinition;
 import org.umlg.sqlg.structure.PropertyType;
 import org.umlg.sqlg.structure.SqlgGraph;
 import org.umlg.sqlg.structure.topology.AbstractLabel;
-import org.umlg.sqlg.structure.topology.PropertyColumn;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.function.UnaryOperator;
 
 public class PropertyColumnFormController extends BaseNameFormController {
 
@@ -46,54 +53,23 @@ public class PropertyColumnFormController extends BaseNameFormController {
 
     @Override
     protected void delete() {
-        VertexLabelUI vertexLabelUI = this.propertyColumnUI.getVertexLabelUI();
-        if (vertexLabelUI == null) {
-            EdgeLabelUI edgeLabelUI = this.propertyColumnUI.getEdgeLabelUI();
-            SchemaUI schemaUI = edgeLabelUI.getSchemaUI();
-            GraphConfiguration graphConfiguration = schemaUI.getGraphConfiguration();
-            GraphGroup graphGroup = graphConfiguration.getGraphGroup();
-            edgeLabelUI.getPropertyColumnUIs().remove(this.propertyColumnUI);
-            this.propertyColumnUI.getPropertyColumn().remove();
-            this.leftPaneController.deletePropertyColumn(
-                    graphGroup,
-                    graphConfiguration,
-                    schemaUI.getSchema(),
-                    null,
-                    edgeLabelUI.getEdgeLabel(),
-                    this.propertyColumnUI.getPropertyColumn()
-            );
-        } else {
-            SchemaUI schemaUI = vertexLabelUI.getSchemaUI();
-            GraphConfiguration graphConfiguration = schemaUI.getGraphConfiguration();
-            GraphGroup graphGroup = graphConfiguration.getGraphGroup();
-            vertexLabelUI.getPropertyColumnUIs().remove(this.propertyColumnUI);
-            this.propertyColumnUI.getPropertyColumn().remove();
-            this.leftPaneController.deletePropertyColumn(
-                    graphGroup,
-                    graphConfiguration,
-                    schemaUI.getSchema(),
-                    vertexLabelUI.getVertexLabel(),
-                    null,
-                    this.propertyColumnUI.getPropertyColumn()
-            );
-        }
+        this.propertyColumnUI.getPropertyColumn().remove();
     }
 
     @Override
     protected void rename() {
         SqlgGraph sqlgGraph = getSqlgGraph();
         try {
-            AbstractLabel abstractLabel = this.propertyColumnUI.getPropertyColumn().getParentLabel();
             this.propertyColumnUI.getPropertyColumn().rename(this.sqlgTreeDataFormNameTxt.getText());
             sqlgGraph.tx().commit();
-            PropertyColumn renamePropertyColumn = abstractLabel.getProperty(this.sqlgTreeDataFormNameTxt.getText()).orElseThrow();
-            this.propertyColumnUI.setPropertyColumn(renamePropertyColumn);
+            Platform.runLater(() -> this.propertyColumnUI.selectInTree(this.sqlgTreeDataFormNameTxt.getText()));
             showDialog(
                     Alert.AlertType.INFORMATION,
                     "Success",
                     "Renamed PropertyColumn to '" + this.sqlgTreeDataFormNameTxt.getText() + "'"
             );
         } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
             showDialog(
                     Alert.AlertType.ERROR,
                     "Error",
@@ -109,6 +85,14 @@ public class PropertyColumnFormController extends BaseNameFormController {
 
     @Override
     protected Collection<Node> additionalChildren(ISqlgTopologyUI sqlgTopologyUI) {
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String text = change.getText();
+            if (text.matches("[0-9]*")) {
+                return change;
+            }
+            return null;
+        };
+
         PropertyColumnUI propertyColumnUI = (PropertyColumnUI) sqlgTopologyUI;
 
         GridPane gridPane = new GridPane();
@@ -122,28 +106,25 @@ public class PropertyColumnFormController extends BaseNameFormController {
         this.propertyTypeCombobox.getItems().addAll(PropertyType.values());
         this.propertyTypeCombobox.setPrefWidth(Double.MAX_VALUE);
         this.propertyTypeCombobox.setValue(PropertyType.STRING);
-        this.propertyTypeCombobox.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
+        this.propertyTypeCombobox.setDisable(true);
         GridPane.setConstraints(this.propertyTypeCombobox, 1, 0);
 
         Label lowerLabel = new Label("lower");
         GridPane.setConstraints(lowerLabel, 0, 1);
         this.lowerTextField = new TextField(Long.toString(propertyColumnUI.getLower()));
-        this.lowerTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (!newValue.matches("\\d*")) {
-                lowerTextField.setText(newValue.replaceAll("[^\\d]", ""));
-            }
-        });
+        this.lowerTextField.setTextFormatter(new TextFormatter<>(filter));
         this.lowerTextField.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
+        StringConverter<? extends Number> converter = new LongStringConverter();
+        Bindings.bindBidirectional(this.lowerTextField.textProperty(), propertyColumnUI.lowerProperty(), (StringConverter) converter);
+
         GridPane.setConstraints(this.lowerTextField, 1, 1);
 
         Label upperLabel = new Label("upper");
         GridPane.setConstraints(upperLabel, 0, 2);
         this.upperTextField = new TextField(Long.toString(propertyColumnUI.getUpper()));
-        this.upperTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (!newValue.matches("\\d*")) {
-                upperTextField.setText(newValue.replaceAll("[^\\d]", ""));
-            }
-        });
+        this.upperTextField.setTextFormatter(new TextFormatter<>(filter));
+        Bindings.bindBidirectional(this.upperTextField.textProperty(), propertyColumnUI.upperProperty(), (StringConverter) converter);
+
         this.upperTextField.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
         GridPane.setConstraints(this.upperTextField, 1, 2);
 
@@ -165,12 +146,14 @@ public class PropertyColumnFormController extends BaseNameFormController {
         GridPane.setConstraints(defaultLiteralLabel, 0, 5);
         this.defaultLiteralTextField = new TextField(propertyColumnUI.getDefaultLiteral());
         this.defaultLiteralTextField.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
+        Bindings.bindBidirectional(this.defaultLiteralTextField.textProperty(), propertyColumnUI.defaultLiteralProperty());
         GridPane.setConstraints(this.defaultLiteralTextField, 1, 5);
 
         Label checkConstraintLabel = new Label("checkConstraint");
         GridPane.setConstraints(checkConstraintLabel, 0, 6);
         this.checkConstraintTextField = new TextField(propertyColumnUI.getCheckConstraint());
         this.checkConstraintTextField.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
+        Bindings.bindBidirectional(this.checkConstraintTextField.textProperty(), propertyColumnUI.checkConstraintProperty());
         GridPane.setConstraints(this.checkConstraintTextField, 1, 6);
 
         ColumnConstraints column1 = new ColumnConstraints();
@@ -189,7 +172,76 @@ public class PropertyColumnFormController extends BaseNameFormController {
         );
 
         VBox.setVgrow(gridPane, Priority.ALWAYS);
-        return List.of(gridPane);
+
+        ButtonBar buttonBar = new ButtonBar();
+        buttonBar.setPadding(new Insets(0, 5, 0, 0));
+        Button save = new Button("Save");
+        ButtonBar.setButtonData(save, ButtonBar.ButtonData.OK_DONE);
+        Button cancel = new Button("Cancel");
+        ButtonBar.setButtonData(cancel, ButtonBar.ButtonData.CANCEL_CLOSE);
+        buttonBar.getButtons().addAll(save, cancel);
+
+        VBox vBox = new VBox(5, gridPane, buttonBar);
+        vBox.setPadding(new Insets(0, 0, 5, 0));
+        VBox.setVgrow(buttonBar, Priority.NEVER);
+        VBox.setVgrow(gridPane, Priority.ALWAYS);
+        VBox.setVgrow(vBox, Priority.ALWAYS);
+
+        save.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
+        save.setOnAction((event) -> {
+            save();
+        });
+        cancel.setOnAction((event) -> {
+            cancel();
+        });
+        return List.of(vBox);
     }
 
+    void cancel() {
+        this.propertyColumnUI.reset();
+        this.getSqlgGraph().tx().rollback();
+    }
+
+    void save() {
+        try {
+            if (this.propertyColumnUI.getLower() != this.propertyColumnUI.getPropertyColumn().getPropertyDefinition().multiplicity().lower() ||
+                            this.propertyColumnUI.getUpper() != this.propertyColumnUI.getPropertyColumn().getPropertyDefinition().multiplicity().upper() ||
+                            !this.propertyColumnUI.getDefaultLiteral().equals(this.propertyColumnUI.getPropertyColumn().getPropertyDefinition().defaultLiteral()) ||
+                            !this.propertyColumnUI.getCheckConstraint().equals(this.propertyColumnUI.getPropertyColumn().getPropertyDefinition().checkConstraint())
+            ) {
+                PropertyDefinition updatedPropertyDefinition = PropertyDefinition.of(
+                        PropertyType.valueOf(this.propertyColumnUI.getPropertyType()),
+                        Multiplicity.of(
+                                this.propertyColumnUI.getLower(),
+                                this.propertyColumnUI.getUpper(),
+                                this.propertyColumnUI.isUnique()
+                        ),
+                        this.propertyColumnUI.getDefaultLiteral(),
+                        this.propertyColumnUI.getCheckConstraint()
+                );
+                AbstractLabel abstractLabel = this.propertyColumnUI.getPropertyColumn().getParentLabel();
+                String propertyName = this.propertyColumnUI.getPropertyColumn().getName();
+                this.propertyColumnUI.getPropertyColumn().updatePropertyDefinition(updatedPropertyDefinition);
+                this.propertyColumnUI.setPropertyColumn(abstractLabel.getProperty(propertyName).orElseThrow());
+            }
+            getSqlgGraph().tx().commit();
+            showDialog(
+                    Alert.AlertType.INFORMATION,
+                    "Success",
+                    "Saved PropertyColumns"
+            );
+        } catch (Exception e) {
+            getSqlgGraph().tx().rollback();
+            LOGGER.error(e.getMessage(), e);
+            showDialog(
+                    Alert.AlertType.ERROR,
+                    "Error",
+                    "Failed to save PropertyColumns",
+                    e,
+                    result -> this.sqlgTreeDataFormNameTxt.setText(this.propertyColumnUI.getName())
+            );
+        } finally {
+            getSqlgGraph().tx().rollback();
+        }
+    }
 }

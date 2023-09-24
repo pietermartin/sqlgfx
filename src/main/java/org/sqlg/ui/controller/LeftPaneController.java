@@ -1,5 +1,6 @@
 package org.sqlg.ui.controller;
 
+import javafx.beans.binding.Bindings;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
@@ -8,8 +9,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.*;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.controlsfx.glyphfont.FontAwesome;
 import org.controlsfx.glyphfont.Glyph;
@@ -98,26 +98,28 @@ public class LeftPaneController {
             graphGroup.getGraphConfigurations().addListener((ListChangeListener<GraphConfiguration>) c -> {
                 while (c.next()) {
                     if (c.wasPermutated()) {
+                        //noinspection StatementWithEmptyBody
                         for (int i = c.getFrom(); i < c.getTo(); ++i) {
                             //permutate
                         }
-                    } else if (c.wasUpdated()) {
-                        //update item
-                    } else {
-                        for (GraphConfiguration remitem : c.getRemoved()) {
-                            Set<TreeItem<ISqlgTopologyUI>> toRemove = new HashSet<>();
-                            graphGroupTreeItem.getChildren().forEach(treeItem -> {
-                                if (treeItem.getValue().getName().equals(remitem.getName())) {
-                                    toRemove.add(treeItem);
-                                }
-                            });
-                            graphGroupTreeItem.getChildren().removeAll(toRemove);
+                    } else //noinspection StatementWithEmptyBody
+                        if (c.wasUpdated()) {
+                            //update item
+                        } else {
+                            for (GraphConfiguration remitem : c.getRemoved()) {
+                                Set<TreeItem<ISqlgTopologyUI>> toRemove = new HashSet<>();
+                                graphGroupTreeItem.getChildren().forEach(treeItem -> {
+                                    if (treeItem.getValue().getName().equals(remitem.getName())) {
+                                        toRemove.add(treeItem);
+                                    }
+                                });
+                                graphGroupTreeItem.getChildren().removeAll(toRemove);
+                            }
+                            for (GraphConfiguration addItem : c.getAddedSubList()) {
+                                TreeItem<ISqlgTopologyUI> graphConfigurationTreeItem = new GraphConfigurationTreeItem(this, addItem);
+                                graphGroupTreeItem.getChildren().add(graphConfigurationTreeItem);
+                            }
                         }
-                        for (GraphConfiguration additem : c.getAddedSubList()) {
-                            TreeItem<ISqlgTopologyUI> graphConfigurationTreeItem = new GraphConfigurationTreeItem(this, additem);
-                            graphGroupTreeItem.getChildren().add(graphConfigurationTreeItem);
-                        }
-                    }
                 }
             });
 
@@ -128,7 +130,7 @@ public class LeftPaneController {
                 graphConfigurationTreeItem.addEventHandler(TreeItem.branchExpandedEvent(), this.graphConfigurationExpandingEventHandles);
             }
         }
-        this.topologyTreeView.setCellFactory(treeView -> new TextFieldTreeCellImpl());
+        this.topologyTreeView.setCellFactory(treeView -> new SqlgTreeCellImpl());
 
         this.topologyTreeView.getSelectionModel().selectedItemProperty().addListener(
                 (observable, oldValue, newValue) -> {
@@ -182,7 +184,7 @@ public class LeftPaneController {
                             if (newValue.getValue() instanceof VertexLabelUI vertexLabelUI) {
                                 VertexLabelFormController vertexLabelFormController = new VertexLabelFormController(this, vertexLabelUI);
                                 view = vertexLabelFormController.getView();
-                            } else if (newValue.getValue() instanceof  EdgeLabelUI edgeLabelUI) {
+                            } else if (newValue.getValue() instanceof EdgeLabelUI edgeLabelUI) {
                                 EdgeLabelFormController edgeLabelFormController = new EdgeLabelFormController(this, edgeLabelUI);
                                 view = edgeLabelFormController.getView();
                             } else {
@@ -195,13 +197,13 @@ public class LeftPaneController {
 
                             if (metaTopology.getParent() instanceof VertexLabelUI vertexLabelUI) {
                                 if (metaTopology.getName().equals(TopologyTreeItem.PROPERTY_COLUMNS)) {
-                                    PropertyTableViewController propertyTableViewController = new PropertyTableViewController(this, vertexLabelUI, null);
-                                    view = propertyTableViewController.getView();
+                                    PropertyColumnTableViewController propertyColumnTableViewController = new PropertyColumnTableViewController(this, vertexLabelUI, null);
+                                    view = propertyColumnTableViewController.getView();
                                 } else if (metaTopology.getName().equals(TopologyTreeItem.OUT_EDGE_ROLES)) {
-                                    EdgeRoleTableViewController edgeRoleTableViewController = new EdgeRoleTableViewController(this, vertexLabelUI, Direction.OUT);
+                                    EdgeRoleTableViewController edgeRoleTableViewController = new EdgeRoleTableViewController(this, vertexLabelUI, null, Direction.OUT);
                                     view = edgeRoleTableViewController.getView();
                                 } else if (metaTopology.getName().equals(TopologyTreeItem.IN_EDGE_ROLES)) {
-                                    EdgeRoleTableViewController edgeRoleTableViewController = new EdgeRoleTableViewController(this, vertexLabelUI, Direction.IN);
+                                    EdgeRoleTableViewController edgeRoleTableViewController = new EdgeRoleTableViewController(this, vertexLabelUI, null, Direction.IN);
                                     view = edgeRoleTableViewController.getView();
                                 } else if (metaTopology.getName().equals(TopologyTreeItem.INDEXES)) {
                                     IndexTableViewController indexTableViewController = new IndexTableViewController(this, vertexLabelUI, null);
@@ -213,8 +215,14 @@ public class LeftPaneController {
                                 }
                             } else if (metaTopology.getParent() instanceof EdgeLabelUI edgeLabelUI) {
                                 if (metaTopology.getName().equals(TopologyTreeItem.PROPERTY_COLUMNS)) {
-                                    PropertyTableViewController propertyTableViewController = new PropertyTableViewController(this, null, edgeLabelUI);
-                                    view = propertyTableViewController.getView();
+                                    PropertyColumnTableViewController propertyColumnTableViewController = new PropertyColumnTableViewController(this, null, edgeLabelUI);
+                                    view = propertyColumnTableViewController.getView();
+                                } else if (metaTopology.getName().equals(TopologyTreeItem.OUT_EDGE_ROLES)) {
+                                    EdgeRoleTableViewController edgeRoleTableViewController = new EdgeRoleTableViewController(this, null, edgeLabelUI, Direction.OUT);
+                                    view = edgeRoleTableViewController.getView();
+                                } else if (metaTopology.getName().equals(TopologyTreeItem.IN_EDGE_ROLES)) {
+                                    EdgeRoleTableViewController edgeRoleTableViewController = new EdgeRoleTableViewController(this, null, edgeLabelUI, Direction.IN);
+                                    view = edgeRoleTableViewController.getView();
                                 } else if (metaTopology.getName().equals(TopologyTreeItem.INDEXES)) {
                                     IndexTableViewController indexTableViewController = new IndexTableViewController(this, null, edgeLabelUI);
                                     view = indexTableViewController.getView();
@@ -266,85 +274,182 @@ public class LeftPaneController {
         return primaryController;
     }
 
+    public void addPropertyColumn(
+            GraphGroup graphGroup,
+            GraphConfiguration graphConfiguration,
+            Schema schema,
+            AbstractLabel abstractLabel,
+            PropertyColumn propertyColumn) {
+
+        TreeItem<ISqlgTopologyUI> graphGroupTreeItem = search(this.topologyTreeView.getRoot(), graphGroup.getName());
+        if (graphGroupTreeItem != null) {
+            TreeItem<ISqlgTopologyUI> graphConfigurationTreeItem = search(graphGroupTreeItem, graphConfiguration.getName());
+            if (graphConfigurationTreeItem != null) {
+                TreeItem<ISqlgTopologyUI> schemaTreeItem = search(graphConfigurationTreeItem, schema.getName());
+                if (schemaTreeItem != null) {
+                    if (abstractLabel instanceof VertexLabel vertexLabel) {
+                        TreeItem<ISqlgTopologyUI> metaTopologyVertexLabelsTreeItem = search(schemaTreeItem, TopologyTreeItem.VERTEX_LABELS);
+                        if (metaTopologyVertexLabelsTreeItem != null) {
+                            TreeItem<ISqlgTopologyUI> vertexLabelTreeItem = search(metaTopologyVertexLabelsTreeItem, vertexLabel.getName());
+                            if (vertexLabelTreeItem != null) {
+                                VertexLabelUI vertexLabelUI = (VertexLabelUI) vertexLabelTreeItem.getValue();
+                                PropertyColumnUI propertyColumnUI = new PropertyColumnUI(vertexLabelUI, null, propertyColumn);
+                                vertexLabelUI.getPropertyColumnUIs().add(propertyColumnUI);
+                                TreeItem<ISqlgTopologyUI> metaTopologyPropertyColumnsTreeItem = search(vertexLabelTreeItem, TopologyTreeItem.PROPERTY_COLUMNS);
+                                if (metaTopologyPropertyColumnsTreeItem != null) {
+                                    metaTopologyPropertyColumnsTreeItem.getChildren().add(new TopologyTreeItem(propertyColumnUI));
+                                }
+                            }
+                        }
+                    } else {
+                        TreeItem<ISqlgTopologyUI> metaTopologyEdgeLabelsTreeItem = search(schemaTreeItem, TopologyTreeItem.EDGE_LABELS);
+                        if (metaTopologyEdgeLabelsTreeItem != null) {
+                            TreeItem<ISqlgTopologyUI> edgeLabelTreeItem = search(metaTopologyEdgeLabelsTreeItem, abstractLabel.getName());
+                            if (edgeLabelTreeItem != null) {
+                                EdgeLabelUI edgeLabelUI = (EdgeLabelUI) edgeLabelTreeItem.getValue();
+                                PropertyColumnUI propertyColumnUI = new PropertyColumnUI(null, edgeLabelUI, propertyColumn);
+                                edgeLabelUI.getPropertyColumnUIs().add(propertyColumnUI);
+                                TreeItem<ISqlgTopologyUI> metaTopologyPropertyColumnsTreeItem = search(edgeLabelTreeItem, TopologyTreeItem.PROPERTY_COLUMNS);
+                                if (metaTopologyPropertyColumnsTreeItem != null) {
+                                    metaTopologyPropertyColumnsTreeItem.getChildren().add(new TopologyTreeItem(propertyColumnUI));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public void addEdgeRole(GraphGroup graphGroup, GraphConfiguration graphConfiguration, EdgeRole edgeRole) {
+        TreeItem<ISqlgTopologyUI> graphGroupTreeItem = search(this.topologyTreeView.getRoot(), graphGroup.getName());
+        if (graphGroupTreeItem != null) {
+            TreeItem<ISqlgTopologyUI> graphConfigurationTreeItem = search(graphGroupTreeItem, graphConfiguration.getName());
+            if (graphConfigurationTreeItem != null) {
+                TreeItem<ISqlgTopologyUI> schemaTreeItem = search(graphConfigurationTreeItem, edgeRole.getEdgeLabel().getSchema().getName());
+                if (schemaTreeItem != null) {
+                    SchemaUI schemaUI = (SchemaUI) schemaTreeItem.getValue();
+                    TreeItem<ISqlgTopologyUI> metaTopologyVertexLabels = search(schemaTreeItem, TopologyTreeItem.VERTEX_LABELS);
+                    if (metaTopologyVertexLabels != null) {
+                        VertexLabel vertexLabel = edgeRole.getVertexLabel();
+                        TreeItem<ISqlgTopologyUI> vertexLabelTreeItem = search(metaTopologyVertexLabels, vertexLabel.getLabel());
+                        if (vertexLabelTreeItem != null) {
+                            VertexLabelUI vertexLabelUI = (VertexLabelUI) vertexLabelTreeItem.getValue();
+                            TreeItem<ISqlgTopologyUI> metaTopologyOutEdgeRoles = search(vertexLabelTreeItem, TopologyTreeItem.OUT_EDGE_ROLES);
+                            if (metaTopologyOutEdgeRoles != null) {
+                                TreeItem<ISqlgTopologyUI> outEdgeRoleTreeItem = search(metaTopologyOutEdgeRoles, edgeRole.getName());
+                                if (outEdgeRoleTreeItem == null) {
+                                    EdgeRoleUI edgeRoleUI = new EdgeRoleUI(vertexLabelUI, null, edgeRole);
+                                    boolean success = vertexLabelUI.getOutEdgeRoleUIs().add(edgeRoleUI);
+                                    LOGGER.info("addEdgeRole edgeRole[OUT] to ui {}/{}/{} with success = {}", graphGroup.getName(), schemaUI.getSchema().getName(), edgeRoleUI.getName(), success);
+                                    success = metaTopologyOutEdgeRoles.getChildren().add(new TopologyTreeItem(edgeRoleUI));
+                                    LOGGER.info("addEdgeLabel edgeRole[OUT] to ui {}/{}/{} with success = {}", graphGroup.getName(), schemaUI.getSchema().getName(), edgeRoleUI.getName(), success);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public void addEdgeLabel(GraphGroup graphGroup, GraphConfiguration graphConfiguration, EdgeLabel edgeLabel) {
-//        TreeItem<ISqlgTopologyUI> graphGroupTreeItem = search(this.topologyTreeView.getRoot(), graphGroup.getName());
-//        if (graphGroupTreeItem != null) {
-//            TreeItem<ISqlgTopologyUI> graphConfigurationTreeItem = search(graphGroupTreeItem, graphConfiguration.getName());
-//            if (graphConfigurationTreeItem != null) {
-//                TreeItem<ISqlgTopologyUI> schemaTreeItem = search(graphConfigurationTreeItem, edgeLabel.getSchema().getName());
-//                if (schemaTreeItem != null) {
-//                    TreeItem<ISqlgTopologyUI> metaTopologyVertexLabels = search(schemaTreeItem, "VertexLabels");
-//                    if (metaTopologyVertexLabels != null) {
-//                        for (VertexLabel outVertexLabel : edgeLabel.getOutVertexLabels()) {
-//                            Schema outVertexLabelSchema = outVertexLabel.getSchema();
-//                            TreeItem<ISqlgTopologyUI> outVertexLabelSchemaTreeItem = search(graphConfigurationTreeItem, outVertexLabelSchema.getName());
-//                            if (outVertexLabelSchemaTreeItem != null) {
-//                                metaTopologyVertexLabels = search(outVertexLabelSchemaTreeItem, "VertexLabels");
-//                                if (metaTopologyVertexLabels != null) {
-//                                    TreeItem<ISqlgTopologyUI> vertexLabelTreeItem = search(metaTopologyVertexLabels, outVertexLabel.getName());
-//                                    if (vertexLabelTreeItem != null) {
-//                                        VertexLabelUI vertexLabelUI = (VertexLabelUI) vertexLabelTreeItem.getValue();
-//                                        EdgeLabelUI edgeLabelUI = new EdgeLabelUI(vertexLabelUI, edgeLabel);
-//                                        vertexLabelUI.getOutEdgeLabels().add(edgeLabelUI);
-//                                        TreeItem<ISqlgTopologyUI> metaTopologyOutEdgeLabels = search(vertexLabelTreeItem, "Out EdgeLabels");
-//                                        if (metaTopologyOutEdgeLabels != null) {
-//                                            TreeItem<ISqlgTopologyUI> edgeLabelTreeItem = search(metaTopologyOutEdgeLabels, edgeLabel.getName());
-//                                            if (edgeLabelTreeItem == null) {
-//                                                metaTopologyOutEdgeLabels.getChildren().add(new TopologyTreeItem(edgeLabelUI));
-//                                            }
-//                                        }
-//                                    }
-//                                }
-//                            }
-//                        }
-//                        for (VertexLabel inVertexLabel : edgeLabel.getInVertexLabels()) {
-//                            Schema inVertexLabelSchema = inVertexLabel.getSchema();
-//                            TreeItem<ISqlgTopologyUI> inVertexLabelSchemaTreeItem = search(graphConfigurationTreeItem, inVertexLabelSchema.getName());
-//                            if (inVertexLabelSchemaTreeItem != null) {
-//                                metaTopologyVertexLabels = search(inVertexLabelSchemaTreeItem, "VertexLabels");
-//                                if (metaTopologyVertexLabels != null) {
-//                                    TreeItem<ISqlgTopologyUI> vertexLabelTreeItem = search(metaTopologyVertexLabels, inVertexLabel.getName());
-//                                    if (vertexLabelTreeItem != null) {
-//                                        VertexLabelUI vertexLabelUI = (VertexLabelUI) vertexLabelTreeItem.getValue();
-//                                        EdgeLabelUI edgeLabelUI = new EdgeLabelUI(vertexLabelUI, edgeLabel);
-//                                        vertexLabelUI.getInEdgeLabels().add(edgeLabelUI);
-//                                        TreeItem<ISqlgTopologyUI> metaTopologyInEdgeLabels = search(vertexLabelTreeItem, "In EdgeLabels");
-//                                        if (metaTopologyInEdgeLabels != null) {
-//                                            TreeItem<ISqlgTopologyUI> edgeLabelTreeItem = search(metaTopologyInEdgeLabels, edgeLabel.getName());
-//                                            if (edgeLabelTreeItem == null) {
-//                                                metaTopologyInEdgeLabels.getChildren().add(new TopologyTreeItem(edgeLabelUI));
-//                                            }
-//                                        }
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
+        TreeItem<ISqlgTopologyUI> graphGroupTreeItem = search(this.topologyTreeView.getRoot(), graphGroup.getName());
+        if (graphGroupTreeItem != null) {
+            TreeItem<ISqlgTopologyUI> graphConfigurationTreeItem = search(graphGroupTreeItem, graphConfiguration.getName());
+            if (graphConfigurationTreeItem != null) {
+                for (VertexLabel outVertexLabel : edgeLabel.getOutVertexLabels()) {
+                    Schema outVertexLabelSchema = outVertexLabel.getSchema();
+                    TreeItem<ISqlgTopologyUI> outVertexLabelSchemaTreeItem = search(graphConfigurationTreeItem, outVertexLabelSchema.getName());
+                    if (outVertexLabelSchemaTreeItem != null) {
+                        TreeItem<ISqlgTopologyUI> metaTopologyVertexLabel = search(outVertexLabelSchemaTreeItem, TopologyTreeItem.VERTEX_LABELS);
+                        if (metaTopologyVertexLabel != null) {
+                            TreeItem<ISqlgTopologyUI> vertexLabelTreeItem = search(metaTopologyVertexLabel, outVertexLabel.getName());
+                            if (vertexLabelTreeItem != null) {
+                                VertexLabelUI vertexLabelUI = (VertexLabelUI) vertexLabelTreeItem.getValue();
+                                TreeItem<ISqlgTopologyUI> metaTopologyOutEdgeRoles = search(vertexLabelTreeItem, TopologyTreeItem.OUT_EDGE_ROLES);
+                                if (metaTopologyOutEdgeRoles != null) {
+                                    EdgeRole edgeRole = edgeLabel.getOutEdgeRoles(outVertexLabel);
+                                    TreeItem<ISqlgTopologyUI> outEdgeRoleTreeItem = search(metaTopologyOutEdgeRoles, edgeRole.getName());
+                                    if (outEdgeRoleTreeItem == null) {
+                                        EdgeRoleUI edgeRoleUI = new EdgeRoleUI(vertexLabelUI, null, edgeRole);
+                                        boolean success = vertexLabelUI.getOutEdgeRoleUIs().add(edgeRoleUI);
+                                        LOGGER.info("addEdgeLabel edgeRole[OUT] to ui {}/{}/{} with success = {}", graphGroup.getName(), outVertexLabelSchema.getName(), edgeRoleUI.getName(), success);
+                                        success = metaTopologyOutEdgeRoles.getChildren().add(new TopologyTreeItem(edgeRoleUI));
+                                        LOGGER.info("addEdgeLabel edgeRole[OUT] to ui {}/{}/{} with success = {}", graphGroup.getName(), outVertexLabelSchema.getName(), edgeRoleUI.getName(), success);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                for (VertexLabel inVertexLabel : edgeLabel.getInVertexLabels()) {
+                    Schema inVertexLabelSchema = inVertexLabel.getSchema();
+                    TreeItem<ISqlgTopologyUI> inVertexLabelSchemaTreeItem = search(graphConfigurationTreeItem, inVertexLabelSchema.getName());
+                    if (inVertexLabelSchemaTreeItem != null) {
+                        TreeItem<ISqlgTopologyUI> metaTopologyVertexLabel = search(inVertexLabelSchemaTreeItem, TopologyTreeItem.VERTEX_LABELS);
+                        if (metaTopologyVertexLabel != null) {
+                            TreeItem<ISqlgTopologyUI> vertexLabelTreeItem = search(metaTopologyVertexLabel, inVertexLabel.getName());
+                            if (vertexLabelTreeItem != null) {
+                                VertexLabelUI vertexLabelUI = (VertexLabelUI) vertexLabelTreeItem.getValue();
+                                TreeItem<ISqlgTopologyUI> metaTopologyInEdgeRoles = search(inVertexLabelSchemaTreeItem, TopologyTreeItem.IN_EDGE_ROLES);
+                                if (metaTopologyInEdgeRoles != null) {
+                                    EdgeRole edgeRole = edgeLabel.getInEdgeRoles(inVertexLabel);
+                                    TreeItem<ISqlgTopologyUI> inEdgeRoleTreeItem = search(metaTopologyInEdgeRoles, edgeRole.getName());
+                                    if (inEdgeRoleTreeItem == null) {
+                                        EdgeRoleUI edgeRoleUI = new EdgeRoleUI(vertexLabelUI, null, edgeRole);
+                                        boolean success = vertexLabelUI.getInEdgeRoleUIs().add(edgeRoleUI);
+                                        LOGGER.info("addEdgeLabel edgeRole[IN] to ui {}/{}/{} with success = {}", graphGroup.getName(), inVertexLabelSchema.getName(), edgeRoleUI.getName(), success);
+                                        success = metaTopologyInEdgeRoles.getChildren().add(new TopologyTreeItem(edgeRoleUI));
+                                        LOGGER.info("addEdgeLabel edgeRole[IN] to tree {}/{}/{} with success = {}", graphGroup.getName(), inVertexLabelSchema.getName(), edgeRoleUI.getName(), success);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Schema schema = edgeLabel.getSchema();
+                TreeItem<ISqlgTopologyUI> schemaTreeItem = search(graphConfigurationTreeItem, schema.getName());
+                if (schemaTreeItem != null) {
+                    SchemaUI schemaUI = (SchemaUI) schemaTreeItem.getValue();
+                    TreeItem<ISqlgTopologyUI> metaTopologyEdgeLabels = search(schemaTreeItem, TopologyTreeItem.EDGE_LABELS);
+                    if (metaTopologyEdgeLabels != null) {
+                        TreeItem<ISqlgTopologyUI> edgeLabelTreeItem = search(metaTopologyEdgeLabels, edgeLabel.getName());
+                        if (edgeLabelTreeItem == null) {
+                            EdgeLabelUI edgeLabelUI = new EdgeLabelUI(schemaUI, edgeLabel);
+                            boolean success = schemaUI.getEdgeLabelUIS().add(edgeLabelUI);
+                            LOGGER.info("addEdgeLabel to ui {}/{}/{} with success = {}", graphGroup.getName(), schema.getName(), edgeLabelUI.getName(), success);
+                            success = metaTopologyEdgeLabels.getChildren().add(new TopologyTreeItem(edgeLabelUI));
+                            LOGGER.info("addEdgeLabel to tree {}/{}/{} with success = {}", graphGroup.getName(), schema.getName(), edgeLabelUI.getName(), success);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public void addVertexLabel(GraphGroup graphGroup, GraphConfiguration graphConfiguration, VertexLabel vertexLabel) {
-//        TreeItem<ISqlgTopologyUI> graphGroupTreeItem = search(this.topologyTreeView.getRoot(), graphGroup.getName());
-//        if (graphGroupTreeItem != null) {
-//            TreeItem<ISqlgTopologyUI> graphConfigurationTreeItem = search(graphGroupTreeItem, graphConfiguration.getName());
-//            if (graphConfigurationTreeItem != null) {
-//                TreeItem<ISqlgTopologyUI> schemaTreeItem = search(graphConfigurationTreeItem, vertexLabel.getSchema().getName());
-//                if (schemaTreeItem != null) {
-//                    SchemaUI schemaUI = (SchemaUI) schemaTreeItem.getValue();
-//                    TreeItem<ISqlgTopologyUI> metaTopologyVertexLabels = search(schemaTreeItem, "VertexLabels");
-//                    if (metaTopologyVertexLabels != null) {
-//                        TreeItem<ISqlgTopologyUI> vertexLabelTreeItem = search(metaTopologyVertexLabels, vertexLabel.getName());
-//                        if (vertexLabelTreeItem == null) {
-//                            VertexLabelUI vertexLabelUI = new VertexLabelUI(schemaUI, vertexLabel);
-//                            schemaUI.getVertexLabelUIs().add(vertexLabelUI);
-//                            metaTopologyVertexLabels.getChildren().add(new TopologyTreeItem(vertexLabelUI));
-//                        }
-//                    }
-//                }
-//            }
-//        }
+        TreeItem<ISqlgTopologyUI> graphGroupTreeItem = search(this.topologyTreeView.getRoot(), graphGroup.getName());
+        if (graphGroupTreeItem != null) {
+            TreeItem<ISqlgTopologyUI> graphConfigurationTreeItem = search(graphGroupTreeItem, graphConfiguration.getName());
+            if (graphConfigurationTreeItem != null) {
+                TreeItem<ISqlgTopologyUI> schemaTreeItem = search(graphConfigurationTreeItem, vertexLabel.getSchema().getName());
+                if (schemaTreeItem != null) {
+                    SchemaUI schemaUI = (SchemaUI) schemaTreeItem.getValue();
+                    TreeItem<ISqlgTopologyUI> metaTopologyVertexLabels = search(schemaTreeItem, TopologyTreeItem.VERTEX_LABELS);
+                    if (metaTopologyVertexLabels != null) {
+                        TreeItem<ISqlgTopologyUI> vertexLabelTreeItem = search(metaTopologyVertexLabels, vertexLabel.getName());
+                        if (vertexLabelTreeItem == null) {
+                            VertexLabelUI vertexLabelUI = new VertexLabelUI(schemaUI, vertexLabel);
+                            boolean success = metaTopologyVertexLabels.getChildren().add(new TopologyTreeItem(vertexLabelUI));
+                            LOGGER.info("addVertexLabel to tree {}/{}/{} with success = {}", graphGroup.getName(), vertexLabel.getSchema().getName(), vertexLabel.getName(), success);
+                            success = schemaUI.getVertexLabelUIs().add(vertexLabelUI);
+                            LOGGER.info("addVertexLabel to table {}/{}/{} with success = {}", graphGroup.getName(), vertexLabel.getSchema().getName(), vertexLabel.getName(), success);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public void deleteSchema(GraphGroup graphGroup, GraphConfiguration graphConfiguration, Schema schema) {
@@ -354,7 +459,68 @@ public class LeftPaneController {
             if (graphConfigurationTreeItem != null) {
                 TreeItem<ISqlgTopologyUI> schemaTreeItem = search(graphConfigurationTreeItem, schema.getName());
                 if (schemaTreeItem != null) {
-                    schemaTreeItem.getParent().getChildren().remove(schemaTreeItem);
+                    boolean success = schemaTreeItem.getParent().getChildren().remove(schemaTreeItem);
+                    LOGGER.info("deleteSchema from tree {}/{} with success = {}", graphGroup.getName(), schema.getName(), success);
+                }
+            }
+        }
+    }
+
+    public void removeOldAddUpdatedPropertyColumn(
+            boolean beforeCommit,
+            GraphGroup graphGroup,
+            GraphConfiguration graphConfiguration,
+            Schema schema,
+            AbstractLabel abstractLabel,
+            PropertyColumn oldPropertyColumn,
+            PropertyColumn propertyColumn) {
+
+        TreeItem<ISqlgTopologyUI> graphGroupTreeItem = search(this.topologyTreeView.getRoot(), graphGroup.getName());
+        if (graphGroupTreeItem != null) {
+            TreeItem<ISqlgTopologyUI> graphConfigurationTreeItem = search(graphGroupTreeItem, graphConfiguration.getName());
+            if (graphConfigurationTreeItem != null) {
+                TreeItem<ISqlgTopologyUI> schemaTreeItem = search(graphConfigurationTreeItem, schema.getName());
+                if (schemaTreeItem != null) {
+                    TreeItem<ISqlgTopologyUI> abstractLabelTreeItem = search(schemaTreeItem, abstractLabel.getName());
+                    if (abstractLabelTreeItem != null) {
+                        TreeItem<ISqlgTopologyUI> metaTopologyPropertyColumns = search(abstractLabelTreeItem, TopologyTreeItem.PROPERTY_COLUMNS);
+                        if (metaTopologyPropertyColumns != null) {
+                            ISqlgTopologyUI sqlgTopologyUI = abstractLabelTreeItem.getValue();
+                            TreeItem<ISqlgTopologyUI> propertyColumnTreeItem = search(metaTopologyPropertyColumns, oldPropertyColumn.getName());
+                            if (propertyColumnTreeItem != null) {
+                                PropertyColumnUI oldPropertyColumnUI = (PropertyColumnUI) propertyColumnTreeItem.getValue();
+                                PropertyColumnUI propertyColumnUI;
+                                if (sqlgTopologyUI instanceof VertexLabelUI) {
+                                    propertyColumnUI = new PropertyColumnUI((VertexLabelUI) sqlgTopologyUI, null, propertyColumn);
+                                } else {
+                                    assert sqlgTopologyUI instanceof EdgeLabelUI;
+                                    propertyColumnUI = new PropertyColumnUI(null, (EdgeLabelUI) sqlgTopologyUI, propertyColumn);
+                                }
+
+                                //get the selected item here before removing and adding the propertyColumnUi
+                                ISqlgTopologyUI sqlgTopologyUI1 = this.topologyTreeView.getSelectionModel().getSelectedItem().getValue();
+                                
+                                metaTopologyPropertyColumns.getChildren().remove(propertyColumnTreeItem);
+                                boolean success = metaTopologyPropertyColumns.getChildren().add(new TopologyTreeItem(propertyColumnUI));
+                                LOGGER.info("refreshPropertyColumn to tree {}/{}/{}/{} with success = {}", graphGroup.getName(), abstractLabel.getSchema().getName(), abstractLabel.getName(), propertyColumn.getName(), success);
+                                if (sqlgTopologyUI instanceof VertexLabelUI) {
+                                    success = propertyColumnUI.getVertexLabelUI().getPropertyColumnUIs().remove(oldPropertyColumnUI);
+                                    success = propertyColumnUI.getVertexLabelUI().getPropertyColumnUIs().add(propertyColumnUI);
+                                } else {
+                                    success = propertyColumnUI.getEdgeLabelUI().getPropertyColumnUIs().remove(oldPropertyColumnUI);
+                                    success = propertyColumnUI.getEdgeLabelUI().getPropertyColumnUIs().add(propertyColumnUI);
+                                }
+                                LOGGER.info("refreshPropertyColumn to model {}/{}/{}/{} with success = {}", graphGroup.getName(), abstractLabel.getSchema().getName(), abstractLabel.getName(), propertyColumn.getName(), success);
+
+                                //if the current selected item the property, then select it again.
+                                //remove and adding it to the tree remove it as the selected item, so we will select it again.
+                                //only select the graphConfiguration making the update, i.e. beforeCommit = true
+                                if (beforeCommit && sqlgTopologyUI1 instanceof PropertyColumnUI) {
+                                    propertyColumnUI.selectInTree(propertyColumn.getName());
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -391,10 +557,14 @@ public class LeftPaneController {
             if (graphConfigurationTreeItem != null) {
                 TreeItem<ISqlgTopologyUI> schemaTreeItem = search(graphConfigurationTreeItem, schema.getName());
                 if (schemaTreeItem != null) {
+                    SchemaUI schemaUI = (SchemaUI) schemaTreeItem.getValue();
                     TreeItem<ISqlgTopologyUI> vertexLabelTreeItem = search(schemaTreeItem, vertexLabel.getName());
                     if (vertexLabelTreeItem != null) {
                         boolean success = vertexLabelTreeItem.getParent().getChildren().remove(vertexLabelTreeItem);
-                        LOGGER.info("deleted {}/{}/{} with success = {}", graphGroup.getName(), schema.getName(), vertexLabel.getName(), success);
+                        LOGGER.info("deleteVertexLabel from tree {}/{}/{} with success = {}", graphGroup.getName(), schema.getName(), vertexLabel.getName(), success);
+                        VertexLabelUI vertexLabelUI = (VertexLabelUI) vertexLabelTreeItem.getValue();
+                        success = schemaUI.getVertexLabelUIs().remove(vertexLabelUI);
+                        LOGGER.info("deleteVertexLabel from table {}/{}/{} with success = {}", graphGroup.getName(), schema.getName(), vertexLabel.getName(), success);
                     }
                 }
             }
@@ -404,10 +574,10 @@ public class LeftPaneController {
     public void deleteEdgeRole(
             GraphGroup graphGroup,
             GraphConfiguration graphConfiguration,
+            Schema schema,
             EdgeRole edgeRole,
             Direction direction) {
 
-        Schema schema = edgeRole.getVertexLabel().getSchema();
         TreeItem<ISqlgTopologyUI> graphGroupTreeItem = search(this.topologyTreeView.getRoot(), graphGroup.getName());
         if (graphGroupTreeItem != null) {
             TreeItem<ISqlgTopologyUI> graphConfigurationTreeItem = search(graphGroupTreeItem, graphConfiguration.getName());
@@ -431,16 +601,46 @@ public class LeftPaneController {
                                     EdgeRoleUI edgeRoleUI = (EdgeRoleUI) edgeRoleTreeItem.getValue();
                                     if (direction == Direction.OUT) {
                                         boolean success = vertexLabelUI.getOutEdgeRoleUIs().remove(edgeRoleUI);
-                                        LOGGER.debug("deleteEdgeRole[out] from ui model with {}/{}/{}/{}/{} with {}", graphGroup.getName(), graphConfiguration.getName(), schema.getName(), vertexLabelUI.getName(), edgeRole.getName(), success);
+                                        LOGGER.debug("deleteEdgeRole[{}] from ui model with {}/{}/{}/{}/{} with {}", direction.name(), graphGroup.getName(), graphConfiguration.getName(), schema.getName(), vertexLabelUI.getName(), edgeRole.getName(), success);
                                     } else {
                                         boolean success = vertexLabelUI.getInEdgeRoleUIs().remove(edgeRoleUI);
-                                        LOGGER.debug("deleteEdgeRole[in] from ui model with {}/{}/{}/{}/{} with {}", graphGroup.getName(), graphConfiguration.getName(), schema.getName(), vertexLabelUI.getName(), edgeRole.getName(), success);
+                                        LOGGER.debug("deleteEdgeRole[{}] from ui model with {}/{}/{}/{}/{} with {}", direction.name(), graphGroup.getName(), graphConfiguration.getName(), schema.getName(), vertexLabelUI.getName(), edgeRole.getName(), success);
                                     }
                                     boolean success = metaTopologyEdgeRoleTreeItem.getChildren().remove(edgeRoleTreeItem);
                                     LOGGER.debug("deleteEdgeRole[{}] from tree {}/{}/{}/{}/{} with {}", direction.name(), graphGroup.getName(), graphConfiguration.getName(), schema.getName(), vertexLabelUI.getName(), edgeRole.getName(), success);
                                 }
                             }
                         }
+                    }
+                    TreeItem<ISqlgTopologyUI> metaTopologyEdgeLabelsTreeItem = search(schemaTreeItem, TopologyTreeItem.EDGE_LABELS);
+                    if (metaTopologyEdgeLabelsTreeItem != null) {
+                        TreeItem<ISqlgTopologyUI> edgeLabelTreeItem = search(metaTopologyEdgeLabelsTreeItem, edgeRole.getEdgeLabel().getName());
+                        if (edgeLabelTreeItem != null) {
+                            EdgeLabelUI edgeLabelUI = (EdgeLabelUI) edgeLabelTreeItem.getValue();
+
+                            TreeItem<ISqlgTopologyUI> metaTopologyEdgeRoleTreeItem;
+                            if (direction == Direction.OUT) {
+                                metaTopologyEdgeRoleTreeItem = search(edgeLabelTreeItem, TopologyTreeItem.OUT_EDGE_ROLES);
+                            } else {
+                                metaTopologyEdgeRoleTreeItem = search(edgeLabelTreeItem, TopologyTreeItem.IN_EDGE_ROLES);
+                            }
+                            if (metaTopologyEdgeRoleTreeItem != null) {
+                                TreeItem<ISqlgTopologyUI> edgeRoleTreeItem = search(metaTopologyEdgeRoleTreeItem, edgeRole.getName());
+                                if (edgeRoleTreeItem != null) {
+                                    EdgeRoleUI edgeRoleUI = (EdgeRoleUI) edgeRoleTreeItem.getValue();
+                                    if (direction == Direction.OUT) {
+                                        boolean success = edgeLabelUI.getOutEdgeRoleUIs().remove(edgeRoleUI);
+                                        LOGGER.debug("deleteEdgeRole[{}] from ui model with {}/{}/{}/{}/{} with {}", direction.name(), graphGroup.getName(), graphConfiguration.getName(), schema.getName(), edgeLabelUI.getName(), edgeRole.getName(), success);
+                                    } else {
+                                        boolean success = edgeLabelUI.getInEdgeRoleUIs().remove(edgeRoleUI);
+                                        LOGGER.debug("deleteEdgeRole[{}] from ui model with {}/{}/{}/{}/{} with {}", direction.name(), graphGroup.getName(), graphConfiguration.getName(), schema.getName(), edgeLabelUI.getName(), edgeRole.getName(), success);
+                                    }
+                                    boolean success = metaTopologyEdgeRoleTreeItem.getChildren().remove(edgeRoleTreeItem);
+                                    LOGGER.debug("deleteEdgeRole[{}] from tree {}/{}/{}/{}/{} with {}", direction.name(), graphGroup.getName(), graphConfiguration.getName(), schema.getName(), edgeLabelUI.getName(), edgeRole.getName(), success);
+                                }
+                            }
+                        }
+
                     }
                 }
             }
@@ -479,26 +679,41 @@ public class LeftPaneController {
             EdgeLabel edgeLabel,
             PropertyColumn propertyColumn) {
 
+        assert (vertexLabel != null && edgeLabel == null) || (vertexLabel == null && edgeLabel != null);
         TreeItem<ISqlgTopologyUI> graphGroupTreeItem = search(this.topologyTreeView.getRoot(), graphGroup.getName());
         if (graphGroupTreeItem != null) {
             TreeItem<ISqlgTopologyUI> graphConfigurationTreeItem = search(graphGroupTreeItem, graphConfiguration.getName());
             if (graphConfigurationTreeItem != null) {
                 TreeItem<ISqlgTopologyUI> schemaTreeItem = search(graphConfigurationTreeItem, schema.getName());
                 if (schemaTreeItem != null) {
-                    TreeItem<ISqlgTopologyUI> vertexLabelTreeItem = search(schemaTreeItem, vertexLabel.getName());
-                    if (vertexLabelTreeItem != null) {
-                        if (edgeLabel != null) {
-                            TreeItem<ISqlgTopologyUI> edgeLabelTreeItem = search(vertexLabelTreeItem, edgeLabel.getName());
-                            if (edgeLabelTreeItem != null) {
-                                TreeItem<ISqlgTopologyUI> propertyColumnTreeItem = search(vertexLabelTreeItem, propertyColumn.getName());
-                                if (propertyColumnTreeItem != null) {
-                                    propertyColumnTreeItem.getParent().getChildren().remove(propertyColumnTreeItem);
-                                }
-                            }
-                        } else {
-                            TreeItem<ISqlgTopologyUI> propertyColumnTreeItem = search(vertexLabelTreeItem, propertyColumn.getName());
+                    if (edgeLabel != null) {
+                        TreeItem<ISqlgTopologyUI> edgeLabelTreeItem = search(schemaTreeItem, edgeLabel.getName());
+                        if (edgeLabelTreeItem != null) {
+                            TreeItem<ISqlgTopologyUI> propertyColumnTreeItem = search(edgeLabelTreeItem, propertyColumn.getName());
                             if (propertyColumnTreeItem != null) {
+                                PropertyColumnUI propertyColumnUI = (PropertyColumnUI) propertyColumnTreeItem.getValue();
+                                propertyColumnUI.getEdgeLabelUI().getPropertyColumnUIs().remove(propertyColumnUI);
                                 propertyColumnTreeItem.getParent().getChildren().remove(propertyColumnTreeItem);
+                            }
+                        }
+                    } else {
+                        TreeItem<ISqlgTopologyUI> vertexLabelTreeItem = search(schemaTreeItem, vertexLabel.getName());
+                        if (vertexLabelTreeItem != null) {
+                            TreeItem<ISqlgTopologyUI> metaPropertyColumnsTreeItem = search(vertexLabelTreeItem, TopologyTreeItem.PROPERTY_COLUMNS);
+                            if (metaPropertyColumnsTreeItem != null) {
+                                //we do not use the regular search here as the PropertyColumnUI's name has already been changed but the edit.
+                                Set<TreeItem<ISqlgTopologyUI>> toRemove = new HashSet<>();
+                                for (TreeItem<ISqlgTopologyUI> propertyColumnTreeItem : metaPropertyColumnsTreeItem.getChildren()) {
+                                    PropertyColumnUI propertyColumnUI = (PropertyColumnUI) propertyColumnTreeItem.getValue();
+                                    if (propertyColumnUI.getPropertyColumn().getName().equals(propertyColumn.getName())) {
+                                        toRemove.add(propertyColumnTreeItem);
+                                        propertyColumnUI.getVertexLabelUI().getPropertyColumnUIs().remove(propertyColumnUI);
+                                    }
+                                }
+                                for (TreeItem<ISqlgTopologyUI> iSqlgTopologyUITreeItem : toRemove) {
+                                    metaPropertyColumnsTreeItem.getChildren().remove(iSqlgTopologyUITreeItem);
+
+                                }
                             }
                         }
                     }
@@ -553,12 +768,12 @@ public class LeftPaneController {
         return null;
     }
 
-    private final class TextFieldTreeCellImpl extends TreeCell<ISqlgTopologyUI> {
+    private final class SqlgTreeCellImpl extends TreeCell<ISqlgTopologyUI> {
 
         private TextField textField;
         private final ProgressBar progressBar = new ProgressBar();
 
-        public TextFieldTreeCellImpl() {
+        public SqlgTreeCellImpl() {
             super();
         }
 
@@ -607,6 +822,36 @@ public class LeftPaneController {
                     if (treeItem instanceof GraphConfigurationTreeItem graphConfigurationTreeItem && graphConfigurationTreeItem.isLoading()) {
                         setText(null);
                         setGraphic(this.progressBar);
+                    } else if (treeItem instanceof GraphConfigurationTreeItem graphConfigurationTreeItem) {
+                        GraphConfiguration graphConfiguration = (GraphConfiguration) graphConfigurationTreeItem.getValue();
+
+                        GlyphFont fontAwesome = GlyphFontRegistry.font("FontAwesome");
+                        Button close = new Button();
+                        close.disableProperty().bind(Bindings.createBooleanBinding(() -> !graphConfiguration.isOpen(), graphConfiguration.sqlgGraphOpenPropertyProperty()));
+                        Glyph closeGlyph = fontAwesome.create(FontAwesome.Glyph.CLOSE).size(12);
+                        close.setGraphic(closeGlyph);
+                        Button refresh = new Button();
+                        refresh.disableProperty().bind(Bindings.createBooleanBinding(() -> !graphConfiguration.isOpen(), graphConfiguration.sqlgGraphOpenPropertyProperty()));
+                        Glyph refreshGlyph = fontAwesome.create(FontAwesome.Glyph.REFRESH).size(12);
+                        refresh.setGraphic(refreshGlyph);
+                        HBox hBox = new HBox();
+                        hBox.setSpacing(2);
+                        Insets insets = new Insets(2, 6, 2, 6);
+                        refresh.setPadding(insets);
+                        close.setPadding(insets);
+                        hBox.getChildren().addAll(close, refresh);
+                        setGraphic(hBox);
+                        setText(getItem().getName());
+                        close.setOnAction(event -> {
+                            graphConfiguration.closeSqlgGraph();
+                            graphConfigurationTreeItem.closeGraph();
+                            graphConfigurationTreeItem.setExpanded(false);
+                        });
+                        refresh.setOnAction(event -> {
+                            graphConfiguration.refreshSqlgGraph();
+                            graphConfigurationTreeItem.refreshGraph();
+                            graphConfigurationTreeItem.setExpanded(false);
+                        });
                     } else {
                         setText(getItem().getName());
                         setGraphic(getTreeItem().getGraphic());
@@ -629,6 +874,57 @@ public class LeftPaneController {
                 }
             });
         }
-
     }
+
+    public void selectPropertyColumn(GraphGroup graphGroup, GraphConfiguration graphConfiguration, Schema schema, AbstractLabel abstractLabel, String propertyColumnName) {
+        TreeItem<ISqlgTopologyUI> graphGroupTreeItem = search(this.topologyTreeView.getRoot(), graphGroup.getName());
+        if (graphGroupTreeItem != null) {
+            TreeItem<ISqlgTopologyUI> graphConfigurationTreeItem = search(graphGroupTreeItem, graphConfiguration.getName());
+            if (graphConfigurationTreeItem != null) {
+                TreeItem<ISqlgTopologyUI> schemaTreeItem = search(graphConfigurationTreeItem, schema.getName());
+                if (schemaTreeItem != null) {
+                    TreeItem<ISqlgTopologyUI> abstractLabelTreeItem = search(schemaTreeItem, abstractLabel.getName());
+                    if (abstractLabelTreeItem != null) {
+                        TreeItem<ISqlgTopologyUI> propertyColumnTreeItem = search(abstractLabelTreeItem, propertyColumnName);
+                        if (propertyColumnTreeItem != null) {
+                            this.topologyTreeView.getSelectionModel().select(propertyColumnTreeItem);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public void selectVertexLabel(GraphGroup graphGroup, GraphConfiguration graphConfiguration, Schema schema, String vertexLabelName) {
+        TreeItem<ISqlgTopologyUI> graphGroupTreeItem = search(this.topologyTreeView.getRoot(), graphGroup.getName());
+        if (graphGroupTreeItem != null) {
+            TreeItem<ISqlgTopologyUI> graphConfigurationTreeItem = search(graphGroupTreeItem, graphConfiguration.getName());
+            if (graphConfigurationTreeItem != null) {
+                TreeItem<ISqlgTopologyUI> schemaTreeItem = search(graphConfigurationTreeItem, schema.getName());
+                if (schemaTreeItem != null) {
+                    TreeItem<ISqlgTopologyUI> vertexLabelTreeItem = search(schemaTreeItem, vertexLabelName);
+                    if (vertexLabelTreeItem != null) {
+                        this.topologyTreeView.getSelectionModel().select(vertexLabelTreeItem);
+                    }
+                }
+            }
+        }
+    }
+
+    public void selectEdgeLabel(GraphGroup graphGroup, GraphConfiguration graphConfiguration, Schema schema, String edgeLabelName) {
+        TreeItem<ISqlgTopologyUI> graphGroupTreeItem = search(this.topologyTreeView.getRoot(), graphGroup.getName());
+        if (graphGroupTreeItem != null) {
+            TreeItem<ISqlgTopologyUI> graphConfigurationTreeItem = search(graphGroupTreeItem, graphConfiguration.getName());
+            if (graphConfigurationTreeItem != null) {
+                TreeItem<ISqlgTopologyUI> schemaTreeItem = search(graphConfigurationTreeItem, schema.getName());
+                if (schemaTreeItem != null) {
+                    TreeItem<ISqlgTopologyUI> edgeLabelTreeItem = search(schemaTreeItem, edgeLabelName);
+                    if (edgeLabelTreeItem != null) {
+                        this.topologyTreeView.getSelectionModel().select(edgeLabelTreeItem);
+                    }
+                }
+            }
+        }
+    }
+
 }

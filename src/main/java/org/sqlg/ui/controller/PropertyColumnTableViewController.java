@@ -8,21 +8,19 @@ import javafx.scene.control.Alert;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.controlsfx.control.ToggleSwitch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.sqlg.ui.model.EdgeLabelUI;
+import org.sqlg.ui.model.PropertyColumnUI;
 import org.sqlg.ui.model.VertexLabelUI;
 
-public class PropertyTableViewController extends BaseController {
+public class PropertyColumnTableViewController extends BaseController {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(PropertyTableViewController.class);
     protected final ToggleSwitch editToggleSwitch;
     protected final LeftPaneController leftPaneController;
     protected final VBox root;
     private final VertexLabelUI vertexLabelUI;
     private final EdgeLabelUI edgeLabelUI;
 
-    public PropertyTableViewController(
+    public PropertyColumnTableViewController(
             LeftPaneController leftPaneController,
             VertexLabelUI vertexLabelUI,
             EdgeLabelUI edgeLabelUI
@@ -46,14 +44,48 @@ public class PropertyTableViewController extends BaseController {
         editBox.getChildren().addAll(editToggleSwitch);
 
         this.root.getChildren().add(editBox);
+        init(vertexLabelUI, edgeLabelUI);
+    }
+
+    private void init(VertexLabelUI vertexLabelUI, EdgeLabelUI edgeLabelUI) {
+        Node propertiesTableView;
         if (vertexLabelUI != null) {
-            Node propertiesTableView = ControllerUtil.propertyColumnsTableView(
+            propertiesTableView = ControllerUtil.propertyColumnsTableView(
                     vertexLabelUI.getPropertyColumnUIs(),
                     editToggleSwitch.selectedProperty(),
                     event -> ControllerUtil.savePropertyColumns(
                             vertexLabelUI.getSchemaUI().getGraphConfiguration().getSqlgGraph(),
-                            vertexLabelUI.getVertexLabel(),
                             vertexLabelUI.getPropertyColumnUIs(),
+                            result -> {
+                                assert result : "expected true";
+                                showDialog(
+                                        Alert.AlertType.INFORMATION,
+                                        "Success",
+                                        "Saved PropertyColumns"
+                                );
+                                return null;
+                            },
+                            exception -> {
+                                showDialog(
+                                        Alert.AlertType.ERROR,
+                                        "Error",
+                                        "Failed to save PropertyColumns",
+                                        exception,
+                                        result -> cancel()
+                                );
+                                return null;
+                            }
+                    ),
+                    event -> cancel()
+            );
+            this.root.getChildren().add(propertiesTableView);
+        } else {
+            propertiesTableView = ControllerUtil.propertyColumnsTableView(
+                    edgeLabelUI.getPropertyColumnUIs(),
+                    editToggleSwitch.selectedProperty(),
+                    event -> ControllerUtil.savePropertyColumns(
+                            edgeLabelUI.getSchemaUI().getGraphConfiguration().getSqlgGraph(),
+                            edgeLabelUI.getPropertyColumnUIs(),
                             result -> {
                                 assert result : "expected true";
                                 showDialog(
@@ -77,23 +109,22 @@ public class PropertyTableViewController extends BaseController {
                     event -> cancel()
             );
             this.root.getChildren().add(propertiesTableView);
-        } else {
-            Node propertiesTableView = ControllerUtil.propertyColumnsTableView(
-                    edgeLabelUI.getPropertyColumnUIs(),
-                    editToggleSwitch.selectedProperty(),
-                    event -> save(),
-                    event -> cancel()
-            );
-            this.root.getChildren().add(propertiesTableView);
         }
     }
 
-    private void save() {
-
-    }
-
     private void cancel() {
-
+        if (this.vertexLabelUI != null) {
+            for (PropertyColumnUI propertyColumnUI : this.vertexLabelUI.getPropertyColumnUIs()) {
+                propertyColumnUI.reset();
+            }
+            this.vertexLabelUI.getSchemaUI().getGraphConfiguration().getSqlgGraph().tx().rollback();
+        }
+        if (this.edgeLabelUI != null) {
+            for (PropertyColumnUI propertyColumnUI : this.edgeLabelUI.getPropertyColumnUIs()) {
+                propertyColumnUI.reset();
+            }
+            this.edgeLabelUI.getSchemaUI().getGraphConfiguration().getSqlgGraph().tx().rollback();
+        }
     }
 
     public Parent getView() {

@@ -6,28 +6,43 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import org.umlg.sqlg.structure.topology.EdgeLabel;
-import org.umlg.sqlg.structure.topology.Index;
-import org.umlg.sqlg.structure.topology.Partition;
-import org.umlg.sqlg.structure.topology.PropertyColumn;
+import org.umlg.sqlg.structure.topology.*;
 
 public final class EdgeLabelUI implements ISqlgTopologyUI {
 
     private final SchemaUI schemaUI;
     private final SimpleObjectProperty<EdgeLabel> edgeLabel;
-    private final SimpleStringProperty name;
-    private final ObservableList<PropertyColumnUI> propertyColumnUIs;
-    private final ObservableList<PartitionUI> partitionUIs;
-    private final ObservableList<IndexUI> indexUIs;
-    private final SimpleBooleanProperty delete;
+    private SimpleStringProperty name;
+    private ObservableList<PropertyColumnUI> propertyColumnUIs;
+    private ObservableList<EdgeRoleUI> outEdgeRoleUIs;
+    private ObservableList<EdgeRoleUI> inEdgeRoleUIs;
+    private ObservableList<PartitionUI> partitionUIs;
+    private ObservableList<IndexUI> indexUIs;
+    private SimpleBooleanProperty delete;
 
     public EdgeLabelUI(SchemaUI schemaUI, EdgeLabel edgeLabel) {
         this.schemaUI = schemaUI;
         this.edgeLabel = new SimpleObjectProperty<>(edgeLabel);
+        init(edgeLabel);
+    }
+
+    public void refresh() {
+        init(this.edgeLabel.get());
+    }
+
+    private void init(EdgeLabel edgeLabel) {
         this.name = new SimpleStringProperty(edgeLabel.getName());
         this.propertyColumnUIs = FXCollections.observableArrayList();
         for (PropertyColumn propertyColumn : edgeLabel.getProperties().values()) {
             this.propertyColumnUIs.add(new PropertyColumnUI(null, this, propertyColumn));
+        }
+        this.outEdgeRoleUIs = FXCollections.observableArrayList();
+        for (EdgeRole outEdgeRole : edgeLabel.getOutEdgeRoles()) {
+            this.outEdgeRoleUIs.add(new EdgeRoleUI(null, this, outEdgeRole));
+        }
+        this.inEdgeRoleUIs = FXCollections.observableArrayList();
+        for (EdgeRole inEdgeRole : edgeLabel.getInEdgeRoles()) {
+            this.inEdgeRoleUIs.add(new EdgeRoleUI(null, this, inEdgeRole));
         }
         this.indexUIs = FXCollections.observableArrayList();
         for (Index index : edgeLabel.getIndexes().values()) {
@@ -96,6 +111,22 @@ public final class EdgeLabelUI implements ISqlgTopologyUI {
         return partitionUIs;
     }
 
+    public ObservableList<EdgeRoleUI> getOutEdgeRoleUIs() {
+        return outEdgeRoleUIs;
+    }
+
+    public void setOutEdgeRoleUIs(ObservableList<EdgeRoleUI> outEdgeRoleUIs) {
+        this.outEdgeRoleUIs = outEdgeRoleUIs;
+    }
+
+    public ObservableList<EdgeRoleUI> getInEdgeRoleUIs() {
+        return inEdgeRoleUIs;
+    }
+
+    public void setInEdgeRoleUIs(ObservableList<EdgeRoleUI> inEdgeRoleUIs) {
+        this.inEdgeRoleUIs = inEdgeRoleUIs;
+    }
+
     @Override
     public void remove() {
         getEdgeLabel().remove();
@@ -103,5 +134,18 @@ public final class EdgeLabelUI implements ISqlgTopologyUI {
 
     public ObservableList<PropertyColumnUI> getPropertyColumnUIs() {
         return this.propertyColumnUIs;
+    }
+
+    public void selectInTree(String name) {
+        GraphConfiguration graphConfiguration = this.getSchemaUI().getGraphConfiguration();
+        GraphGroup graphGroup = graphConfiguration.getGraphGroup();
+        graphConfiguration
+                .getLeftPaneController()
+                .selectEdgeLabel(
+                        graphGroup,
+                        graphConfiguration,
+                        getSchemaUI().getSchema(),
+                        name
+                );
     }
 }

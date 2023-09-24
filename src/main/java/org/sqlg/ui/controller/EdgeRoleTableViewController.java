@@ -18,11 +18,13 @@ import org.controlsfx.control.tableview2.cell.ComboBox2TableCell;
 import org.controlsfx.control.tableview2.cell.TextField2TableCell;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sqlg.ui.TopologyTreeItem;
+import org.sqlg.ui.model.EdgeLabelUI;
 import org.sqlg.ui.model.EdgeRoleUI;
 import org.sqlg.ui.model.VertexLabelUI;
+import org.umlg.sqlg.structure.SqlgGraph;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class EdgeRoleTableViewController extends BaseController {
 
@@ -31,15 +33,19 @@ public class EdgeRoleTableViewController extends BaseController {
     protected final LeftPaneController leftPaneController;
     protected final VBox root;
     private final VertexLabelUI vertexLabelUI;
+    private final EdgeLabelUI edgeLabelUI;
     private final Direction direction;
 
     public EdgeRoleTableViewController(
             LeftPaneController leftPaneController,
             VertexLabelUI vertexLabelUI,
+            EdgeLabelUI edgeLabelUI,
             Direction direction
     ) {
         super(leftPaneController.getPrimaryController().getStage());
+        assert (vertexLabelUI != null && edgeLabelUI == null) || (vertexLabelUI == null && edgeLabelUI != null);
         this.vertexLabelUI = vertexLabelUI;
+        this.edgeLabelUI = edgeLabelUI;
         this.direction = direction;
 
         this.leftPaneController = leftPaneController;
@@ -117,9 +123,17 @@ public class EdgeRoleTableViewController extends BaseController {
         tableView.getColumns().addAll(nameColumn, multiplicityColumn, directionColumn, delete);
 
         if (direction == Direction.OUT) {
-            tableView.setItems(vertexLabelUI.getOutEdgeRoleUIs());
+            if (vertexLabelUI != null) {
+                tableView.setItems(vertexLabelUI.getOutEdgeRoleUIs());
+            } else {
+                tableView.setItems(edgeLabelUI.getOutEdgeRoleUIs());
+            }
         } else {
-            tableView.setItems(vertexLabelUI.getInEdgeRoleUIs());
+            if (vertexLabelUI != null) {
+                tableView.setItems(vertexLabelUI.getInEdgeRoleUIs());
+            } else {
+                tableView.setItems(edgeLabelUI.getInEdgeRoleUIs());
+            }
         }
 
         ButtonBar buttonBar = new ButtonBar();
@@ -132,20 +146,116 @@ public class EdgeRoleTableViewController extends BaseController {
         VBox vBox = new VBox(5, tableView, buttonBar);
         vBox.setPadding(new Insets(0, 0, 5, 0));
         VBox.setVgrow(buttonBar, Priority.NEVER);
+        VBox.setVgrow(tableView, Priority.ALWAYS);
+        VBox.setVgrow(vBox, Priority.ALWAYS);
 
         save.disableProperty().bind(Bindings.createBooleanBinding(() -> !this.editToggleSwitch.selectedProperty().get(), this.editToggleSwitch.selectedProperty()));
         save.setOnAction(x -> {
-
+            doSave(tableView);
         });
         cancel.setOnAction(x -> {
-
+            doCancel(tableView);
         });
-        TitledPane titledPane = new TitledPane(direction == Direction.OUT ? TopologyTreeItem.OUT_EDGE_ROLES : TopologyTreeItem.IN_EDGE_ROLES, vBox);
-        this.root.getChildren().add(titledPane);
+        this.root.getChildren().add(vBox);
     }
 
-    private void save() {
+    private void doCancel(TableView<EdgeRoleUI> tableView) {
+        if (this.vertexLabelUI != null) {
+            this.vertexLabelUI.refresh();
+            if (direction == Direction.OUT) {
+                tableView.setItems(vertexLabelUI.getOutEdgeRoleUIs());
+            } else {
+                tableView.setItems(vertexLabelUI.getInEdgeRoleUIs());
+            }
 
+        } else {
+            this.edgeLabelUI.refresh();
+            if (direction == Direction.OUT) {
+                tableView.setItems(edgeLabelUI.getOutEdgeRoleUIs());
+            } else {
+                tableView.setItems(edgeLabelUI.getInEdgeRoleUIs());
+            }
+        }
+    }
+
+    private void doSave(TableView<EdgeRoleUI> tableView) {
+        if (this.vertexLabelUI != null) {
+            SqlgGraph sqlgGraph = this.vertexLabelUI.getSchemaUI().getGraphConfiguration().getSqlgGraph();
+            List<EdgeRoleUI> edgeRoleUISToDelete = this.direction == Direction.OUT ?
+                    this.vertexLabelUI.getOutEdgeRoleUIs().stream().filter(EdgeRoleUI::isDelete).toList() :
+                    this.vertexLabelUI.getInEdgeRoleUIs().stream().filter(EdgeRoleUI::isDelete).toList();
+            String description = edgeRoleUISToDelete.stream()
+                    .map(edgeRoleUI -> edgeRoleUI.getEdgeRole().getName())
+                    .reduce((a,b) -> a + ", " + b).orElse("");
+            try {
+                for (EdgeRoleUI edgeRoleUI : edgeRoleUISToDelete) {
+                    if (edgeRoleUI.isDelete()) {
+                        if (this.direction == Direction.OUT) {
+                            this.vertexLabelUI.getOutEdgeRoleUIs().remove(edgeRoleUI);
+                        } else {
+                            this.vertexLabelUI.getInEdgeRoleUIs().remove(edgeRoleUI);
+                        }
+                        edgeRoleUI.getEdgeRole().remove();
+                    }
+                }
+                sqlgGraph.tx().commit();
+                showDialog(
+                        Alert.AlertType.INFORMATION,
+                        "Success",
+                        "Deleted EdgeRoles '" + description + "'"
+                );
+            } catch (Exception e) {
+                LOGGER.error(e.getMessage(), e);
+                sqlgGraph.tx().rollback();
+                showDialog(
+                        Alert.AlertType.ERROR,
+                        "Error",
+                        "Failed to delete EdgeRoles '" + description + "'",
+                        e,
+                        result -> doCancel(tableView)
+                );
+            } finally {
+                sqlgGraph.tx().rollback();
+            }
+        } else {
+            SqlgGraph sqlgGraph = this.edgeLabelUI.getSchemaUI().getGraphConfiguration().getSqlgGraph();
+            List<EdgeRoleUI> edgeRoleUISToDelete = this.direction == Direction.OUT ?
+                    this.edgeLabelUI.getOutEdgeRoleUIs().stream().filter(EdgeRoleUI::isDelete).toList() :
+                    this.edgeLabelUI.getInEdgeRoleUIs().stream().filter(EdgeRoleUI::isDelete).toList();
+            String description = edgeRoleUISToDelete.stream()
+                    .map(edgeRoleUI -> edgeRoleUI.getEdgeRole().getName())
+                    .reduce((a,b) -> a + ", " + b).orElse("");
+            try {
+                for (EdgeRoleUI edgeRoleUI : edgeRoleUISToDelete) {
+                    if (edgeRoleUI.isDelete()) {
+                        if (this.direction == Direction.OUT) {
+                            this.edgeLabelUI.getOutEdgeRoleUIs().remove(edgeRoleUI);
+                        } else {
+                            this.edgeLabelUI.getInEdgeRoleUIs().remove(edgeRoleUI);
+                        }
+                        edgeRoleUI.getEdgeRole().remove();
+                    }
+                }
+                sqlgGraph.tx().commit();
+                showDialog(
+                        Alert.AlertType.INFORMATION,
+                        "Success",
+                        "Deleted EdgeRoles '" + description + "'"
+                );
+            } catch (Exception e) {
+                LOGGER.error(e.getMessage(), e);
+                sqlgGraph.tx().rollback();
+                showDialog(
+                        Alert.AlertType.ERROR,
+                        "Error",
+                        "Failed to delete EdgeRoles '" + description + "'",
+                        e,
+                        result -> doCancel(tableView)
+                );
+            } finally {
+                sqlgGraph.tx().rollback();
+            }
+        }
     }
 
     private void cancel() {

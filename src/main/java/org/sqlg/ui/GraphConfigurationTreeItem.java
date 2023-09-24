@@ -95,4 +95,16 @@ public class GraphConfigurationTreeItem extends TreeItem<ISqlgTopologyUI> {
         return childrenLoadedStatus == ChildrenLoadedStatus.LOADING;
     }
 
+    public void refreshGraph() {
+        getChildren().clear();
+        this.isFirstTimeChildren = true;
+    }
+
+    public void closeGraph() {
+        getChildren().clear();
+        this.isGraphOpened = false;
+        this.isGraphOpening = false;
+        this.isFirstTimeChildren = true;
+    }
+
 }
