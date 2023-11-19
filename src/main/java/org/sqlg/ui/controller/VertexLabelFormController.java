@@ -1,14 +1,17 @@
 package org.sqlg.ui.controller;
 
 import javafx.application.Platform;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sqlg.ui.model.ISqlgTopologyUI;
-import org.sqlg.ui.model.VertexLabelUI;
+import org.sqlg.ui.model.*;
 import org.umlg.sqlg.structure.SqlgGraph;
 import org.umlg.sqlg.structure.topology.VertexLabel;
 
@@ -50,7 +53,17 @@ public class VertexLabelFormController extends AbstractLabelControllerName {
                 VertexLabel vertexLabel = this.vertexLabelUI.getVertexLabel();
                 vertexLabel.rename(this.sqlgTreeDataFormNameTxt.getText());
                 sqlgGraph.tx().commit();
-                Platform.runLater(() -> this.vertexLabelUI.selectInTree(this.sqlgTreeDataFormNameTxt.getText()));
+                Platform.runLater(() -> {
+                    SchemaUI schemaUI = this.vertexLabelUI.getSchemaUI();
+                    GraphConfiguration graphConfiguration = schemaUI.getGraphConfiguration();
+                    GraphGroup graphGroup = graphConfiguration.getGraphGroup();
+                    leftPaneController.selectVertexLabel(
+                            graphGroup,
+                            graphConfiguration,
+                            schemaUI.getSchema(),
+                            this.sqlgTreeDataFormNameTxt.getText()
+                    );
+                });
                 showDialog(
                         Alert.AlertType.INFORMATION,
                         "Success",
@@ -74,10 +87,29 @@ public class VertexLabelFormController extends AbstractLabelControllerName {
     @Override
     protected Collection<Node> additionalChildren(ISqlgTopologyUI sqlgTopologyUI) {
         VertexLabelUI vertexLabelUI = (VertexLabelUI) sqlgTopologyUI;
+
+        HBox partitionTypeHBox = new HBox(5);
+        TextField partitionTypeTextField = new TextField(vertexLabelUI.getPartitionType());
+        partitionTypeTextField.setEditable(false);
+        partitionTypeTextField.setDisable(true);
+        Label partitionTypeLabel = new Label("partitionType");
+        partitionTypeLabel.setMinWidth(TOP_LABEL_MIN_WIDTH);
+        partitionTypeHBox.setAlignment(Pos.CENTER_LEFT);
+        partitionTypeHBox.getChildren().addAll(partitionTypeLabel, partitionTypeTextField);
+
+        HBox partitionExpressionHBox = new HBox(5);
+        TextField partitionExpressionTextField = new TextField(vertexLabelUI.getPartitionExpression());
+        partitionExpressionTextField.setEditable(false);
+        partitionExpressionTextField.setDisable(true);
+        Label partitionExpresssionLabel = new Label("partitionExpression");
+        partitionExpresssionLabel.setMinWidth(TOP_LABEL_MIN_WIDTH);
+        partitionExpressionHBox.setAlignment(Pos.CENTER_LEFT);
+        partitionExpressionHBox.getChildren().addAll(partitionExpresssionLabel, partitionExpressionTextField);
+
         Node propertiesTableView = ControllerUtil.propertyColumnsTableView(
                 vertexLabelUI.getPropertyColumnUIs(),
                 this.editToggleSwitch.selectedProperty(),
-                event -> ControllerUtil.savePropertyColumns(
+                ignore -> ControllerUtil.savePropertyColumns(
                         getSqlgGraph(),
                         vertexLabelUI.getPropertyColumnUIs(),
                         result -> {
@@ -100,17 +132,17 @@ public class VertexLabelFormController extends AbstractLabelControllerName {
                             return null;
                         }
                 ),
-                event -> cancelPropertyColumns()
+                ignore -> cancelPropertyColumns()
         );
         VBox.setVgrow(propertiesTableView, Priority.ALWAYS);
         Node indexesTableView = ControllerUtil.indexesTableView(
                 vertexLabelUI.getIndexUIs(),
                 this.editToggleSwitch.selectedProperty(),
-                event -> saveIndexes(),
-                event -> cancelIndexes()
+                ignore -> saveIndexes(),
+                ignore -> cancelIndexes()
         );
         VBox.setVgrow(indexesTableView, Priority.ALWAYS);
-        return List.of(propertiesTableView, indexesTableView);
+        return List.of(partitionTypeHBox, partitionExpressionHBox, propertiesTableView, indexesTableView);
     }
 
 

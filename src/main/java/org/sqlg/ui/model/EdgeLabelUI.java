@@ -53,7 +53,7 @@ public final class EdgeLabelUI implements ISqlgTopologyUI {
         this.partitionUIs = FXCollections.observableArrayList();
         for (Partition partition : edgeLabel.getPartitions().values()) {
             this.partitionUIs.add(
-                    new PartitionUI(null, this, partition)
+                    new PartitionUI(this, partition)
             );
         }
         this.delete = new SimpleBooleanProperty(false);
@@ -136,16 +136,4 @@ public final class EdgeLabelUI implements ISqlgTopologyUI {
         return this.propertyColumnUIs;
     }
 
-    public void selectInTree(String name) {
-        GraphConfiguration graphConfiguration = this.getSchemaUI().getGraphConfiguration();
-        GraphGroup graphGroup = graphConfiguration.getGraphGroup();
-        graphConfiguration
-                .getLeftPaneController()
-                .selectEdgeLabel(
-                        graphGroup,
-                        graphConfiguration,
-                        getSchemaUI().getSchema(),
-                        name
-                );
-    }
 }

@@ -1,17 +1,28 @@
-.button {
-    -fx-text-fill: blue;
-}
 
-/*.titled-pane > .title {*/
-/*    -fx-border-width: 0 1 0 1;*/
-/*    -fx-border-color: red;*/
-/*    !*-fx-background-color: -fx-box-border, -fx-inner-border, -fx-body-color;*!*/
-/*    !*-fx-background-insets: 0, 1, 2;*!*/
-/*    !*-fx-background-radius: 5 5 0 0, 4 4 0 0, 3 3 0 0;*!*/
-/*    !*-fx-padding: 0.166667em 0.833333em 0.25em 0.833333em; !* 2 10 3 10 *!*!*/
+/*.root{*/
+/*    -bg-gradient: linear-gradient(from 25px 25px to 500px 300px, #a1ffce, #faffd1);*/
+/*    -hlight-gradient: linear-gradient(to bottom, #1dbbdd44, #93f9b944);*/
+
+/*    -primary: #81c48355;*/
+/*    -secondary: #375FCB;*/
+/*    -tertiary: #fcc200;*/
+/*    -tertiary-armed: #FDDD71;*/
 /*}*/
 
-.titled-pane > .content {
-    -fx-border-width: 0;
+.tree-view {
+    -fx-background-insets: 1;
     /*-fx-border-color: red;*/
+}
+
+.shadow-pane{
+    -fx-background-color: transparent;
+    -fx-padding: 10px;
+}
+
+.fontawesome {
+    -fx-font-family: "Font Awesome 6 Pro Solid";
+    /*-fx-font-family: "Font Awesome 6 Pro Thin";*/
+    -fx-font-size: 14;
+    /*-fx-background-color: red;*/
+    -fx-min-width: 15;
 }

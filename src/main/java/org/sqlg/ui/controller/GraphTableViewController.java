@@ -2,52 +2,70 @@ package org.sqlg.ui.controller;
 
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.converter.DefaultStringConverter;
 import net.synedra.validatorfx.Validator;
 import org.kordamp.ikonli.boxicons.BoxiconsRegular;
 import org.kordamp.ikonli.javafx.FontIcon;
-import org.sqlg.ui.App;
 import org.sqlg.ui.model.GraphConfiguration;
 import org.sqlg.ui.model.GraphGroup;
 
-import java.io.IOException;
+public class GraphTableViewController extends BaseController {
 
-public class GraphTableViewController {
-
+    private final Stage stage;
     private final GraphGroup graphGroup;
-    private final LeftPaneController leftPaneController;
     private final ObservableList<GraphConfiguration> graphConfigurations;
     private GraphConfiguration selectedGraphConfiguration;
-    @FXML
-    private Button deleteGraphButton;
-    @FXML
-    private Button addGraphButton;
-    @FXML
-    private TableView<GraphConfiguration> graphTableView;
     private final Validator validator = new Validator();
+    protected final VBox root;
 
-    public GraphTableViewController(LeftPaneController leftPaneController, GraphGroup graphGroup, ObservableList<GraphConfiguration> graphConfigurations) {
-        this.leftPaneController = leftPaneController;
+    public GraphTableViewController(Stage stage, GraphGroup graphGroup, ObservableList<GraphConfiguration> graphConfigurations) {
+        super(stage);
+        this.stage = stage;
         this.graphGroup = graphGroup;
         this.graphConfigurations = graphConfigurations;
+        this.root = new VBox(10);
+        this.root.setPadding(new Insets(10, 10, 10, 10));
+        this.root.setMaxHeight(Double.MAX_VALUE);
+        initialize();
     }
 
-    @FXML
     protected void initialize() {
-        this.graphTableView.setItems(this.graphConfigurations);
-        this.graphTableView.setEditable(true);
-        this.deleteGraphButton.setDisable(true);
+        TableView<GraphConfiguration> graphTableView = new TableView<>();
+        graphTableView.setItems(this.graphConfigurations);
+        graphTableView.setEditable(false);
+        graphTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_LAST_COLUMN);
 
-        TableColumn<GraphConfiguration, String> graphNameCol = new TableColumn<>("name");
-        graphNameCol.setCellValueFactory(new PropertyValueFactory<>(this.graphConfigurations.get(0).nameProperty().getName()));
+        ButtonBar buttonBar = new ButtonBar();
+        buttonBar.setPadding(new Insets(0, 5, 0, 0));
+        Button addGraphButton = new Button("Add");
+        ButtonBar.setButtonData(addGraphButton, ButtonBar.ButtonData.OK_DONE);
+        Button deleteGraphButton = new Button("Delete");
+        ButtonBar.setButtonData(deleteGraphButton, ButtonBar.ButtonData.CANCEL_CLOSE);
+        buttonBar.getButtons().addAll(addGraphButton, deleteGraphButton);
+
+        VBox vBox = new VBox(5, graphTableView, buttonBar);
+        vBox.setPadding(new Insets(0, 0, 5, 0));
+        VBox.setVgrow(buttonBar, Priority.NEVER);
+        VBox.setVgrow(graphTableView, Priority.ALWAYS);
+        VBox.setVgrow(vBox, Priority.ALWAYS);
+        this.root.getChildren().add(vBox);
+
+        deleteGraphButton.setDisable(true);
+
+        TableColumn<GraphConfiguration, String> graphNameCol = new TableColumn<>(GraphConfiguration.NAME);
+        graphNameCol.setPrefWidth(50D);
+        graphNameCol.setCellValueFactory(new PropertyValueFactory<>(GraphConfiguration.NAME));
         graphNameCol.setCellFactory(new Callback<>() {
             @Override
             public TextFieldTableCell<GraphConfiguration, String> call(TableColumn<GraphConfiguration, String> param) {
@@ -77,42 +95,26 @@ public class GraphTableViewController {
             graphConfiguration.setName(value);
         });
 
-        TableColumn<GraphConfiguration, String> urlCol = new TableColumn<>("url");
-        urlCol.setCellValueFactory(new PropertyValueFactory<>(this.graphConfigurations.get(0).urlProperty().getName()));
-        TableColumn<GraphConfiguration, String> usernameCol = new TableColumn<>("username");
-        usernameCol.setCellValueFactory(new PropertyValueFactory<>(this.graphConfigurations.get(0).usernameProperty().getName()));
-        TableColumn<GraphConfiguration, String> passwordCol = new TableColumn<>("password");
-        passwordCol.setCellValueFactory(new PropertyValueFactory<>(this.graphConfigurations.get(0).passwordProperty().getName()));
+        TableColumn<GraphConfiguration, String> urlCol = new TableColumn<>(GraphConfiguration.URL);
+        urlCol.setPrefWidth(150D);
+        urlCol.setCellValueFactory(new PropertyValueFactory<>(GraphConfiguration.URL));
+        TableColumn<GraphConfiguration, String> usernameCol = new TableColumn<>(GraphConfiguration.JDBC_USER);
+        usernameCol.setCellValueFactory(new PropertyValueFactory<>(GraphConfiguration.JDBC_USER));
+        usernameCol.setPrefWidth(50D);
         TableColumn<GraphConfiguration, GraphConfiguration.TESTED> testedCol = new TableColumn<>("");
-        testedCol.setCellValueFactory(new PropertyValueFactory<>(this.graphConfigurations.get(0).testedProperty().getName()));
+        testedCol.setCellValueFactory(new PropertyValueFactory<>(GraphConfiguration._TESTED));
 
-        this.graphTableView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+        graphTableView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
                 this.selectedGraphConfiguration = newValue;
-                this.deleteGraphButton.setDisable(false);
+                deleteGraphButton.setDisable(false);
             } else {
-                this.deleteGraphButton.setDisable(true);
+                deleteGraphButton.setDisable(true);
             }
         });
 
-        this.addGraphButton.setOnAction(event -> {
-            FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("graphConfigurationDialogPane.fxml"));
-            try {
-                fxmlLoader.setControllerFactory(controllerClass -> new GraphConfigurationDialogPaneController(
-                        this.leftPaneController,
-                        this.graphGroup,
-                        this.graphConfigurations
-                ));
-                fxmlLoader.load();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
-
-        this.deleteGraphButton.setOnAction(event -> {
-            this.graphConfigurations.remove(this.selectedGraphConfiguration);
-        });
-
+        addGraphButton.setOnAction(ignore -> new GraphConfigurationDialogController(stage, this.graphGroup));
+        deleteGraphButton.setOnAction(ignore -> this.graphGroup.remove(this.selectedGraphConfiguration));
 
         Callback<TableColumn<GraphConfiguration, GraphConfiguration.TESTED>, TableCell<GraphConfiguration, GraphConfiguration.TESTED>> cellFactory = new Callback<>() {
             @Override
@@ -176,7 +178,10 @@ public class GraphTableViewController {
         };
         testedCol.setCellFactory(cellFactory);
 
-        this.graphTableView.getColumns().setAll(graphNameCol, urlCol, usernameCol, passwordCol, testedCol);
+        graphTableView.getColumns().setAll(graphNameCol, urlCol, usernameCol, testedCol);
     }
 
+    public Parent getView() {
+        return this.root;
+    }
 }

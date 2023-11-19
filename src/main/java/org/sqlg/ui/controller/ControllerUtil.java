@@ -55,8 +55,10 @@ public class ControllerUtil {
                 if (!propertyColumnUI.isDelete() &&
                         (propertyColumnUI.getLower() != propertyColumnUI.getPropertyColumn().getPropertyDefinition().multiplicity().lower() ||
                                 propertyColumnUI.getUpper() != propertyColumnUI.getPropertyColumn().getPropertyDefinition().multiplicity().upper() ||
-                                !propertyColumnUI.getDefaultLiteral().equals(propertyColumnUI.getPropertyColumn().getPropertyDefinition().defaultLiteral()) ||
-                                !propertyColumnUI.getCheckConstraint().equals(propertyColumnUI.getPropertyColumn().getPropertyDefinition().checkConstraint()))
+                                (propertyColumnUI.getDefaultLiteral() == null && propertyColumnUI.getPropertyColumn().getPropertyDefinition().defaultLiteral() != null) ||
+                                (propertyColumnUI.getDefaultLiteral() != null && !propertyColumnUI.getDefaultLiteral().equals(propertyColumnUI.getPropertyColumn().getPropertyDefinition().defaultLiteral())) ||
+                                (propertyColumnUI.getCheckConstraint() == null && propertyColumnUI.getPropertyColumn().getPropertyDefinition().checkConstraint() != null) ||
+                                (propertyColumnUI.getCheckConstraint() != null && !propertyColumnUI.getCheckConstraint().equals(propertyColumnUI.getPropertyColumn().getPropertyDefinition().checkConstraint())))
                 ) {
                     PropertyDefinition updatedPropertyDefinition = PropertyDefinition.of(
                             PropertyType.valueOf(propertyColumnUI.getPropertyType()),
@@ -98,6 +100,11 @@ public class ControllerUtil {
         TableColumn<PropertyColumnUI, String> nameColumn = new TableColumn<>("name");
         nameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
+
+        TableColumn<PropertyColumnUI, Boolean> userDefinedIdentifierColumn = new TableColumn<>("identifiers");
+        userDefinedIdentifierColumn.setCellFactory(CheckBoxTableCell.forTableColumn(userDefinedIdentifierColumn));
+        userDefinedIdentifierColumn.setCellValueFactory(new PropertyValueFactory<>("userDefinedIdentifier"));
+        userDefinedIdentifierColumn.setEditable(false);
 
         //PropertyDefinition start
         TableColumn<PropertyColumnUI, String> propertyTypeColumn = new TableColumn<>("propertyType");
@@ -159,7 +166,7 @@ public class ControllerUtil {
         TableColumn<PropertyColumnUI, ?> propertyDefinitionColumn = new TableColumn<>("PropertyDefinition");
         propertyDefinitionColumn.getColumns().addAll(propertyTypeColumn, multiplicityColumn, defaultLiteralColumn, checkConstraintColumn);
 
-        tableView.getColumns().addAll(nameColumn, propertyDefinitionColumn, delete);
+        tableView.getColumns().addAll(nameColumn, userDefinedIdentifierColumn, propertyDefinitionColumn, delete);
 
         tableView.setItems(propertyColumnUIs);
 

@@ -5,6 +5,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -12,6 +13,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.controlsfx.control.ToggleSwitch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sqlg.ui.model.ISqlgTopologyUI;
 import org.umlg.sqlg.structure.SqlgGraph;
 
@@ -19,6 +22,8 @@ import java.util.Collection;
 
 public abstract class BaseNameFormController extends BaseController {
 
+    public static final int TOP_LABEL_MIN_WIDTH = 120;
+    private static final Logger LOGGER = LoggerFactory.getLogger(BaseNameFormController.class);
     protected final ToggleSwitch editToggleSwitch;
     protected final LeftPaneController leftPaneController;
     protected final ISqlgTopologyUI sqlgTopologyUI;
@@ -43,6 +48,7 @@ public abstract class BaseNameFormController extends BaseController {
 
         HBox nameHBox = new HBox(5);
         Label label = new Label("name");
+        label.setMinWidth(TOP_LABEL_MIN_WIDTH);
         nameHBox.setAlignment(Pos.CENTER);
 
         //Do not bind the name property as deletion happens via the old name.
@@ -68,19 +74,28 @@ public abstract class BaseNameFormController extends BaseController {
         this.root.getChildren().add(nameHBox);
         this.root.getChildren().addAll(additionalChildren(sqlgTopologyUI));
 
-        rename.setOnAction(event -> {
+        rename.setOnAction(ignore -> {
             rename();
         });
-        delete.setOnAction(event -> {
+        delete.setOnAction(ignore -> {
             SqlgGraph sqlgGraph = getSqlgGraph();
             try {
                 delete();
                 sqlgGraph.tx().commit();
+            } catch (Exception e) {
+                LOGGER.error(e.getMessage(), e);
+                showDialog(
+                        Alert.AlertType.ERROR,
+                        "Error",
+                        "Failed to save PropertyColumn",
+                        e,
+                        result -> {}
+                );
             } finally {
                 sqlgGraph.tx().rollback();
             }
         });
-        cancel.setOnAction(event -> {
+        cancel.setOnAction(ignore -> {
             SqlgGraph sqlgGraph = getSqlgGraph();
             try {
                 cancelName();

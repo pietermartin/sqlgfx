@@ -7,8 +7,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sqlg.ui.model.EdgeLabelUI;
-import org.sqlg.ui.model.ISqlgTopologyUI;
+import org.sqlg.ui.model.*;
 import org.umlg.sqlg.structure.SqlgGraph;
 import org.umlg.sqlg.structure.topology.EdgeLabel;
 
@@ -44,7 +43,17 @@ public class EdgeLabelFormController extends AbstractLabelControllerName {
                 EdgeLabel edgeLabel = this.edgeLabelUI.getEdgeLabel();
                 edgeLabel.rename(this.sqlgTreeDataFormNameTxt.getText());
                 sqlgGraph.tx().commit();
-                Platform.runLater(() -> this.edgeLabelUI.selectInTree(this.sqlgTreeDataFormNameTxt.getText()));
+                Platform.runLater(() -> {
+                    SchemaUI schemaUI = this.edgeLabelUI.getSchemaUI();
+                    GraphConfiguration graphConfiguration = this.edgeLabelUI.getSchemaUI().getGraphConfiguration();
+                    GraphGroup graphGroup = graphConfiguration.getGraphGroup();
+                    this.leftPaneController.selectEdgeLabel(
+                                    graphGroup,
+                                    graphConfiguration,
+                                    schemaUI.getSchema(),
+                                    this.sqlgTreeDataFormNameTxt.getText()
+                            );
+                });
                 showDialog(
                         Alert.AlertType.INFORMATION,
                         "Success",

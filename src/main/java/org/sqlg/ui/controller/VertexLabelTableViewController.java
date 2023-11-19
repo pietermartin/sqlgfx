@@ -15,10 +15,14 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.controlsfx.control.ToggleSwitch;
+import org.controlsfx.control.tableview2.cell.ComboBox2TableCell;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sqlg.ui.model.SchemaUI;
 import org.sqlg.ui.model.VertexLabelUI;
+import org.umlg.sqlg.structure.topology.PartitionType;
+
+import java.util.Arrays;
 
 public class VertexLabelTableViewController extends BaseController {
 
@@ -58,13 +62,19 @@ public class VertexLabelTableViewController extends BaseController {
         nameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
 
+
+        TableColumn<VertexLabelUI, ?> partitionColumn = new TableColumn<>("Partition");
+        TableColumn<VertexLabelUI, String> partitionTypeColumn = new TableColumn<>("partitionType");
+        partitionTypeColumn.setCellFactory(ComboBox2TableCell.forTableColumn(Arrays.stream(PartitionType.values()).map(PartitionType::name).toList().toArray(new String[]{})));
+        partitionTypeColumn.setCellValueFactory(p -> p.getValue().partitionTypeProperty());
+
         TableColumn<VertexLabelUI, Boolean> delete = new TableColumn<>("delete");
         delete.setText("delete");
         delete.setCellValueFactory(p -> p.getValue().deleteProperty());
         delete.setCellFactory(CheckBoxTableCell.forTableColumn(delete));
         delete.setPrefWidth(60);
 
-        tableView.getColumns().addAll(nameColumn, delete);
+        tableView.getColumns().addAll(nameColumn, partitionTypeColumn, delete);
 
         tableView.setItems(schemaUI.getVertexLabelUIs());
 

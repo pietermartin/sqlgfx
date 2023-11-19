@@ -3,25 +3,30 @@ package org.sqlg.ui;
 import javafx.application.Application;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import org.apache.commons.collections4.set.ListOrderedSet;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.MapConfiguration;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sqlg.ui.controller.PrimaryController2;
+import org.sqlg.ui.controller.LeftPaneController;
+import org.sqlg.ui.controller.PrimaryController;
+import org.sqlg.ui.model.Root;
 import org.umlg.sqlg.structure.Multiplicity;
 import org.umlg.sqlg.structure.PropertyDefinition;
 import org.umlg.sqlg.structure.PropertyType;
 import org.umlg.sqlg.structure.SqlgGraph;
-import org.umlg.sqlg.structure.topology.IndexType;
-import org.umlg.sqlg.structure.topology.PropertyColumn;
-import org.umlg.sqlg.structure.topology.Schema;
-import org.umlg.sqlg.structure.topology.VertexLabel;
+import org.umlg.sqlg.structure.topology.*;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -42,18 +47,30 @@ public class App extends Application {
 //        Application.setUserAgentStylesheet(new NordLight().getUserAgentStylesheet());
 //        Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
 
-        resetDb();
+//        resetDb();
 
-        PrimaryController2 primaryController2 = new PrimaryController2(stage);
-        Parent parent = primaryController2.initialize();
+//        InputStream is = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-web/webfonts/fa-light-300.ttf");
+        InputStream isOtfSolid = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Pro-Solid-900.otf");
+        InputStream isOtfLight = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Pro-Thin-100.otf");
+
+        Font fontSolid = Font.loadFont(isOtfSolid, -1);
+        Font fontLight = Font.loadFont(isOtfLight, -1);
+
+        Root root = new Root();
+        PrimaryController primaryController = new PrimaryController(stage, root);
+        Parent parent = primaryController.initialize();
+
         Scene scene = new Scene(parent);
-
+        scene.getRoot().setEffect(new DropShadow(10, Color.rgb(100, 100, 100)));
+        scene.setFill(Color.TRANSPARENT);
+        stage.initStyle(StageStyle.DECORATED);
+        
         //noinspection DataFlowIssue
         scene.getStylesheets().add(App.class.getResource("styles.css").toExternalForm());
         stage.setScene(scene);
         //noinspection DataFlowIssue
         stage.getIcons().add(new Image(App.class.getResource("sqlg.png").toExternalForm()));
-        stage.setOnCloseRequest(event -> primaryController2.close());
+        stage.setOnCloseRequest(ignore -> primaryController.close());
         stage.show();
     }
 
@@ -105,6 +122,34 @@ public class App extends Application {
                                 "(" + sqlgGraph.getSqlDialect().maybeWrapInQoutes("a1") + " <> 'a')")
                 );
             }});
+
+            VertexLabel cVertexLabel = aSchema.ensurePartitionedVertexLabelExist("C",
+                    new LinkedHashMap<>() {{
+                        put("name", PropertyDefinition.of(PropertyType.STRING));
+                        put("part1", PropertyDefinition.of(PropertyType.INTEGER));
+                        put("part2", PropertyDefinition.of(PropertyType.INTEGER));
+                        put("part3", PropertyDefinition.of(PropertyType.INTEGER));
+                        put("other", PropertyDefinition.of(PropertyType.STRING));
+                    }},
+                    ListOrderedSet.listOrderedSet(List.of("name", "part1", "part2", "part3")),
+                    PartitionType.LIST,
+                    "\"part1\""
+            );
+            Partition part1_1 = cVertexLabel.ensureListPartitionWithSubPartitionExists("part1_1", "'1'", PartitionType.LIST, "\"part2\"");
+            Partition part1_2 = cVertexLabel.ensureListPartitionWithSubPartitionExists("part1_2", "'2'", PartitionType.LIST, "\"part2\"");
+
+            Partition part1_1_1 = part1_1.ensureListPartitionWithSubPartitionExists("part1_1_1", "1", PartitionType.LIST, "\"part3\"");
+            part1_1_1.ensureListPartitionExists("part1_1_1_1", "1");
+            part1_1_1.ensureListPartitionExists("part1_1_1_2", "2");
+            Partition part1_1_2 = part1_1.ensureListPartitionWithSubPartitionExists("part1_1_2", "2", PartitionType.LIST, "\"part3\"");
+            part1_1_2.ensureListPartitionExists("part1_1_2_1", "1");
+            part1_1_2.ensureListPartitionExists("part1_1_2_2", "2");
+
+
+            Partition part1_2_1 = part1_2.ensureListPartitionWithSubPartitionExists("part1_2_1", "1", PartitionType.LIST, "\"part3\"");
+            Partition part1_2_2 = part1_2.ensureListPartitionWithSubPartitionExists("part1_2_2", "2", PartitionType.LIST, "\"part3\"");
+            part1_2_1.ensureListPartitionExists("part1_2_1_1", "1");
+            part1_2_2.ensureListPartitionExists("part1_2_2_1", "1");
 
             VertexLabel bVertexLabel = bSchema.ensureVertexLabelExist("B");
             aVertexLabel.ensureEdgeLabelExist(

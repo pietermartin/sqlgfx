@@ -53,7 +53,7 @@ public class PropertyColumnTableViewController extends BaseController {
             propertiesTableView = ControllerUtil.propertyColumnsTableView(
                     vertexLabelUI.getPropertyColumnUIs(),
                     editToggleSwitch.selectedProperty(),
-                    event -> ControllerUtil.savePropertyColumns(
+                    ignore -> ControllerUtil.savePropertyColumns(
                             vertexLabelUI.getSchemaUI().getGraphConfiguration().getSqlgGraph(),
                             vertexLabelUI.getPropertyColumnUIs(),
                             result -> {
@@ -76,14 +76,14 @@ public class PropertyColumnTableViewController extends BaseController {
                                 return null;
                             }
                     ),
-                    event -> cancel()
+                    ignore -> cancel()
             );
             this.root.getChildren().add(propertiesTableView);
         } else {
             propertiesTableView = ControllerUtil.propertyColumnsTableView(
                     edgeLabelUI.getPropertyColumnUIs(),
                     editToggleSwitch.selectedProperty(),
-                    event -> ControllerUtil.savePropertyColumns(
+                    ignore -> ControllerUtil.savePropertyColumns(
                             edgeLabelUI.getSchemaUI().getGraphConfiguration().getSqlgGraph(),
                             edgeLabelUI.getPropertyColumnUIs(),
                             result -> {
@@ -106,7 +106,7 @@ public class PropertyColumnTableViewController extends BaseController {
                                 return null;
                             }
                     ),
-                    event -> cancel()
+                    ignore -> cancel()
             );
             this.root.getChildren().add(propertiesTableView);
         }

@@ -1,32 +1,44 @@
 package org.sqlg.ui.model;
 
-import javafx.application.Platform;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.MapConfiguration;
-import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sqlg.ui.controller.LeftPaneController;
+import org.sqlg.ui.AESUtil;
 import org.umlg.sqlg.structure.SqlgDataSource;
 import org.umlg.sqlg.structure.SqlgDataSourceFactory;
 import org.umlg.sqlg.structure.SqlgGraph;
-import org.umlg.sqlg.structure.topology.*;
+import org.umlg.sqlg.structure.TopologyListener;
+import org.umlg.sqlg.structure.topology.Schema;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Objects;
 
 public final class GraphConfiguration implements ISqlgTopologyUI {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GraphConfiguration.class);
-    private final LeftPaneController leftPaneController;
     private SqlgGraph sqlgGraph;
-    private BooleanProperty sqlgGraphOpenProperty = new SimpleBooleanProperty(false);
+    private final BooleanProperty sqlgGraphOpenProperty = new SimpleBooleanProperty(false);
     private final GraphGroup graphGroup;
     private final ObservableList<SchemaUI> schemaUis = FXCollections.observableArrayList(new ArrayList<>());
+    private final static String ALGORHYTHM = "AES/CBC/PKCS5Padding";
 
     public enum TESTED {
         UNTESTED,
@@ -34,33 +46,57 @@ public final class GraphConfiguration implements ISqlgTopologyUI {
         TRUE;
     }
 
-    private final StringProperty name = new SimpleStringProperty(this, "name");
-    private final StringProperty url = new SimpleStringProperty(this, "url");
-    private final StringProperty username = new SimpleStringProperty(this, "username");
-    private final StringProperty password = new SimpleStringProperty(this, "password");
-    private final ObjectProperty<TESTED> tested = new SimpleObjectProperty<>(TESTED.UNTESTED, "tested");
+    public static final String USERNAME = "username";
+    private final StringProperty username = new SimpleStringProperty(this, USERNAME);
+    public static final String NAME = "name";
+    private final StringProperty name = new SimpleStringProperty(this, NAME);
+    public static final String URL = "url";
+    private final StringProperty url = new SimpleStringProperty(this, URL);
+    public static final String JDBC_USER = "jdbcUser";
+    private final StringProperty jdbcUser = new SimpleStringProperty(this, JDBC_USER);
+    public static final String JDBC_PASSWORD = "jdbcPassword";
+    private final StringProperty jdbcPassword = new SimpleStringProperty(this, JDBC_PASSWORD);
+    public static final String SAVE_PASSWORD = "savePassword";
+    private final BooleanProperty savePassword = new SimpleBooleanProperty(this, SAVE_PASSWORD);
+    public static final String _TESTED = "tested";
+    private final ObjectProperty<TESTED> tested = new SimpleObjectProperty<>(TESTED.UNTESTED, _TESTED);
 
     public GraphConfiguration(
-            LeftPaneController leftPaneController,
+            String username,
             GraphGroup graphGroup,
             String name,
             String url,
-            String username,
-            String password,
+            String jdbcUser,
+            boolean savePassword,
+            String jdbcPassword,
             TESTED tested) {
 
-        this.leftPaneController = leftPaneController;
+        assert Objects.nonNull(graphGroup) : "graphGroup may not be null";
         this.graphGroup = graphGroup;
+        this.username.set(username);
         this.name.set(name);
         this.url.set(url);
-        this.username.set(username);
-        this.password.set(password);
+        this.jdbcUser.set(jdbcUser);
+        this.savePassword.set(savePassword);
+        this.jdbcPassword.set(jdbcPassword);
         this.tested.set(tested);
 
     }
 
     public GraphGroup getGraphGroup() {
         return graphGroup;
+    }
+
+    public String getUsername() {
+        return username.get();
+    }
+
+    public StringProperty usernameProperty() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username.set(username);
     }
 
     @Override
@@ -89,28 +125,40 @@ public final class GraphConfiguration implements ISqlgTopologyUI {
         this.url.set(url);
     }
 
-    public String getUsername() {
-        return username.get();
+    public String getJdbcUser() {
+        return jdbcUser.get();
     }
 
-    public StringProperty usernameProperty() {
-        return username;
+    public StringProperty jdbcUserProperty() {
+        return jdbcUser;
     }
 
-    public void setUsername(String username) {
-        this.username.set(username);
+    public void setJdbcUser(String jdbcUser) {
+        this.jdbcUser.set(jdbcUser);
     }
 
-    public String getPassword() {
-        return password.get();
+    public String getJdbcPassword() {
+        return jdbcPassword.get();
     }
 
-    public StringProperty passwordProperty() {
-        return password;
+    public StringProperty jdbcPasswordProperty() {
+        return jdbcPassword;
     }
 
-    public void setPassword(String password) {
-        this.password.set(password);
+    public void setJdbcPassword(String jdbcPassword) {
+        this.jdbcPassword.set(jdbcPassword);
+    }
+
+    public boolean isSavePassword() {
+        return savePassword.get();
+    }
+
+    public BooleanProperty savePasswordProperty() {
+        return savePassword;
+    }
+
+    public void setSavePassword(boolean savePassword) {
+        this.savePassword.set(savePassword);
     }
 
     public TESTED getTested() {
@@ -134,8 +182,8 @@ public final class GraphConfiguration implements ISqlgTopologyUI {
         try {
             Configuration configuration = new MapConfiguration(new HashMap<>() {{
                 put("jdbc.url", getUrl());
-                put("jdbc.username", getUsername());
-                put("jdbc.password", getPassword());
+                put("jdbc.username", getJdbcUser());
+                put("jdbc.password", getJdbcPassword());
             }});
             dataSource = SqlgDataSourceFactory.create(configuration);
             dataSource.getDatasource().getConnection();
@@ -148,11 +196,11 @@ public final class GraphConfiguration implements ISqlgTopologyUI {
         }
     }
 
-    public void openSqlgGraph() {
+    public void openSqlgGraph(TopologyListener topologyListener) {
         Configuration configuration = new MapConfiguration(new HashMap<>() {{
             put("jdbc.url", getUrl());
-            put("jdbc.username", getUsername());
-            put("jdbc.password", getPassword());
+            put("jdbc.username", getJdbcUser());
+            put("jdbc.password", getJdbcPassword());
             put("distributed", true);
         }});
         this.sqlgGraph = SqlgGraph.open(configuration);
@@ -160,214 +208,7 @@ public final class GraphConfiguration implements ISqlgTopologyUI {
         for (Schema schema : this.sqlgGraph.getTopology().getSchemas()) {
             this.schemaUis.add(new SchemaUI(this, schema));
         }
-        this.sqlgGraph.getTopology().registerListener((topologyInf, oldValue, action, beforeCommit) -> {
-            LOGGER.info("topology listener {} {}, {}, {}", (beforeCommit ? "beforeCommit" : "afterCommit"), action.name(), topologyInf != null ? topologyInf.getClass().getSimpleName() : "-", oldValue != null ? oldValue.getClass().getSimpleName() : "-");
-            switch (action) {
-                case CREATE -> {
-                    if (topologyInf instanceof Schema schema) {
-                    } else if (topologyInf instanceof VertexLabel vertexLabel) {
-                        Platform.runLater(() -> {
-                            LOGGER.debug("VertexLabel creation: {}/{}/{}/{}", getGraphGroup().getName(), getName(), vertexLabel.getSchema().getName(), vertexLabel.getName());
-                            this.leftPaneController.addVertexLabel(getGraphGroup(), this, vertexLabel);
-                        });
-                    } else if (topologyInf instanceof EdgeRole edgeRole) {
-                        Platform.runLater(() -> {
-                            LOGGER.debug("EdgeRole creation: {}/{}/{}/{}", getGraphGroup().getName(), getName(), edgeRole.getEdgeLabel().getSchema().getName(), edgeRole.getName());
-                            this.leftPaneController.addEdgeRole(getGraphGroup(), this, edgeRole);
-                        });
-                    } else if (topologyInf instanceof EdgeLabel edgeLabel) {
-                        Platform.runLater(() -> {
-                            LOGGER.debug("EdgeLabel creation: {}/{}/{}/{}", getGraphGroup().getName(), getName(), edgeLabel.getSchema().getName(), edgeLabel.getName());
-                            this.leftPaneController.addEdgeLabel(getGraphGroup(), this, edgeLabel);
-                        });
-                    } else if (topologyInf instanceof PropertyColumn propertyColumn) {
-                        Platform.runLater(() -> {
-                            LOGGER.debug("PropertyColumn creation: {}/{}/{}/{}/{}", getGraphGroup().getName(), getName(), propertyColumn.getParentLabel().getSchema().getName(), propertyColumn.getParentLabel().getName(), propertyColumn.getName());
-                            AbstractLabel abstractLabel = propertyColumn.getParentLabel();
-                            Schema schema = abstractLabel.getSchema();
-                            this.leftPaneController.addPropertyColumn(getGraphGroup(), this, schema, abstractLabel, propertyColumn);
-                        });
-                    } else if (topologyInf instanceof Index ignore) {
-
-                    }
-                }
-                case ADD_IN_VERTEX_LABEL_TO_EDGE -> {
-                }
-                case DELETE -> {
-                    if (topologyInf instanceof Schema schema) {
-                        Platform.runLater(() -> {
-                            LOGGER.debug("Schema deletion: {}/{}/{}", getGraphGroup().getName(), getName(), schema.getName());
-                            this.leftPaneController.deleteSchema(getGraphGroup(), this, schema);
-                        });
-                    } else if (oldValue instanceof VertexLabel oldVertexLabel) {
-                        Platform.runLater(() -> {
-                            LOGGER.debug("VertexLabel deletion: {}/{}/{}", getGraphGroup().getName(), getName(), oldVertexLabel.getName());
-                            this.leftPaneController.deleteVertexLabel(
-                                    getGraphGroup(),
-                                    this,
-                                    oldVertexLabel.getSchema(),
-                                    oldVertexLabel
-                            );
-                        });
-                    } else if (oldValue instanceof EdgeRole edgeRole) {
-                        Schema schema = edgeRole.getEdgeLabel().getSchema();
-                        Platform.runLater(() -> {
-                            LOGGER.debug("EdgeRole deletion : {}/{}/{}/{}", getGraphGroup().getName(), getName(), schema.getName(), edgeRole.getName());
-                            this.leftPaneController.deleteEdgeRole(
-                                    getGraphGroup(),
-                                    this,
-                                    schema,
-                                    edgeRole,
-                                    edgeRole.getDirection()
-                            );
-                        });
-                    } else if (oldValue instanceof EdgeLabel edgeLabel) {
-                        Schema schema = edgeLabel.getSchema();
-                        Platform.runLater(() -> {
-                            LOGGER.debug("EdgeLabel deletion: {}/{}/{}", getGraphGroup().getName(), getName(), edgeLabel.getName());
-                            for (EdgeRole outEdgeRole : edgeLabel.getOutEdgeRoles()) {
-                                this.leftPaneController.deleteEdgeRole(
-                                        getGraphGroup(),
-                                        this,
-                                        schema,
-                                        outEdgeRole,
-                                        Direction.OUT
-                                );
-                            }
-                            for (EdgeRole inEdgeRole : edgeLabel.getInEdgeRoles()) {
-                                Schema inEdgeRoleSchema = inEdgeRole.getVertexLabel().getSchema();
-                                this.leftPaneController.deleteEdgeRole(
-                                        getGraphGroup(),
-                                        this,
-                                        inEdgeRoleSchema,
-                                        inEdgeRole,
-                                        Direction.IN
-                                );
-                            }
-                            this.leftPaneController.deleteEdgeLabel(
-                                    getGraphGroup(),
-                                    this,
-                                    edgeLabel.getSchema(),
-                                    edgeLabel
-                            );
-                        });
-                    } else if (oldValue instanceof PropertyColumn propertyColumnToDelete) {
-                        Platform.runLater(() -> {
-                            LOGGER.debug("PropertyColumn deletion: {}/{}/{}", getGraphGroup().getName(), getName(), propertyColumnToDelete.getName());
-                            AbstractLabel abstractLabel = propertyColumnToDelete.getParentLabel();
-                            if (abstractLabel instanceof VertexLabel) {
-                                this.leftPaneController.deletePropertyColumn(
-                                        getGraphGroup(),
-                                        this,
-                                        abstractLabel.getSchema(),
-                                        (VertexLabel) abstractLabel,
-                                        null,
-                                        propertyColumnToDelete
-                                );
-                            } else {
-                                EdgeLabel edgeLabel = (EdgeLabel) abstractLabel;
-                                for (VertexLabel outVertexLabel : edgeLabel.getOutVertexLabels()) {
-                                    this.leftPaneController.deletePropertyColumn(
-                                            getGraphGroup(),
-                                            this,
-                                            abstractLabel.getSchema(),
-                                            outVertexLabel,
-                                            (EdgeLabel) abstractLabel,
-                                            propertyColumnToDelete
-                                    );
-                                }
-                            }
-                        });
-                    } else if (topologyInf instanceof Index index) {
-                        Platform.runLater(() -> {
-                            AbstractLabel abstractLabel = index.getParentLabel();
-                            LOGGER.debug("Index deletion: {}/{}/{}/{}", getGraphGroup().getName(), getName(), abstractLabel.getName(), index.getName());
-                            if (abstractLabel instanceof VertexLabel) {
-                                this.leftPaneController.deleteIndex(
-                                        getGraphGroup(),
-                                        this,
-                                        abstractLabel.getSchema(),
-                                        (VertexLabel) abstractLabel,
-                                        null,
-                                        index
-                                );
-                            } else {
-                                EdgeLabel edgeLabel = (EdgeLabel) abstractLabel;
-                                for (VertexLabel outVertexLabel : edgeLabel.getOutVertexLabels()) {
-                                    this.leftPaneController.deleteIndex(
-                                            getGraphGroup(),
-                                            this,
-                                            abstractLabel.getSchema(),
-                                            outVertexLabel,
-                                            (EdgeLabel) abstractLabel,
-                                            index
-                                    );
-                                }
-                            }
-                        });
-                    }
-                }
-                case UPDATE -> {
-                    if (topologyInf instanceof Schema schema) {
-                        Platform.runLater(() -> {
-                            LOGGER.debug("Schema update : {}/{}/{}", getGraphGroup().getName(), getName(), schema.getName());
-                        });
-                    } else if (topologyInf instanceof VertexLabel vertexLabel) {
-                        if (!vertexLabel.getName().equals(oldValue.getName())) {
-                            Platform.runLater(() -> {
-                                LOGGER.debug("VertexLabel update: {}/{}/{}", getGraphGroup().getName(), getName(), vertexLabel.getName());
-                                this.leftPaneController.refreshTree();
-                            });
-                        }
-                    } else if (topologyInf instanceof EdgeLabel edgeLabel) {
-                        Platform.runLater(() -> {
-                            LOGGER.debug("EdgeLabel update: {}/{}/{}", getGraphGroup().getName(), getName(), edgeLabel.getName());
-                            this.leftPaneController.refreshTree();
-                            for (VertexLabel outVertexLabel : edgeLabel.getOutVertexLabels()) {
-                                this.leftPaneController.refreshEdgeLabel(
-                                        getGraphGroup(),
-                                        this,
-                                        edgeLabel.getSchema(),
-                                        outVertexLabel,
-                                        (EdgeLabel) oldValue,
-                                        edgeLabel
-                                );
-                            }
-                            for (VertexLabel inVertexLabel : edgeLabel.getInVertexLabels()) {
-                                this.leftPaneController.refreshEdgeLabel(
-                                        getGraphGroup(),
-                                        this,
-                                        edgeLabel.getSchema(),
-                                        inVertexLabel,
-                                        (EdgeLabel) oldValue,
-                                        edgeLabel
-                                );
-                            }
-                        });
-                    } else if (topologyInf instanceof PropertyColumn propertyColumn) {
-                        Platform.runLater(() -> {
-                            LOGGER.debug("PropertyColumn update: {}/{}/{}", getGraphGroup().getName(), getName(), propertyColumn.getName());
-                            this.leftPaneController.removeOldAddUpdatedPropertyColumn(
-                                    beforeCommit,
-                                    getGraphGroup(),
-                                    this,
-                                    propertyColumn.getParentLabel().getSchema(),
-                                    propertyColumn.getParentLabel(),
-                                    (PropertyColumn) oldValue,
-                                    propertyColumn
-                            );
-                            this.leftPaneController.refreshTree();
-                        });
-                    } else if (topologyInf instanceof Index index) {
-                        Platform.runLater(() -> {
-                            AbstractLabel abstractLabel = index.getParentLabel();
-                            LOGGER.debug("Index update: {}/{}/{}/{}", getGraphGroup().getName(), getName(), abstractLabel.getName(), index.getName());
-                            this.leftPaneController.refreshTree();
-                        });
-                    }
-                }
-            }
-        });
+        this.sqlgGraph.getTopology().registerListener(topologyListener);
     }
 
     public void refreshSqlgGraph() {
@@ -378,6 +219,9 @@ public final class GraphConfiguration implements ISqlgTopologyUI {
     }
 
     public void closeSqlgGraph() {
+        if (!this.isSavePassword()) {
+            setJdbcPassword(null);
+        }
         if (this.sqlgGraph != null) {
             this.sqlgGraph.close();
             this.sqlgGraphOpenProperty.set(false);
@@ -402,7 +246,93 @@ public final class GraphConfiguration implements ISqlgTopologyUI {
         return sqlgGraphOpenProperty;
     }
 
-    public LeftPaneController getLeftPaneController() {
-        return this.leftPaneController;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GraphConfiguration that = (GraphConfiguration) o;
+        return Objects.equals(graphGroup, that.graphGroup) && Objects.equals(name, that.name) && Objects.equals(url, that.url) && Objects.equals(jdbcUser, that.jdbcUser);
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(graphGroup, name, url, jdbcUser);
+    }
+
+    @Override
+    public String toString() {
+        return "GraphConfiguration{" +
+                "name=" + name +
+                ", url=" + url +
+                ", username=" + jdbcUser +
+                '}';
+    }
+
+    public ObjectNode toJson(ObjectMapper objectMapper) {
+        ObjectNode objectNode = objectMapper.createObjectNode();
+        objectNode.put("name", getName());
+        objectNode.put("url", getUrl());
+        objectNode.put("jdbcUser", getJdbcUser());
+        if (isSavePassword()) {
+            String password = getJdbcPassword();
+            try {
+                SecretKey key = AESUtil.getKeyFromPassword(getGraphGroup().getUser().getPassword(), AESUtil.salt);
+                IvParameterSpec ivParameterSpec = AESUtil.generateIv();
+                String cipherPassword = AESUtil.encrypt(ALGORHYTHM, password, key, ivParameterSpec);
+                String ivAsString = Arrays.toString(ivParameterSpec.getIV());
+                objectNode.put("jdbcPassword", ivAsString + cipherPassword);
+                String plainText = AESUtil.decrypt(ALGORHYTHM, cipherPassword, key, ivParameterSpec);
+                assert password.equals(plainText);
+            } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchPaddingException |
+                     IllegalBlockSizeException | BadPaddingException | InvalidKeyException |
+                     InvalidKeySpecException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return objectNode;
+    }
+
+    public static GraphConfiguration fromJson(User user, GraphGroup graphGroup, ObjectNode graphConfigurationJson) {
+        String name = graphConfigurationJson.get("name").asText();
+        String url = graphConfigurationJson.get("url").asText();
+        String jdbcUser = graphConfigurationJson.get("jdbcUser").asText();
+        String jdbcPassword = null;
+        if (graphConfigurationJson.hasNonNull("jdbcPassword")) {
+            jdbcPassword = graphConfigurationJson.get("jdbcPassword").asText();
+        }
+        return new GraphConfiguration(
+                user.getUsername(),
+                graphGroup,
+                name,
+                url,
+                jdbcUser,
+                jdbcPassword != null,
+                jdbcPassword,
+                GraphConfiguration.TESTED.UNTESTED
+        );
+    }
+
+    public void decryptPasswords() {
+        if (this.isSavePassword()) {
+            try {
+                int indexOf = this.jdbcPassword.get().indexOf("]");
+                String ivBytes = this.jdbcPassword.get().substring(1, indexOf);
+                String[] parts = ivBytes.split(",");
+                byte[] iv = new byte[parts.length];
+                for (int i = 0; i < iv.length; i++) {
+                    iv[i] = Byte.parseByte(parts[i].trim());
+                }
+                String jdbcPasswordPassword = this.jdbcPassword.get().substring(indexOf + 1);
+                IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
+                SecretKey key = AESUtil.getKeyFromPassword(getGraphGroup().getUser().getPassword(), AESUtil.salt);
+                String plainTextPassword = AESUtil.decrypt(ALGORHYTHM, jdbcPasswordPassword, key, ivParameterSpec);
+                this.jdbcPassword.set(plainTextPassword);
+            } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchPaddingException |
+                     IllegalBlockSizeException | BadPaddingException | InvalidKeyException |
+                     InvalidKeySpecException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
 }

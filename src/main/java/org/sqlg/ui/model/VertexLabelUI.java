@@ -8,6 +8,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.umlg.sqlg.structure.topology.*;
 
+import java.util.Comparator;
+
 public final class VertexLabelUI implements ISqlgTopologyUI {
 
     private final SchemaUI schemaUI;
@@ -19,6 +21,8 @@ public final class VertexLabelUI implements ISqlgTopologyUI {
     private ObservableList<PartitionUI> partitionUIs;
 
     private SimpleStringProperty name;
+    private SimpleStringProperty partitionType;
+    private SimpleStringProperty partitionExpression;
     private SimpleBooleanProperty delete;
 
     public VertexLabelUI(SchemaUI schemaUI, VertexLabel vertexLabel) {
@@ -44,6 +48,7 @@ public final class VertexLabelUI implements ISqlgTopologyUI {
                     new PropertyColumnUI(this, null, propertyColumn)
             );
         }
+        this.propertyColumnUIs.sort(Comparator.comparing(PropertyColumnUI::getName));
     }
 
     @Override
@@ -54,6 +59,26 @@ public final class VertexLabelUI implements ISqlgTopologyUI {
     @Override
     public StringProperty nameProperty() {
         return this.name;
+    }
+
+    public String getPartitionType() {
+        return partitionType.get();
+    }
+
+    public SimpleStringProperty partitionTypeProperty() {
+        return partitionType;
+    }
+
+    public String getPartitionExpression() {
+        return partitionExpression.get();
+    }
+
+    public SimpleStringProperty partitionExpressionProperty() {
+        return partitionExpression;
+    }
+
+    public void setPartitionExpression(String partitionExpression) {
+        this.partitionExpression.set(partitionExpression);
     }
 
     public SchemaUI getSchemaUI() {
@@ -101,10 +126,13 @@ public final class VertexLabelUI implements ISqlgTopologyUI {
 
     private void init(VertexLabel vertexLabel) {
         this.name = new SimpleStringProperty(vertexLabel.getName());
+        this.partitionType = new SimpleStringProperty(vertexLabel.getPartitionType().name());
+        this.partitionExpression = new SimpleStringProperty(vertexLabel.getPartitionExpression());
         this.propertyColumnUIs = FXCollections.observableArrayList();
         for (PropertyColumn propertyColumn : vertexLabel.getProperties().values()) {
             this.propertyColumnUIs.add(new PropertyColumnUI(this, null, propertyColumn));
         }
+        this.propertyColumnUIs.sort(Comparator.comparing(PropertyColumnUI::getName));
         this.outEdgeRoleUIs = FXCollections.observableArrayList();
         for (EdgeRole outEdgeRole : vertexLabel.getOutEdgeRoles().values()) {
             this.outEdgeRoleUIs.add(new EdgeRoleUI(this, null, outEdgeRole));
@@ -122,7 +150,7 @@ public final class VertexLabelUI implements ISqlgTopologyUI {
         this.partitionUIs = FXCollections.observableArrayList();
         for (Partition partition : vertexLabel.getPartitions().values()) {
             this.partitionUIs.add(
-                    new PartitionUI(this, null, partition)
+                    new PartitionUI(this, partition)
             );
         }
         this.delete = new SimpleBooleanProperty(false);
@@ -130,19 +158,6 @@ public final class VertexLabelUI implements ISqlgTopologyUI {
 
     public void refresh() {
         init(this.vertexLabel.get());
-    }
-
-    public void selectInTree(String name) {
-        GraphConfiguration graphConfiguration = this.getSchemaUI().getGraphConfiguration();
-        GraphGroup graphGroup = graphConfiguration.getGraphGroup();
-        graphConfiguration
-                .getLeftPaneController()
-                .selectVertexLabel(
-                        graphGroup,
-                        graphConfiguration,
-                        getSchemaUI().getSchema(),
-                        name
-                );
     }
 
 }

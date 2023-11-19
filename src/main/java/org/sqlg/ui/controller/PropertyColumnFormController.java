@@ -13,8 +13,7 @@ import javafx.util.StringConverter;
 import javafx.util.converter.LongStringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sqlg.ui.model.ISqlgTopologyUI;
-import org.sqlg.ui.model.PropertyColumnUI;
+import org.sqlg.ui.model.*;
 import org.umlg.sqlg.structure.Multiplicity;
 import org.umlg.sqlg.structure.PropertyDefinition;
 import org.umlg.sqlg.structure.PropertyType;
@@ -29,13 +28,6 @@ public class PropertyColumnFormController extends BaseNameFormController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PropertyColumnFormController.class);
     private final PropertyColumnUI propertyColumnUI;
-    private ComboBox<PropertyType> propertyTypeCombobox;
-    private TextField lowerTextField;
-    private TextField upperTextField;
-    private CheckBox uniqueCheckBox;
-    private CheckBox orderedCheckBox;
-    private TextField defaultLiteralTextField;
-    private TextField checkConstraintTextField;
 
     public PropertyColumnFormController(LeftPaneController leftPaneController, PropertyColumnUI propertyColumnUI) {
         super(leftPaneController, propertyColumnUI);
@@ -62,7 +54,34 @@ public class PropertyColumnFormController extends BaseNameFormController {
         try {
             this.propertyColumnUI.getPropertyColumn().rename(this.sqlgTreeDataFormNameTxt.getText());
             sqlgGraph.tx().commit();
-            Platform.runLater(() -> this.propertyColumnUI.selectInTree(this.sqlgTreeDataFormNameTxt.getText()));
+            Platform.runLater(() -> {
+
+                if (this.propertyColumnUI.getVertexLabelUI() != null) {
+                    VertexLabelUI vertexLabelUI = this.propertyColumnUI.getVertexLabelUI();
+                    SchemaUI schemaUI = vertexLabelUI.getSchemaUI();
+                    GraphConfiguration graphConfiguration = schemaUI.getGraphConfiguration();
+                    GraphGroup graphGroup = graphConfiguration.getGraphGroup();
+                    this.leftPaneController.selectPropertyColumn(
+                                    graphGroup,
+                                    graphConfiguration,
+                                    schemaUI.getSchema(),
+                                    vertexLabelUI.getVertexLabel(),
+                                    this.sqlgTreeDataFormNameTxt.getText()
+                            );
+                } else {
+                    EdgeLabelUI edgeLabelUI = this.propertyColumnUI.getEdgeLabelUI();
+                    SchemaUI schemaUI = edgeLabelUI.getSchemaUI();
+                    GraphConfiguration graphConfiguration = schemaUI.getGraphConfiguration();
+                    GraphGroup graphGroup = graphConfiguration.getGraphGroup();
+                    this.leftPaneController.selectPropertyColumn(
+                                    graphGroup,
+                                    graphConfiguration,
+                                    schemaUI.getSchema(),
+                                    edgeLabelUI.getEdgeLabel(),
+                                    this.sqlgTreeDataFormNameTxt.getText()
+                            );
+                }
+            });
             showDialog(
                     Alert.AlertType.INFORMATION,
                     "Success",
@@ -98,63 +117,76 @@ public class PropertyColumnFormController extends BaseNameFormController {
         GridPane gridPane = new GridPane();
         gridPane.setHgap(5);
         gridPane.setVgap(5);
+        int rowIndex = 0;
+
+        Label identifierLabel = new Label("identifier");
+        GridPane.setConstraints(identifierLabel, 0, rowIndex);
+        CheckBox identifierCheckBox = new CheckBox();
+        identifierCheckBox.setSelected(propertyColumnUI.isIdentifier());
+        identifierCheckBox.setDisable(true);
+        GridPane.setConstraints(identifierCheckBox, 1, rowIndex);
+        rowIndex++;
 
         Label propertyTypeLabel = new Label("PropertyType");
-        GridPane.setConstraints(propertyTypeLabel, 0, 0);
+        GridPane.setConstraints(propertyTypeLabel, 0, rowIndex);
 
-        this.propertyTypeCombobox = new ComboBox<>();
-        this.propertyTypeCombobox.getItems().addAll(PropertyType.values());
-        this.propertyTypeCombobox.setPrefWidth(Double.MAX_VALUE);
-        this.propertyTypeCombobox.setValue(PropertyType.STRING);
-        this.propertyTypeCombobox.setDisable(true);
-        GridPane.setConstraints(this.propertyTypeCombobox, 1, 0);
+        ComboBox<PropertyType> propertyTypeCombobox = new ComboBox<>();
+        propertyTypeCombobox.getItems().addAll(PropertyType.values());
+        propertyTypeCombobox.setPrefWidth(Double.MAX_VALUE);
+        propertyTypeCombobox.setValue(PropertyType.STRING);
+        propertyTypeCombobox.setDisable(true);
+        GridPane.setConstraints(propertyTypeCombobox, 1, rowIndex);
+        rowIndex++;
 
         Label lowerLabel = new Label("lower");
-        GridPane.setConstraints(lowerLabel, 0, 1);
-        this.lowerTextField = new TextField(Long.toString(propertyColumnUI.getLower()));
-        this.lowerTextField.setTextFormatter(new TextFormatter<>(filter));
-        this.lowerTextField.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
+        GridPane.setConstraints(lowerLabel, 0, rowIndex);
+        TextField lowerTextField = new TextField(Long.toString(propertyColumnUI.getLower()));
+        lowerTextField.setTextFormatter(new TextFormatter<>(filter));
+        lowerTextField.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
         StringConverter<? extends Number> converter = new LongStringConverter();
-        Bindings.bindBidirectional(this.lowerTextField.textProperty(), propertyColumnUI.lowerProperty(), (StringConverter) converter);
-
-        GridPane.setConstraints(this.lowerTextField, 1, 1);
+        Bindings.bindBidirectional(lowerTextField.textProperty(), propertyColumnUI.lowerProperty(), (StringConverter) converter);
+        GridPane.setConstraints(lowerTextField, 1, rowIndex);
+        rowIndex++;
 
         Label upperLabel = new Label("upper");
-        GridPane.setConstraints(upperLabel, 0, 2);
-        this.upperTextField = new TextField(Long.toString(propertyColumnUI.getUpper()));
-        this.upperTextField.setTextFormatter(new TextFormatter<>(filter));
-        Bindings.bindBidirectional(this.upperTextField.textProperty(), propertyColumnUI.upperProperty(), (StringConverter) converter);
-
-        this.upperTextField.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
-        GridPane.setConstraints(this.upperTextField, 1, 2);
+        GridPane.setConstraints(upperLabel, 0, rowIndex);
+        TextField upperTextField = new TextField(Long.toString(propertyColumnUI.getUpper()));
+        upperTextField.setTextFormatter(new TextFormatter<>(filter));
+        Bindings.bindBidirectional(upperTextField.textProperty(), propertyColumnUI.upperProperty(), (StringConverter) converter);
+        upperTextField.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
+        GridPane.setConstraints(upperTextField, 1, rowIndex);
+        rowIndex++;
 
         Label uniqueLabel = new Label("unique");
-        GridPane.setConstraints(uniqueLabel, 0, 3);
-        this.uniqueCheckBox = new CheckBox();
-        this.uniqueCheckBox.setSelected(propertyColumnUI.isUnique());
-        this.uniqueCheckBox.setDisable(true);
-        GridPane.setConstraints(this.uniqueCheckBox, 1, 3);
+        GridPane.setConstraints(uniqueLabel, 0, rowIndex);
+        CheckBox uniqueCheckBox = new CheckBox();
+        uniqueCheckBox.setSelected(propertyColumnUI.isUnique());
+        uniqueCheckBox.setDisable(true);
+        GridPane.setConstraints(uniqueCheckBox, 1, rowIndex);
+        rowIndex++;
 
         Label orderedLabel = new Label("ordered");
-        GridPane.setConstraints(orderedLabel, 0, 4);
-        this.orderedCheckBox = new CheckBox();
-        this.orderedCheckBox.setSelected(propertyColumnUI.isOrdered());
-        this.orderedCheckBox.setDisable(true);
-        GridPane.setConstraints(this.orderedCheckBox, 1, 4);
+        GridPane.setConstraints(orderedLabel, 0, rowIndex);
+        CheckBox orderedCheckBox = new CheckBox();
+        orderedCheckBox.setSelected(propertyColumnUI.isOrdered());
+        orderedCheckBox.setDisable(true);
+        GridPane.setConstraints(orderedCheckBox, 1, rowIndex);
+        rowIndex++;
 
         Label defaultLiteralLabel = new Label("defaultLiteral");
-        GridPane.setConstraints(defaultLiteralLabel, 0, 5);
-        this.defaultLiteralTextField = new TextField(propertyColumnUI.getDefaultLiteral());
-        this.defaultLiteralTextField.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
-        Bindings.bindBidirectional(this.defaultLiteralTextField.textProperty(), propertyColumnUI.defaultLiteralProperty());
-        GridPane.setConstraints(this.defaultLiteralTextField, 1, 5);
+        GridPane.setConstraints(defaultLiteralLabel, 0, rowIndex);
+        TextField defaultLiteralTextField = new TextField(propertyColumnUI.getDefaultLiteral());
+        defaultLiteralTextField.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
+        Bindings.bindBidirectional(defaultLiteralTextField.textProperty(), propertyColumnUI.defaultLiteralProperty());
+        GridPane.setConstraints(defaultLiteralTextField, 1, rowIndex);
+        rowIndex++;
 
         Label checkConstraintLabel = new Label("checkConstraint");
-        GridPane.setConstraints(checkConstraintLabel, 0, 6);
-        this.checkConstraintTextField = new TextField(propertyColumnUI.getCheckConstraint());
-        this.checkConstraintTextField.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
-        Bindings.bindBidirectional(this.checkConstraintTextField.textProperty(), propertyColumnUI.checkConstraintProperty());
-        GridPane.setConstraints(this.checkConstraintTextField, 1, 6);
+        GridPane.setConstraints(checkConstraintLabel, 0, rowIndex);
+        TextField checkConstraintTextField = new TextField(propertyColumnUI.getCheckConstraint());
+        checkConstraintTextField.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
+        Bindings.bindBidirectional(checkConstraintTextField.textProperty(), propertyColumnUI.checkConstraintProperty());
+        GridPane.setConstraints(checkConstraintTextField, 1, rowIndex);
 
         ColumnConstraints column1 = new ColumnConstraints();
         column1.setPercentWidth(20);
@@ -162,13 +194,14 @@ public class PropertyColumnFormController extends BaseNameFormController {
         column2.setPercentWidth(80);
         gridPane.getColumnConstraints().addAll(column1, column2); // each get 50% of width
         gridPane.getChildren().addAll(
-                propertyTypeLabel, this.propertyTypeCombobox,
-                lowerLabel, this.lowerTextField,
-                upperLabel, this.upperTextField,
-                uniqueLabel, this.uniqueCheckBox,
-                orderedLabel, this.orderedCheckBox,
-                defaultLiteralLabel, this.defaultLiteralTextField,
-                checkConstraintLabel, this.checkConstraintTextField
+                identifierLabel, identifierCheckBox,
+                propertyTypeLabel, propertyTypeCombobox,
+                lowerLabel, lowerTextField,
+                upperLabel, upperTextField,
+                uniqueLabel, uniqueCheckBox,
+                orderedLabel, orderedCheckBox,
+                defaultLiteralLabel, defaultLiteralTextField,
+                checkConstraintLabel, checkConstraintTextField
         );
 
         VBox.setVgrow(gridPane, Priority.ALWAYS);
@@ -188,12 +221,8 @@ public class PropertyColumnFormController extends BaseNameFormController {
         VBox.setVgrow(vBox, Priority.ALWAYS);
 
         save.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
-        save.setOnAction((event) -> {
-            save();
-        });
-        cancel.setOnAction((event) -> {
-            cancel();
-        });
+        save.setOnAction(ignore -> save());
+        cancel.setOnAction(ignore -> cancel());
         return List.of(vBox);
     }
 
