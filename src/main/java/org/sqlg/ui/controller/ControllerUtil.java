@@ -95,7 +95,7 @@ public class ControllerUtil {
     ) {
         TableView<PropertyColumnUI> tableView = new TableView<>();
         tableView.editableProperty().bind(editableProperty);
-        tableView.setFixedCellSize(30D);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_LAST_COLUMN);
 
         TableColumn<PropertyColumnUI, String> nameColumn = new TableColumn<>("name");
         nameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
@@ -198,7 +198,7 @@ public class ControllerUtil {
     ) {
         TableView<IndexUI> tableView = new TableView<>();
         tableView.editableProperty().bind(editableProperty);
-        tableView.setFixedCellSize(30D);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_LAST_COLUMN);
 
         TableColumn<IndexUI, String> nameColumn = new TableColumn<>("name");
         nameColumn.setCellFactory(TextFieldTableCell.forTableColumn());

@@ -10,23 +10,18 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import org.kordamp.ikonli.boxicons.BoxiconsRegular;
-import org.kordamp.ikonli.javafx.FontIcon;
 import org.sqlg.ui.model.GraphConfiguration;
 
 public class GraphConfigurationFormController extends BaseController {
 
     private final GraphConfiguration graphConfiguration;
-
-    private final FontIcon noneChecked = new FontIcon(BoxiconsRegular.SQUARE);
-    private final FontIcon check = new FontIcon(BoxiconsRegular.CHECK_SQUARE);
-    private final FontIcon unchecked = new FontIcon(BoxiconsRegular.X);
-
+    private final LeftPaneController leftPaneController;
     protected final VBox root;
 
-    public GraphConfigurationFormController(Stage stage, GraphConfiguration graphConfiguration) {
+    public GraphConfigurationFormController(Stage stage, LeftPaneController leftPaneController, GraphConfiguration graphConfiguration) {
         super(stage);
         this.graphConfiguration = graphConfiguration;
+        this.leftPaneController = leftPaneController;
         this.root = new VBox(10);
         this.root.setPadding(new Insets(10, 10, 10, 10));
         this.root.setMaxHeight(Double.MAX_VALUE);
@@ -123,6 +118,7 @@ public class GraphConfigurationFormController extends BaseController {
 
     void save() {
         this.graphConfiguration.getGraphGroup().getUser().getRoot().persistConfig();
+        this.leftPaneController.refreshTree();
     }
 
     public Parent getView() {

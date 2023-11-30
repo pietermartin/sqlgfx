@@ -1,6 +1,7 @@
 package org.sqlg.ui.controller;
 
 import javafx.application.Platform;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
@@ -89,6 +90,7 @@ public class VertexLabelFormController extends AbstractLabelControllerName {
         VertexLabelUI vertexLabelUI = (VertexLabelUI) sqlgTopologyUI;
 
         HBox partitionTypeHBox = new HBox(5);
+        partitionTypeHBox.setPadding(new Insets(0, 5, 0, 5));
         TextField partitionTypeTextField = new TextField(vertexLabelUI.getPartitionType());
         partitionTypeTextField.setEditable(false);
         partitionTypeTextField.setDisable(true);
@@ -98,6 +100,7 @@ public class VertexLabelFormController extends AbstractLabelControllerName {
         partitionTypeHBox.getChildren().addAll(partitionTypeLabel, partitionTypeTextField);
 
         HBox partitionExpressionHBox = new HBox(5);
+        partitionExpressionHBox.setPadding(new Insets(0, 5, 0, 5));
         TextField partitionExpressionTextField = new TextField(vertexLabelUI.getPartitionExpression());
         partitionExpressionTextField.setEditable(false);
         partitionExpressionTextField.setDisable(true);

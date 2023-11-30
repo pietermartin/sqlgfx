@@ -115,8 +115,9 @@ public class PropertyColumnFormController extends BaseNameFormController {
         PropertyColumnUI propertyColumnUI = (PropertyColumnUI) sqlgTopologyUI;
 
         GridPane gridPane = new GridPane();
-        gridPane.setHgap(5);
+        gridPane.setHgap(100);
         gridPane.setVgap(5);
+        gridPane.setPadding(new Insets(0, 5, 0, 5));
         int rowIndex = 0;
 
         Label identifierLabel = new Label("identifier");
@@ -192,6 +193,7 @@ public class PropertyColumnFormController extends BaseNameFormController {
         column1.setPercentWidth(20);
         ColumnConstraints column2 = new ColumnConstraints();
         column2.setPercentWidth(80);
+        column2.setHgrow(Priority.ALWAYS);
         gridPane.getColumnConstraints().addAll(column1, column2); // each get 50% of width
         gridPane.getChildren().addAll(
                 identifierLabel, identifierCheckBox,

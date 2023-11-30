@@ -39,6 +39,7 @@ public class App extends Application {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
 
+    @SuppressWarnings("unused")
     @Override
     public void start(Stage stage) throws IOException {
         LOGGER.debug("start");
@@ -49,12 +50,25 @@ public class App extends Application {
 
 //        resetDb();
 
-//        InputStream is = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-web/webfonts/fa-light-300.ttf");
+        InputStream isOtfBrands_Regular = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Brands-Regular-400.otf");
+        InputStream isOtfDuotone_Solid = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Duotone-Solid-900.otf");
+        InputStream isOtfLight = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Pro-Light-300.otf");
+        InputStream isOtfRegular = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Pro-Regular-400.otf");
         InputStream isOtfSolid = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Pro-Solid-900.otf");
-        InputStream isOtfLight = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Pro-Thin-100.otf");
+        InputStream isOtfThin = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Pro-Thin-100.otf");
+        InputStream isOtfSharp_Light = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Sharp-Light-300.otf");
+        InputStream isOtfSharp_Regular = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Sharp-Regular-400.otf");
+        InputStream isOtfSharp_Solid = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Sharp-Solid-900.otf");
 
-        Font fontSolid = Font.loadFont(isOtfSolid, -1);
+        Font fontBrands_Regular = Font.loadFont(isOtfBrands_Regular, -1);
+        Font fontDuotone_Solid = Font.loadFont(isOtfDuotone_Solid, -1);
         Font fontLight = Font.loadFont(isOtfLight, -1);
+        Font fontRegular = Font.loadFont(isOtfRegular, -1);
+        Font fontSolid = Font.loadFont(isOtfSolid, -1);
+        Font fontThin = Font.loadFont(isOtfThin, -1);
+        Font fontSharp_Light = Font.loadFont(isOtfSharp_Light, -1);
+        Font fontSharp_Regular = Font.loadFont(isOtfSharp_Regular, -1);
+        Font fontSharp_Solid = Font.loadFont(isOtfSharp_Solid, -1);
 
         Root root = new Root();
         PrimaryController primaryController = new PrimaryController(stage, root);
@@ -64,7 +78,7 @@ public class App extends Application {
         scene.getRoot().setEffect(new DropShadow(10, Color.rgb(100, 100, 100)));
         scene.setFill(Color.TRANSPARENT);
         stage.initStyle(StageStyle.DECORATED);
-        
+
         //noinspection DataFlowIssue
         scene.getStylesheets().add(App.class.getResource("styles.css").toExternalForm());
         stage.setScene(scene);

@@ -49,14 +49,14 @@ public class IndexTableViewController extends BaseController {
 
         this.leftPaneController = leftPaneController;
         this.root = new VBox(10);
-        this.root.setPadding(new Insets(10, 10, 10, 10));
+        this.root.setPadding(Insets.EMPTY);
         this.root.setMaxHeight(Double.MAX_VALUE);
 
         this.editToggleSwitch = new ToggleSwitch("Edit");
         this.editToggleSwitch.setLayoutX(70);
         this.editToggleSwitch.setLayoutY(168);
         HBox editBox = new HBox();
-        editBox.setPadding(new Insets(30, 30, 0, 30));
+        editBox.setPadding(new Insets(12, 5, 0, 0));
         editBox.setAlignment(Pos.CENTER_RIGHT);
         editBox.getChildren().addAll(editToggleSwitch);
 
@@ -64,7 +64,7 @@ public class IndexTableViewController extends BaseController {
 
         this.indexTableView = new TableView<>();
         indexTableView.editableProperty().bind(this.editToggleSwitch.selectedProperty());
-        indexTableView.setFixedCellSize(30D);
+        indexTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_LAST_COLUMN);
 
         TableColumn<IndexUI, String> nameColumn = new TableColumn<>("name");
         nameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
@@ -109,7 +109,7 @@ public class IndexTableViewController extends BaseController {
 
         TableView<PropertyColumnUI> indexPropertyTableView = new TableView<>();
         indexPropertyTableView.setEditable(false);
-        indexPropertyTableView.setFixedCellSize(30D);
+        indexPropertyTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_LAST_COLUMN);
 
         TableColumn<PropertyColumnUI, String> propertyNameColumn = new TableColumn<>("name");
         propertyNameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
@@ -131,7 +131,7 @@ public class IndexTableViewController extends BaseController {
         });
 
         VBox vBox = new VBox(5, indexTableView, buttonBar, indexPropertyTableView);
-        vBox.setPadding(new Insets(0, 0, 5, 0));
+        vBox.setPadding(new Insets(0, 0, 0, 0));
         VBox.setVgrow(vBox, Priority.ALWAYS);
         VBox.setVgrow(indexTableView, Priority.ALWAYS);
         VBox.setVgrow(buttonBar, Priority.NEVER);

@@ -1,6 +1,5 @@
 package org.sqlg.ui;
 
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 
@@ -20,7 +19,14 @@ public enum Fontawesome {
     ARROW_LEFT('\uf060'),
     INDENT('\uf03c'),
     BLOCK_QUOTE('\ue0b5'),
-    DATABASE('\uf1c0');
+    PLUS('+'),
+    MINUS('-'),
+    SQUARE('\uf0c8'),
+    SQUARE_XMARK('\uf2d3'),
+    XMARK('\uf00d'),
+    DATABASE('\uf1c0'),
+    SERVER('\uf233'),
+    ARROWS_ROTATE_RIGHT('\uf01e');
     final char unicode;
 
     Fontawesome(char unicode) {
@@ -31,12 +37,40 @@ public enum Fontawesome {
         return String.valueOf(this.unicode);
     }
 
-    public Label label() {
+    public enum Type {
+        Brands_Regular,
+        Duotone_Solid,
+        Light,
+        Regular,
+        Solid,
+        Thin,
+        Sharp_Light,
+        Sharp_Regular,
+        Sharp_Solid,
+    }
+
+    public Label label(Type type) {
         Label label = new Label();
         label.getStyleClass().add("fontawesome");
         label.setText(this.unicode());
-        label.setPadding(Insets.EMPTY);
+//        label.setText("AAA");
+//        label.setPadding(Insets.EMPTY);
         label.setAlignment(Pos.CENTER_LEFT);
+//        label.setTextAlignment(TextAlignment.RIGHT);
+//        label.setAlignment(Pos.CENTER_LEFT);
+//        label.setAlignment(Pos.CENTER_RIGHT);
+        switch (type) {
+            case Brands_Regular -> label.getStyleClass().add("fontawesome-Brands_Regular");
+            case Duotone_Solid -> label.getStyleClass().add("fontawesome-Duotone_Solid");
+            case Light -> label.getStyleClass().add("fontawesome-Light");
+            case Regular -> label.getStyleClass().add("fontawesome-Regular");
+            case Solid -> label.getStyleClass().add("fontawesome-Solid");
+            case Thin -> label.getStyleClass().add("fontawesome-Thin");
+            case Sharp_Light -> label.getStyleClass().add("fontawesome-Sharp_Light");
+            case Sharp_Regular -> label.getStyleClass().add("fontawesome-Sharp_Regular");
+            case Sharp_Solid -> label.getStyleClass().add("fontawesome-Sharp_Solid");
+        }
         return label;
     }
+
 }

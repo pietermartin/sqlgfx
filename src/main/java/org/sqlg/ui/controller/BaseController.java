@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 
 public class BaseController {
 
-    private final Stage stage;
+    protected final Stage stage;
 
     public BaseController(Stage stage) {
         this.stage = stage;

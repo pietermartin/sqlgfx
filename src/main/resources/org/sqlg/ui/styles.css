@@ -1,28 +1,85 @@
-
-/*.root{*/
-/*    -bg-gradient: linear-gradient(from 25px 25px to 500px 300px, #a1ffce, #faffd1);*/
-/*    -hlight-gradient: linear-gradient(to bottom, #1dbbdd44, #93f9b944);*/
-
-/*    -primary: #81c48355;*/
-/*    -secondary: #375FCB;*/
-/*    -tertiary: #fcc200;*/
-/*    -tertiary-armed: #FDDD71;*/
-/*}*/
-
 .tree-view {
     -fx-background-insets: 1;
-    /*-fx-border-color: red;*/
 }
 
-.shadow-pane{
+.tree-cell {
+    -fx-border-color: transparent transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+}
+
+.shadow-pane {
     -fx-background-color: transparent;
     -fx-padding: 10px;
 }
 
-.fontawesome {
-    -fx-font-family: "Font Awesome 6 Pro Solid";
-    /*-fx-font-family: "Font Awesome 6 Pro Thin";*/
-    -fx-font-size: 14;
-    /*-fx-background-color: red;*/
-    -fx-min-width: 15;
+fontawesome-Brands_Regular {
+    -fx-font-family: "Font Awesome 6 Brands Regular";
 }
+
+.fontawesome-Duotone_Solid {
+    -fx-font-family: "Font Awesome 6 Duotone Solid";
+}
+
+.fontawesome-Light {
+    -fx-font-family: "Font Awesome 6 Pro Light";
+}
+
+.fontawesome-Regular {
+    -fx-font-family: "Font Awesome 6 Pro Regular";
+}
+
+.fontawesome-Regular {
+    -fx-font-family: "Font Awesome 6 Pro Regular";
+}
+
+.fontawesome-Solid {
+    -fx-font-family: "Font Awesome 6 Pro Solid";
+}
+
+.fontawesome-Thin {
+    -fx-font-family: "Font Awesome 6 Pro Thin";
+}
+
+.fontawesome-Sharp_Light {
+    -fx-font-family: "Font Awesome 6 Sharp Light";
+}
+
+.fontawesome-Sharp_Regular {
+    -fx-font-family: "Font Awesome 6 Sharp Regular";
+}
+
+.fontawesome-Sharp_Solid {
+    -fx-font-family: "Font Awesome 6 Sharp Solid";
+}
+
+.fontawesome {
+    -fx-font-size: 14;
+    -fx-min-width: 13;
+    -fx-padding: 0em 0em 0.15em 0em;
+}
+
+.fontawesome:hover {
+    -fx-text-fill: #536569;
+}
+
+.sqlgfx-name-box {
+    -fx-background-color: #dfdfdf;
+}
+
+.tree-cell-drop {
+    -fx-border-color: blue transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-border-style: segments(10, 15, 15, 15) line-cap round;
+}
+
+/*.fontawesome.gradient{*/
+/*    -fx-effect: innershadow( three-pass-box , derive(-fx-text-fill,-70%) , 0.1em, 0.0 , 0.07em, 0.07em );*/
+/*}*/
+
+/*.fontawesome.hover-effect:hover{*/
+/*    -fx-effect: dropshadow( three-pass-box , derive(-fx-text-fill,0%) , 0.01em, 0.0 , 0, 0);*/
+/*}*/
+
+/*.fontawesome.hover-effect:selected{*/
+/*    -fx-effect: dropshadow( three-pass-box , derive(-fx-text-fill,0%) , 0.01em, 0.0 , 0, 0);*/
+/*}*/

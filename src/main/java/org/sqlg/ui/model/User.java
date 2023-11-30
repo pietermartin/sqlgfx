@@ -8,10 +8,10 @@ import org.apache.commons.collections4.set.ListOrderedSet;
 
 public class User {
 
-    private Root root;
+    private final Root root;
     private String username;
     private String password;
-    private ListOrderedSet<GraphGroup> graphGroups = new ListOrderedSet<>();
+    private final ListOrderedSet<GraphGroup> graphGroups = new ListOrderedSet<>();
 
     public User(Root root, String username, String password) {
         this.root = root;

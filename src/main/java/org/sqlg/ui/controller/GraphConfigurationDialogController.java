@@ -15,21 +15,23 @@ import javafx.stage.Stage;
 import javafx.util.converter.DefaultStringConverter;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.MapConfiguration;
-import org.kordamp.ikonli.boxicons.BoxiconsRegular;
-import org.kordamp.ikonli.javafx.FontIcon;
+import org.sqlg.ui.App;
+import org.sqlg.ui.Fontawesome;
 import org.sqlg.ui.model.GraphGroup;
 import org.umlg.sqlg.structure.SqlgDataSource;
 import org.umlg.sqlg.structure.SqlgDataSourceFactory;
 
 import java.util.HashMap;
 
+import static org.sqlg.ui.Fontawesome.Type.Regular;
+
 public class GraphConfigurationDialogController extends BaseController {
 
     private final GraphGroup graphGroup;
 
-    private final FontIcon noneChecked = new FontIcon(BoxiconsRegular.SQUARE);
-    private final FontIcon check = new FontIcon(BoxiconsRegular.CHECK_SQUARE);
-    private final FontIcon unchecked = new FontIcon(BoxiconsRegular.X);
+    private final Label noneChecked = Fontawesome.SQUARE.label(Regular);
+    private final Label check = Fontawesome.SQUARE_XMARK.label(Regular);
+    private final Label unchecked = Fontawesome.XMARK.label(Regular);
 
     private final StringProperty name = new SimpleStringProperty();
     private final StringProperty url = new SimpleStringProperty();
@@ -44,8 +46,8 @@ public class GraphConfigurationDialogController extends BaseController {
     }
 
     private void initialize() {
-
         DialogPane graphConfigurationDialogPane = new DialogPane();
+        graphConfigurationDialogPane.getStylesheets().add(App.class.getResource("styles.css").toExternalForm());
         graphConfigurationDialogPane.setMinWidth(630);
         graphConfigurationDialogPane.setMinHeight(195);
         GridPane gridPane = new GridPane();
@@ -138,13 +140,15 @@ public class GraphConfigurationDialogController extends BaseController {
         addGraphDialog.getDialogPane().lookupButton(save).disableProperty().bind(booleanBinding);
         addGraphDialogTestButton.disableProperty().bind(booleanBinding);
 
+//        addGraphDialogTestButton.setAlignment(Pos.TOP_CENTER);    aa
         addGraphDialogTestButton.setGraphic(this.noneChecked);
+
         addGraphDialogTestButton.setContentDisplay(ContentDisplay.RIGHT);
         addGraphDialogTestButton.setOnAction(ignore -> {
             addGraphDialogTestProgressBar.styleProperty().set("");
-            Task<FontIcon> connectionTask = new Task<>() {
+            Task<Label> connectionTask = new Task<>() {
                 @Override
-                protected FontIcon call() {
+                protected Label call() {
                     SqlgDataSource dataSource = null;
                     try {
                         Configuration configuration = new MapConfiguration(new HashMap<>() {{

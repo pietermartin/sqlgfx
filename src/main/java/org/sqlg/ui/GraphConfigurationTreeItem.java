@@ -16,6 +16,8 @@ import org.sqlg.ui.model.SchemaUI;
 
 import java.util.Comparator;
 
+import static org.sqlg.ui.Fontawesome.Type.Regular;
+
 public class GraphConfigurationTreeItem extends TreeItem<ISqlgTopologyUI> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GraphConfigurationTreeItem.class);
@@ -77,9 +79,20 @@ public class GraphConfigurationTreeItem extends TreeItem<ISqlgTopologyUI> {
                     childrenLoadedStatus = ChildrenLoadedStatus.LOADED;
                     getChildren().addAll(buildMetaSchemaAndSchemaTreeItems());
                 } catch (Exception e) {
-                    childrenLoadedStatus = ChildrenLoadedStatus.LOADED;
-                    leftPaneController.refreshTree();
+                    getChildren().clear();
+                    isGraphOpened = false;
+                    isGraphOpening = false;
+                    isFirstTimeChildren = true;
+                    childrenLoadedStatus = ChildrenLoadedStatus.NOT_LOADED;
+                    setExpanded(false);
                     LOGGER.info("failed to open graph configuration for graph '{}'", graphConfiguration.getName(), e);
+                    Platform.runLater(() -> {
+                        leftPaneController.getPrimaryController().alert(
+                                String.format("Failed to open graph '%s'", graphConfiguration.getName()),
+                                "not used in ExceptionDialog",
+                                e
+                        );
+                    });
                 }
                 return null;
             }
@@ -97,14 +110,14 @@ public class GraphConfigurationTreeItem extends TreeItem<ISqlgTopologyUI> {
         if (value instanceof GraphConfiguration graphConfiguration) {
             ObservableList<TreeItem<ISqlgTopologyUI>> metaSchemaTreeItems = FXCollections.observableArrayList();
             TreeItem<ISqlgTopologyUI> metaSchema = new TreeItem<>(new MetaTopology("Schemas", graphConfiguration));
-            metaSchema.setGraphic(Fontawesome.LIST_UL.label());
+            metaSchema.setGraphic(Fontawesome.SERVER.label(Regular));
             metaSchemaTreeItems.add(metaSchema);
             ObservableList<TreeItem<ISqlgTopologyUI>> schemaTreeItems = FXCollections.observableArrayList();
             ObservableList<SchemaUI> schemaUIS = graphConfiguration.getSchemaUis();
             schemaUIS.sort(Comparator.comparing(SchemaUI::getName));
             for (SchemaUI schemaUi : schemaUIS) {
                 TopologyTreeItem schemaTopologyTreeItem = new TopologyTreeItem(schemaUi);
-                schemaTopologyTreeItem.setGraphic(Fontawesome.LIST_UL.label());
+                schemaTopologyTreeItem.setGraphic(Fontawesome.LIST_UL.label(Regular));
                 schemaTreeItems.add(schemaTopologyTreeItem);
             }
             metaSchema.getChildren().addAll(schemaTreeItems);

@@ -16,8 +16,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.controlsfx.control.ToggleSwitch;
 import org.controlsfx.control.tableview2.cell.ComboBox2TableCell;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.sqlg.ui.model.SchemaUI;
 import org.sqlg.ui.model.VertexLabelUI;
 import org.umlg.sqlg.structure.topology.PartitionType;
@@ -26,29 +24,26 @@ import java.util.Arrays;
 
 public class VertexLabelTableViewController extends BaseController {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(VertexLabelTableViewController.class);
     protected final ToggleSwitch editToggleSwitch;
     protected final LeftPaneController leftPaneController;
     protected final VBox root;
-    private final SchemaUI schemaUI;
 
     public VertexLabelTableViewController(
             LeftPaneController leftPaneController,
             SchemaUI schemaUI
     ) {
         super(leftPaneController.getPrimaryController().getStage());
-        this.schemaUI = schemaUI;
 
         this.leftPaneController = leftPaneController;
         this.root = new VBox(10);
-        this.root.setPadding(new Insets(10, 10, 10, 10));
+        this.root.setPadding(Insets.EMPTY);
         this.root.setMaxHeight(Double.MAX_VALUE);
 
         this.editToggleSwitch = new ToggleSwitch("Edit");
         this.editToggleSwitch.setLayoutX(70);
         this.editToggleSwitch.setLayoutY(168);
         HBox editBox = new HBox();
-        editBox.setPadding(new Insets(30, 30, 0, 30));
+        editBox.setPadding(new Insets(12, 5, 0, 0));
         editBox.setAlignment(Pos.CENTER_RIGHT);
         editBox.getChildren().addAll(editToggleSwitch);
 
@@ -56,7 +51,7 @@ public class VertexLabelTableViewController extends BaseController {
 
         TableView<VertexLabelUI> tableView = new TableView<>();
         tableView.editableProperty().bind(this.editToggleSwitch.selectedProperty());
-        tableView.setFixedCellSize(30D);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_LAST_COLUMN);
 
         TableColumn<VertexLabelUI, String> nameColumn = new TableColumn<>("name");
         nameColumn.setCellFactory(TextFieldTableCell.forTableColumn());

@@ -38,12 +38,5 @@ build/
 .DS_Store
 /.idea/uiDesigner.xml
 /.idea/inspectionProfiles/Project_Default.xml
-/src/main/resources/org/sqlg/ui/images/kit-1f0259751e-desktop/metadata/categories.yml
-/src/main/resources/org/sqlg/ui/images/kit-1f0259751e-desktop/metadata/icon-families.json
-/src/main/resources/org/sqlg/ui/images/kit-1f0259751e-desktop/metadata/icon-families.yml
-/src/main/resources/org/sqlg/ui/images/kit-1f0259751e-desktop/metadata/icons.json
-/src/main/resources/org/sqlg/ui/images/kit-1f0259751e-desktop/metadata/icons.yml
-/src/main/resources/org/sqlg/ui/images/kit-1f0259751e-desktop/metadata/shims.json
-/src/main/resources/org/sqlg/ui/images/kit-1f0259751e-desktop/metadata/shims.yml
-/src/main/resources/org/sqlg/ui/images/kit-1f0259751e-desktop/metadata/sponsors.yml
+/src/main/resources/org/sqlg/ui/images/kit-1f0259751e-desktop/metadata/
 /src/main/resources/org/sqlg/ui/images/kit-1f0259751e-desktop/svgs/

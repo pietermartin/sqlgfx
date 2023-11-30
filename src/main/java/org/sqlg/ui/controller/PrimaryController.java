@@ -4,6 +4,7 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Parent;
+import javafx.scene.control.Alert;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.ToolBar;
 import javafx.scene.control.TreeItem;
@@ -23,37 +24,44 @@ import org.umlg.sqlg.structure.TopologyListener;
 import org.umlg.sqlg.structure.topology.*;
 
 import java.util.ArrayList;
+import java.util.Optional;
 
-public class PrimaryController {
+public class PrimaryController extends BaseController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PrimaryController.class);
-    private final Stage stage;
     private final Root root;
     private BorderPane borderPane;
-    private LoginFormController loginFormController;
     private LeftPaneController leftPaneController;
     private User user;
     private final ObservableList<GraphGroup> graphGroups = FXCollections.observableArrayList(new ArrayList<>());
 
     public PrimaryController(Stage stage, Root root) {
-        this.stage = stage;
+        super(stage);
         this.root = root;
     }
 
     public Parent initialize() {
         this.borderPane = new BorderPane();
-        this.borderPane.setPrefHeight(600D);
-        this.borderPane.setPrefWidth(1100D);
+        this.borderPane.setPrefHeight(1000D);
+        this.borderPane.setPrefWidth(1500D);
         StatusBar statusbar = new StatusBar();
         this.borderPane.setBottom(statusbar);
-        this.loginFormController = new LoginFormController(
+        LoginFormController loginFormController = new LoginFormController(
                 this.stage,
                 this.root,
                 this.borderPane,
                 this
         );
-        this.loginFormController.initialise();
+        loginFormController.initialise();
         return borderPane;
+    }
+
+    public GraphGroup addDefaultGraphGroup() {
+        Optional<GraphGroup> graphGroupDefaultOpt = this.graphGroups.stream().filter(g -> g.getName().equals("default")).findAny();
+        GraphGroup graphGroup = new GraphGroup(this.user, graphGroupDefaultOpt.isEmpty() ? "default" : "default1");
+        this.user.getGraphGroups().add(graphGroup);
+        this.graphGroups.add(graphGroup);
+        return graphGroup;
     }
 
     public void log(User user) {
@@ -70,9 +78,7 @@ public class PrimaryController {
         splitPane.setDividerPosition(0, 0.25D);
         this.borderPane.setCenter(splitPane);
         BorderPane borderPaneLeft = new BorderPane();
-//        AnchorPane anchorPaneLeft = new AnchorPane();
         AnchorPane anchorPaneRight = new AnchorPane();
-//        splitPane.getItems().addAll(anchorPaneLeft, anchorPaneRight);
         splitPane.getItems().addAll(borderPaneLeft, anchorPaneRight);
         StatusBar statusbar = new StatusBar();
         this.borderPane.setBottom(statusbar);
@@ -81,7 +87,6 @@ public class PrimaryController {
         this.leftPaneController = new LeftPaneController(
                 this,
                 this.graphGroups,
-//                anchorPaneLeft,
                 borderPaneLeft,
                 anchorPaneRight
         );
@@ -349,5 +354,9 @@ public class PrimaryController {
             }
         };
 
+    }
+
+    public void alert(String heading, String message, Exception e) {
+        showDialog(Alert.AlertType.ERROR, heading, message, e, (ignore) -> {});
     }
 }

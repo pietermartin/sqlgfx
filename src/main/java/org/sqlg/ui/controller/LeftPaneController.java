@@ -3,29 +3,30 @@ package org.sqlg.ui.controller;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import org.apache.tinkerpop.gremlin.structure.Direction;
-import org.controlsfx.glyphfont.FontAwesome;
-import org.controlsfx.glyphfont.Glyph;
-import org.controlsfx.glyphfont.GlyphFont;
-import org.controlsfx.glyphfont.GlyphFontRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sqlg.ui.Fontawesome;
 import org.sqlg.ui.GraphConfigurationTreeItem;
+import org.sqlg.ui.GraphGroupTreeItem;
 import org.sqlg.ui.TopologyTreeItem;
 import org.sqlg.ui.model.*;
 import org.umlg.sqlg.structure.topology.*;
 
 import java.util.*;
+
+import static org.sqlg.ui.Fontawesome.Type.Solid;
 
 public class LeftPaneController {
 
@@ -36,7 +37,6 @@ public class LeftPaneController {
     private final ObservableList<GraphGroup> graphGroups;
     private final BorderPane leftBorderPane;
     private final AnchorPane rightAnchorPane;
-    private final EventHandler<TreeItem.TreeModificationEvent<ISqlgTopologyUI>> graphConfigurationExpandingEventHandles;
 
     private final int GRAPH_GROUP_INDEX = 1;
     private final int GRAPH_CONFIGURATION_INDEX = 2;
@@ -49,6 +49,7 @@ public class LeftPaneController {
     private final int META_PROPERTY_COLUMN_INDEX = 9;
     private final int PROPERTY_COLUMN_INDEX_PARTITION = 10;
 
+
     public LeftPaneController(
             PrimaryController primaryController,
             ObservableList<GraphGroup> graphGroups,
@@ -60,72 +61,142 @@ public class LeftPaneController {
         this.leftBorderPane = leftBorderPane;
         this.rightAnchorPane = rightAnchorPane;
         this.rightAnchorPane.setPadding(Insets.EMPTY);
-        this.graphConfigurationExpandingEventHandles = event -> {
-        };
+    }
 
+    private static ListChangeListener<GraphConfiguration> graphConfigurationListChangeListener(
+            LeftPaneController leftPaneController,
+            TreeItem<ISqlgTopologyUI> graphGroupTreeItem) {
+        return (c) -> {
+            while (c.next()) {
+                if (c.wasPermutated()) {
+                    //noinspection StatementWithEmptyBody
+                    for (int i = c.getFrom(); i < c.getTo(); ++i) {
+                        //permutate
+                    }
+                } else //noinspection StatementWithEmptyBody
+                    if (c.wasUpdated()) {
+                        //update item
+                    } else {
+                        for (GraphConfiguration remitem : c.getRemoved()) {
+                            Set<TreeItem<ISqlgTopologyUI>> toRemove = new HashSet<>();
+                            graphGroupTreeItem.getChildren().forEach(treeItem -> {
+                                if (treeItem.getValue().getName().equals(remitem.getName())) {
+                                    toRemove.add(treeItem);
+                                }
+                            });
+                            graphGroupTreeItem.getChildren().removeAll(toRemove);
+                        }
+                        for (GraphConfiguration addItem : c.getAddedSubList()) {
+                            TreeItem<ISqlgTopologyUI> graphConfigurationTreeItem = new GraphConfigurationTreeItem(leftPaneController, addItem);
+                            graphGroupTreeItem.getChildren().add(graphConfigurationTreeItem);
+                        }
+                    }
+            }
+        };
     }
 
     protected void initialize() {
         this.topologyTreeView = new TreeView<>();
-        AnchorPane.setLeftAnchor(this.topologyTreeView, 0D);
-        AnchorPane.setTopAnchor(this.topologyTreeView, 0D);
-        AnchorPane.setRightAnchor(this.topologyTreeView, 0D);
-        AnchorPane.setBottomAnchor(this.topologyTreeView, 0D);
-
         this.leftBorderPane.setCenter(this.topologyTreeView);
 
         this.topologyTreeView.setEditable(false);
-        final ContextMenu contextMenu = new ContextMenu();
-        MenuItem addGraphMenu = new MenuItem("Add graph group");
-        contextMenu.getItems().addAll(addGraphMenu);
-        this.topologyTreeView.setContextMenu(contextMenu);
-
         TreeItem<ISqlgTopologyUI> dummyRoot = new TreeItem<>(new MetaTopology("dummy", null));
         this.topologyTreeView.setShowRoot(false);
         this.topologyTreeView.setRoot(dummyRoot);
 
-        for (GraphGroup graphGroup : graphGroups) {
-            TreeItem<ISqlgTopologyUI> graphGroupTreeItem = new TreeItem<>(graphGroup);
-            graphGroupTreeItem.setGraphic(Fontawesome.LAYER_GROUP.label());
+        for (GraphGroup graphGroup : this.graphGroups) {
+            GraphGroupTreeItem graphGroupTreeItem = new GraphGroupTreeItem(this, graphGroup);
+            graphGroupTreeItem.setGraphic(Fontawesome.LAYER_GROUP.label(Solid));
             graphGroupTreeItem.setExpanded(true);
             dummyRoot.getChildren().add(graphGroupTreeItem);
-
-            graphGroup.getGraphConfigurations().addListener((ListChangeListener<GraphConfiguration>) c -> {
-                while (c.next()) {
-                    if (c.wasPermutated()) {
-                        //noinspection StatementWithEmptyBody
-                        for (int i = c.getFrom(); i < c.getTo(); ++i) {
-                            //permutate
-                        }
-                    } else //noinspection StatementWithEmptyBody
-                        if (c.wasUpdated()) {
-                            //update item
-                        } else {
-                            for (GraphConfiguration remitem : c.getRemoved()) {
-                                Set<TreeItem<ISqlgTopologyUI>> toRemove = new HashSet<>();
-                                graphGroupTreeItem.getChildren().forEach(treeItem -> {
-                                    if (treeItem.getValue().getName().equals(remitem.getName())) {
-                                        toRemove.add(treeItem);
-                                    }
-                                });
-                                graphGroupTreeItem.getChildren().removeAll(toRemove);
-                            }
-                            for (GraphConfiguration addItem : c.getAddedSubList()) {
-                                TreeItem<ISqlgTopologyUI> graphConfigurationTreeItem = new GraphConfigurationTreeItem(this, addItem);
-                                graphGroupTreeItem.getChildren().add(graphConfigurationTreeItem);
-                            }
-                        }
-                }
-            });
-
+            graphGroup.getGraphConfigurations().addListener(graphConfigurationListChangeListener(this, graphGroupTreeItem));
             for (GraphConfiguration graphConfiguration : graphGroup.getGraphConfigurations()) {
                 GraphConfigurationTreeItem graphConfigurationTreeItem = new GraphConfigurationTreeItem(this, graphConfiguration);
                 graphConfigurationTreeItem.setExpanded(false);
                 graphGroupTreeItem.getChildren().add(graphConfigurationTreeItem);
-                graphConfigurationTreeItem.addEventHandler(TreeItem.branchExpandedEvent(), this.graphConfigurationExpandingEventHandles);
             }
         }
-        this.topologyTreeView.setCellFactory(treeView -> new SqlgTreeCellImpl());
+        this.topologyTreeView.setCellFactory(ignore -> {
+            SqlgTreeCellImpl sqlgTreeCell = new SqlgTreeCellImpl();
+            sqlgTreeCell.setOnDragDetected(event -> {
+                if (!(sqlgTreeCell.getItem() instanceof GraphGroup graphGroup)) {
+                    return;
+                }
+                Dragboard db = sqlgTreeCell.startDragAndDrop(TransferMode.MOVE);
+                ClipboardContent clipboardContent = new ClipboardContent();
+                clipboardContent.putString(graphGroup.getName());
+                db.setContent(clipboardContent);
+                event.consume();
+            });
+            sqlgTreeCell.setOnDragOver(event -> {
+                if (event.getGestureSource() != sqlgTreeCell && event.getDragboard().hasString() &&
+                        sqlgTreeCell.getItem() instanceof GraphGroup) {
+
+                    event.acceptTransferModes(TransferMode.MOVE);
+                }
+                event.consume();
+            });
+            sqlgTreeCell.setOnDragEntered(event -> {
+                if (event.getGestureSource() != sqlgTreeCell && event.getDragboard().hasString() &&
+                        sqlgTreeCell.getItem() instanceof GraphGroup) {
+
+                    sqlgTreeCell.getStyleClass().add("tree-cell-drop");
+                }
+                event.consume();
+            });
+            sqlgTreeCell.setOnDragExited(event -> {
+                sqlgTreeCell.getStyleClass().remove("tree-cell-drop");
+            });
+            sqlgTreeCell.setOnDragDropped(event -> {
+                Dragboard db = event.getDragboard();
+                boolean success = false;
+                if (db.hasString()) {
+
+                    String _graphGroupToMove = event.getDragboard().getString();
+                    GraphGroup graphGroupToDropOn = (GraphGroup) sqlgTreeCell.getItem();
+                    TreeItem<ISqlgTopologyUI> graphGroupToDropOnTreeItem = sqlgTreeCell.getTreeItem();
+
+                    GraphGroup graphGroupToMove = graphGroups.stream()
+                            .filter(graphGroup -> graphGroup.getName().equals(_graphGroupToMove))
+                            .findAny()
+                            .orElseThrow();
+                    TreeItem<ISqlgTopologyUI> graphGroupToMoveTreeItem = dummyRoot.getChildren().stream()
+                            .filter(treeItem -> treeItem.getValue().getName().equals(_graphGroupToMove))
+                            .findAny()
+                            .orElseThrow();
+
+                    int indexOf = graphGroups.indexOf(graphGroupToDropOn);
+                    graphGroups.remove(graphGroupToMove);
+                    graphGroups.add(indexOf, graphGroupToMove);
+
+                    dummyRoot.getChildren().remove(graphGroupToMoveTreeItem);
+                    dummyRoot.getChildren().add(indexOf, graphGroupToMoveTreeItem);
+                    sqlgTreeCell.getStyleClass().remove("tree-cell-drop");
+                    topologyTreeView.refresh();
+                    User user = graphGroupToDropOn.getUser();
+                    GraphGroup userGraphGroupToMove = user.getGraphGroups().stream()
+                            .filter(graphGroup -> graphGroup.getName().equals(_graphGroupToMove))
+                            .findAny()
+                            .orElseThrow();
+                    user.getGraphGroups().remove(userGraphGroupToMove);
+                    user.getGraphGroups().add(indexOf, userGraphGroupToMove);
+
+                    user.getRoot().persistConfig();
+
+                    success = true;
+                }
+                /* let the source know whether the string was successfully
+                 * transferred and used */
+                event.setDropCompleted(success);
+                event.consume();
+            });
+            sqlgTreeCell.setOnDragDone(event -> {
+                if (event.getTransferMode() == TransferMode.MOVE) {
+                }
+                event.consume();
+            });
+            return sqlgTreeCell;
+        });
 
         this.topologyTreeView.getSelectionModel().selectedItemProperty().addListener(
                 (observable, oldValue, newValue) -> {
@@ -136,12 +207,13 @@ public class LeftPaneController {
                         if (treeItemLevel == GRAPH_GROUP_INDEX) {
                             Optional<GraphGroup> graphGroupOpt = this.graphGroups.stream().filter(g -> g.getName().equals(newValue.getValue().getName())).findAny();
                             if (graphGroupOpt.isPresent()) {
-                                GraphTableViewController graphTableViewController = new GraphTableViewController(
+                                GraphConfigurationTableViewController graphConfigurationTableViewController = new GraphConfigurationTableViewController(
                                         this.primaryController.getStage(),
+                                        this,
                                         graphGroupOpt.get(),
                                         graphGroupOpt.get().getGraphConfigurations()
                                 );
-                                view = graphTableViewController.getView();
+                                view = graphConfigurationTableViewController.getView();
                             } else {
                                 throw new IllegalStateException("Failed to find GraphGroup " + newValue.getValue());
                             }
@@ -149,6 +221,7 @@ public class LeftPaneController {
                             GraphConfiguration graphConfiguration = (GraphConfiguration) newValue.getValue();
                             GraphConfigurationFormController graphConfigurationFormController = new GraphConfigurationFormController(
                                     getPrimaryController().getStage(),
+                                    this,
                                     graphConfiguration
                             );
                             view = graphConfigurationFormController.getView();
@@ -903,33 +976,61 @@ public class LeftPaneController {
                     if (treeItem instanceof GraphConfigurationTreeItem graphConfigurationTreeItem && graphConfigurationTreeItem.isLoading()) {
                         setText(null);
                         setGraphic(this.progressBar);
+                    } else if (treeItem instanceof GraphGroupTreeItem graphGroupTreeItem) {
+                        setText(getItem().getName());
+                        setGraphic(getTreeItem().getGraphic());
+                        final ContextMenu contextMenu = new ContextMenu();
+
+                        MenuItem addGraphMenu = new MenuItem("Add graph group");
+                        addGraphMenu.setGraphic(Fontawesome.PLUS.label(Solid));
+                        addGraphMenu.setOnAction(ignore -> {
+                            GraphGroup graphGroup = primaryController.addDefaultGraphGroup();
+                            TreeItem<ISqlgTopologyUI> _graphGroupTreeItem = new TreeItem<>(graphGroup);
+                            _graphGroupTreeItem.setGraphic(Fontawesome.LAYER_GROUP.label(Solid));
+                            graphGroup.getGraphConfigurations().addListener(graphConfigurationListChangeListener(LeftPaneController.this, graphGroupTreeItem));
+                            _graphGroupTreeItem.setExpanded(false);
+                            topologyTreeView.getRoot().getChildren().add(_graphGroupTreeItem);
+                        });
+                        MenuItem deleteGraphMenu = new MenuItem("Delete graph group");
+                        deleteGraphMenu.setGraphic(Fontawesome.MINUS.label(Solid));
+                        deleteGraphMenu.setUserData(graphGroupTreeItem);
+                        deleteGraphMenu.setOnAction(ev -> {
+                            MenuItem menuItem = (MenuItem) ev.getSource();
+                            GraphGroupTreeItem _graphGroupTreeItem = (GraphGroupTreeItem) menuItem.getUserData();
+                            GraphGroup graphGroup = (GraphGroup) _graphGroupTreeItem.getValue();
+                            User user = graphGroup.getUser();
+                            user.getGraphGroups().remove(graphGroup);
+                            TreeItem<ISqlgTopologyUI> root = LeftPaneController.this.topologyTreeView.getRoot();
+                            root.getChildren().remove(_graphGroupTreeItem);
+                            user.getRoot().persistConfig();
+                        });
+                        contextMenu.getItems().addAll(addGraphMenu, deleteGraphMenu);
+
+                        setContextMenu(contextMenu);
                     } else if (treeItem instanceof GraphConfigurationTreeItem graphConfigurationTreeItem) {
                         GraphConfiguration graphConfiguration = (GraphConfiguration) graphConfigurationTreeItem.getValue();
 
-                        GlyphFont fontAwesome = GlyphFontRegistry.font("FontAwesome");
                         Button close = new Button();
                         close.disableProperty().bind(Bindings.createBooleanBinding(() -> !graphConfiguration.isOpen(), graphConfiguration.sqlgGraphOpenPropertyProperty()));
-                        Glyph closeGlyph = fontAwesome.create(FontAwesome.Glyph.CLOSE).size(12);
-                        close.setGraphic(closeGlyph);
+                        close.setGraphic(Fontawesome.XMARK.label(Solid));
                         Button refresh = new Button();
                         refresh.disableProperty().bind(Bindings.createBooleanBinding(() -> !graphConfiguration.isOpen(), graphConfiguration.sqlgGraphOpenPropertyProperty()));
-                        Glyph refreshGlyph = fontAwesome.create(FontAwesome.Glyph.REFRESH).size(12);
-                        refresh.setGraphic(refreshGlyph);
+                        refresh.setGraphic(Fontawesome.ARROWS_ROTATE_RIGHT.label(Solid));
                         HBox hBox = new HBox();
                         hBox.setSpacing(2);
                         Insets closeInsets = new Insets(1, 4, 1, 4);
                         Insets refreshInsets = new Insets(1, 4, 1, 4);
                         refresh.setPadding(refreshInsets);
                         close.setPadding(closeInsets);
-                        hBox.getChildren().addAll(Fontawesome.DATABASE.label(), close, refresh);
+                        hBox.getChildren().addAll(Fontawesome.DATABASE.label(Solid), close, refresh);
                         setGraphic(hBox);
                         setText(getItem().getName());
-                        close.setOnAction(event -> {
+                        close.setOnAction(ignore -> {
                             graphConfiguration.closeSqlgGraph();
                             graphConfigurationTreeItem.closeGraph();
                             graphConfigurationTreeItem.setExpanded(false);
                         });
-                        refresh.setOnAction(event -> {
+                        refresh.setOnAction(ignore -> {
                             graphConfiguration.refreshSqlgGraph();
                             graphConfigurationTreeItem.refreshGraph();
                             graphConfigurationTreeItem.setExpanded(false);

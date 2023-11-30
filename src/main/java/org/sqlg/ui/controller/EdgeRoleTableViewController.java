@@ -50,14 +50,14 @@ public class EdgeRoleTableViewController extends BaseController {
 
         this.leftPaneController = leftPaneController;
         this.root = new VBox(10);
-        this.root.setPadding(new Insets(10, 10, 10, 10));
+        this.root.setPadding(Insets.EMPTY);
         this.root.setMaxHeight(Double.MAX_VALUE);
 
         this.editToggleSwitch = new ToggleSwitch("Edit");
         this.editToggleSwitch.setLayoutX(70);
         this.editToggleSwitch.setLayoutY(168);
         HBox editBox = new HBox();
-        editBox.setPadding(new Insets(30, 30, 0, 30));
+        editBox.setPadding(new Insets(12, 5, 0, 0));
         editBox.setAlignment(Pos.CENTER_RIGHT);
         editBox.getChildren().addAll(editToggleSwitch);
 
@@ -65,7 +65,7 @@ public class EdgeRoleTableViewController extends BaseController {
 
         TableView<EdgeRoleUI> tableView = new TableView<>();
         tableView.editableProperty().bind(this.editToggleSwitch.selectedProperty());
-        tableView.setFixedCellSize(30D);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_LAST_COLUMN);
 
         TableColumn<EdgeRoleUI, String> nameColumn = new TableColumn<>("name");
         nameColumn.setCellFactory(TextFieldTableCell.forTableColumn());

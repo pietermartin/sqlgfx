@@ -26,4 +26,5 @@ public final class MetaTopology implements ISqlgTopologyUI {
     public ISqlgTopologyUI getParent() {
         return parent;
     }
+
 }

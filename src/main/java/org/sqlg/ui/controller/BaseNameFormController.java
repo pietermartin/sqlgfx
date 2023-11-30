@@ -9,9 +9,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import org.controlsfx.control.ToggleSwitch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +20,7 @@ import java.util.Collection;
 
 public abstract class BaseNameFormController extends BaseController {
 
-    public static final int TOP_LABEL_MIN_WIDTH = 120;
+    public static final int TOP_LABEL_MIN_WIDTH = 100;
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseNameFormController.class);
     protected final ToggleSwitch editToggleSwitch;
     protected final LeftPaneController leftPaneController;
@@ -35,48 +33,61 @@ public abstract class BaseNameFormController extends BaseController {
         this.leftPaneController = leftPaneController;
         this.sqlgTopologyUI = sqlgTopologyUI;
         this.root = new VBox(10);
-        this.root.setPadding(new Insets(10, 10, 10, 10));
+        this.root.setPadding(Insets.EMPTY);
         this.root.setMaxHeight(Double.MAX_VALUE);
 
         this.editToggleSwitch = new ToggleSwitch("Edit");
         this.editToggleSwitch.setLayoutX(70);
         this.editToggleSwitch.setLayoutY(168);
+
         HBox editBox = new HBox();
-        editBox.setPadding(new Insets(30, 30, 0, 30));
+        editBox.setPadding(new Insets(12, 5, 0, 0));
         editBox.setAlignment(Pos.CENTER_RIGHT);
         editBox.getChildren().addAll(editToggleSwitch);
 
-        HBox nameHBox = new HBox(5);
+        GridPane nameGridPane = new GridPane();
+        nameGridPane.getStyleClass().add("sqlgfx-name-box");
+        nameGridPane.setHgap(100);
+        nameGridPane.setVgap(5);
+        nameGridPane.setPadding(new Insets(5, 5, 5, 5));
+        int rowIndex = 0;
         Label label = new Label("name");
-        label.setMinWidth(TOP_LABEL_MIN_WIDTH);
-        nameHBox.setAlignment(Pos.CENTER);
-
+        GridPane.setConstraints(label, 0, rowIndex);
         //Do not bind the name property as deletion happens via the old name.
         this.sqlgTreeDataFormNameTxt = new TextField(this.sqlgTopologyUI.getName());
-
+        this.sqlgTreeDataFormNameTxt.setMinWidth(100);
         this.sqlgTreeDataFormNameTxt.setMaxWidth(Double.MAX_VALUE);
+        GridPane.setConstraints(this.sqlgTreeDataFormNameTxt, 1, rowIndex);
+        rowIndex++;
+
         Button rename = new Button("Rename");
         Button delete = new Button("Delete");
         Button cancel = new Button("Cancel");
-        HBox.setHgrow(this.sqlgTreeDataFormNameTxt, Priority.ALWAYS);
 
-        nameHBox.getChildren().addAll(label, this.sqlgTreeDataFormNameTxt, rename, delete, cancel);
+        HBox nameButtonBox = new HBox(5);
+        nameButtonBox.setAlignment(Pos.CENTER_RIGHT);
+        nameButtonBox.getChildren().addAll(rename, delete, cancel);
+        GridPane.setConstraints(nameButtonBox, 1, rowIndex);
 
+        ColumnConstraints column1 = new ColumnConstraints();
+        column1.setPercentWidth(20);
+        ColumnConstraints column2 = new ColumnConstraints();
+        column2.setPercentWidth(80);
+        column2.setHgrow(Priority.ALWAYS);
+        nameGridPane.getColumnConstraints().addAll(column1, column2); // each get 50% of width
+        nameGridPane.getChildren().addAll(label, this.sqlgTreeDataFormNameTxt, nameButtonBox);
         sqlgTreeDataFormNameTxt.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
-
-        VBox.setVgrow(nameHBox, Priority.NEVER);
 
         rename.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
         delete.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
         cancel.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
 
         this.root.getChildren().add(editBox);
-        this.root.getChildren().add(nameHBox);
+        this.root.getChildren().add(nameGridPane);
+
         this.root.getChildren().addAll(additionalChildren(sqlgTopologyUI));
 
-        rename.setOnAction(ignore -> {
-            rename();
-        });
+        rename.setOnAction(ignore -> rename());
         delete.setOnAction(ignore -> {
             SqlgGraph sqlgGraph = getSqlgGraph();
             try {
@@ -89,7 +100,8 @@ public abstract class BaseNameFormController extends BaseController {
                         "Error",
                         "Failed to save PropertyColumn",
                         e,
-                        result -> {}
+                        result -> {
+                        }
                 );
             } finally {
                 sqlgGraph.tx().rollback();

@@ -12,10 +12,6 @@ module org.sqlg {
 
     requires atlantafx.base;
 
-    requires org.kordamp.ikonli.core;
-    requires org.kordamp.ikonli.javafx;
-    requires org.kordamp.ikonli.fontawesome5;
-    requires org.kordamp.ikonli.boxicons;
     requires net.synedra.validatorfx;
 
     requires java.sql;

@@ -1,5 +1,6 @@
 package org.sqlg.ui.controller;
 
+import javafx.beans.binding.Bindings;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
@@ -15,32 +16,81 @@ import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.converter.DefaultStringConverter;
 import net.synedra.validatorfx.Validator;
-import org.kordamp.ikonli.boxicons.BoxiconsRegular;
-import org.kordamp.ikonli.javafx.FontIcon;
+import org.controlsfx.control.ToggleSwitch;
+import org.sqlg.ui.Fontawesome;
 import org.sqlg.ui.model.GraphConfiguration;
 import org.sqlg.ui.model.GraphGroup;
 
-public class GraphTableViewController extends BaseController {
+import java.util.Optional;
+
+import static org.sqlg.ui.Fontawesome.Type.Regular;
+
+public class GraphConfigurationTableViewController extends BaseController {
 
     private final Stage stage;
     private final GraphGroup graphGroup;
+    private final LeftPaneController leftPaneController;
+    private TextField graphGroupNameTxt;
     private final ObservableList<GraphConfiguration> graphConfigurations;
     private GraphConfiguration selectedGraphConfiguration;
     private final Validator validator = new Validator();
     protected final VBox root;
 
-    public GraphTableViewController(Stage stage, GraphGroup graphGroup, ObservableList<GraphConfiguration> graphConfigurations) {
+    public GraphConfigurationTableViewController(
+            Stage stage,
+            LeftPaneController leftPaneController,
+            GraphGroup graphGroup,
+            ObservableList<GraphConfiguration> graphConfigurations) {
+
         super(stage);
         this.stage = stage;
         this.graphGroup = graphGroup;
+        this.leftPaneController = leftPaneController;
         this.graphConfigurations = graphConfigurations;
         this.root = new VBox(10);
-        this.root.setPadding(new Insets(10, 10, 10, 10));
+        this.root.setPadding(Insets.EMPTY);
         this.root.setMaxHeight(Double.MAX_VALUE);
         initialize();
     }
 
     protected void initialize() {
+        ToggleSwitch editToggleSwitch = new ToggleSwitch("Edit");
+        editToggleSwitch.setLayoutX(70);
+        editToggleSwitch.setLayoutY(168);
+
+        HBox editBox = new HBox();
+        editBox.setPadding(new Insets(12, 5, 0, 0));
+        editBox.setAlignment(Pos.CENTER_RIGHT);
+        editBox.getChildren().addAll(editToggleSwitch);
+
+        HBox nameHBox = new HBox(5);
+        nameHBox.setPadding(new Insets(0, 5, 0, 5));
+        Label label = new Label("name");
+        label.setMinWidth(BaseNameFormController.TOP_LABEL_MIN_WIDTH);
+        nameHBox.setAlignment(Pos.CENTER);
+
+        //Do not bind the name property as deletion happens via the old name.
+        this.graphGroupNameTxt = new TextField(this.graphGroup.getName());
+        graphGroupNameTxt.setMaxWidth(Double.MAX_VALUE);
+        Button rename = new Button("Rename");
+        Button delete = new Button("Delete");
+        Button cancel = new Button("Cancel");
+        HBox.setHgrow(this.graphGroupNameTxt, Priority.ALWAYS);
+        nameHBox.getChildren().addAll(label, graphGroupNameTxt, rename, delete, cancel);
+        this.graphGroupNameTxt.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
+        VBox.setVgrow(nameHBox, Priority.NEVER);
+
+        rename.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
+        delete.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
+        cancel.disableProperty().bind(Bindings.createBooleanBinding(() -> !editToggleSwitch.isSelected(), editToggleSwitch.selectedProperty()));
+
+        rename.setOnAction(ignore -> {
+            rename();
+        });
+        cancel.setOnAction(ignore -> {
+            cancel();
+        });
+
         TableView<GraphConfiguration> graphTableView = new TableView<>();
         graphTableView.setItems(this.graphConfigurations);
         graphTableView.setEditable(false);
@@ -59,7 +109,8 @@ public class GraphTableViewController extends BaseController {
         VBox.setVgrow(buttonBar, Priority.NEVER);
         VBox.setVgrow(graphTableView, Priority.ALWAYS);
         VBox.setVgrow(vBox, Priority.ALWAYS);
-        this.root.getChildren().add(vBox);
+
+        this.root.getChildren().addAll(editBox, nameHBox, vBox);
 
         deleteGraphButton.setDisable(true);
 
@@ -121,9 +172,9 @@ public class GraphTableViewController extends BaseController {
             public TableCell<GraphConfiguration, GraphConfiguration.TESTED> call(final TableColumn<GraphConfiguration, GraphConfiguration.TESTED> param) {
                 return new TableCell<>() {
 
-                    final FontIcon noneChecked = new FontIcon(BoxiconsRegular.SQUARE);
-                    final FontIcon check = new FontIcon(BoxiconsRegular.CHECK_SQUARE);
-                    final FontIcon unchecked = new FontIcon(BoxiconsRegular.X);
+                    final Label noneChecked = Fontawesome.SQUARE.label(Regular);
+                    final Label check = Fontawesome.SQUARE_XMARK.label(Regular);
+                    final Label unchecked = Fontawesome.XMARK.label(Regular);
                     final Button btn = new Button("test", noneChecked);
                     final ProgressBar progressBar = new ProgressBar(0D);
                     final HBox buttonAndProgressBar = new HBox(5, btn, progressBar);
@@ -131,11 +182,6 @@ public class GraphTableViewController extends BaseController {
                     @Override
                     public void updateItem(GraphConfiguration.TESTED item, boolean empty) {
                         super.updateItem(item, empty);
-
-                        final int FONT_SIZE = 16;
-                        noneChecked.iconSizeProperty().set(FONT_SIZE);
-                        check.iconSizeProperty().set(FONT_SIZE);
-                        unchecked.iconSizeProperty().set(FONT_SIZE);
 
                         if (empty || item == null) {
                             setText(null);
@@ -146,9 +192,9 @@ public class GraphTableViewController extends BaseController {
                             btn.setOnAction(event -> {
                                 progressBar.styleProperty().set("");
                                 GraphConfiguration graphConfiguration = getTableView().getItems().get(getIndex());
-                                Task<FontIcon> connectionTask = new Task<>() {
+                                Task<Label> connectionTask = new Task<>() {
                                     @Override
-                                    protected FontIcon call() {
+                                    protected Label call() {
                                         updateProgress(ProgressBar.INDETERMINATE_PROGRESS, ProgressBar.INDETERMINATE_PROGRESS);
                                         updateValue(noneChecked);
                                         try {
@@ -179,6 +225,25 @@ public class GraphTableViewController extends BaseController {
         testedCol.setCellFactory(cellFactory);
 
         graphTableView.getColumns().setAll(graphNameCol, urlCol, usernameCol, testedCol);
+    }
+
+    private void rename() {
+        Optional<GraphGroup> existing = this.graphGroup.getUser().getGraphGroups().stream().filter(g -> g.getName().equals(this.graphGroupNameTxt.getText())).findAny();
+        if (existing.isPresent()) {
+            showDialog(Alert.AlertType.WARNING, "Rename", String.format("GraphGroup '%s' already exists.", this.graphGroupNameTxt.getText()));
+        } else {
+            this.graphGroup.setName(this.graphGroupNameTxt.getText());
+            this.leftPaneController.refreshTree();
+
+        }
+
+    }
+
+    private void cancel() {
+        this.graphGroupNameTxt.setText(this.graphGroup.getName());
+    }
+
+    private void delete() {
     }
 
     public Parent getView() {
