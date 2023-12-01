@@ -8,13 +8,13 @@ import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
+import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.controlsfx.control.ToggleSwitch;
-import org.controlsfx.control.tableview2.cell.ComboBox2TableCell;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sqlg.ui.model.EdgeLabelUI;
@@ -69,10 +69,11 @@ public class IndexTableViewController extends BaseController {
         TableColumn<IndexUI, String> nameColumn = new TableColumn<>("name");
         nameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
+        nameColumn.setEditable(false);
 
         TableColumn<IndexUI, String> indexTypeColumn = new TableColumn<>("indexType");
         List<String> indexTypes = List.of(IndexType.UNIQUE.getName(), IndexType.NON_UNIQUE.getName(), IndexType.GIN.getName());
-        indexTypeColumn.setCellFactory(ComboBox2TableCell.forTableColumn(indexTypes.toArray(new String[]{})));
+        indexTypeColumn.setCellFactory(ComboBoxTableCell.forTableColumn(indexTypes.toArray(new String[]{})));
         indexTypeColumn.setCellValueFactory(p -> p.getValue().indexTypeProperty());
         indexTypeColumn.setEditable(false);
 
@@ -152,7 +153,7 @@ public class IndexTableViewController extends BaseController {
                 showDialog(
                         Alert.AlertType.INFORMATION,
                         "Success",
-                        "Deleted Index"
+                        "Deleted index"
                 );
             } finally {
                 sqlgGraph.tx().rollback();

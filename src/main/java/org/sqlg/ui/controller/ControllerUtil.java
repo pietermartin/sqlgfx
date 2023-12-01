@@ -10,6 +10,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
+import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.Priority;
@@ -18,8 +19,6 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
-import org.controlsfx.control.tableview2.cell.ComboBox2TableCell;
-import org.controlsfx.control.tableview2.cell.TextField2TableCell;
 import org.controlsfx.dialog.ExceptionDialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,14 +107,14 @@ public class ControllerUtil {
 
         //PropertyDefinition start
         TableColumn<PropertyColumnUI, String> propertyTypeColumn = new TableColumn<>("propertyType");
-        propertyTypeColumn.setCellFactory(ComboBox2TableCell.forTableColumn(Arrays.stream(PropertyType.values()).map(PropertyType::name).toList().toArray(new String[]{})));
+        propertyTypeColumn.setCellFactory(ComboBoxTableCell.forTableColumn(Arrays.stream(PropertyType.values()).map(PropertyType::name).toList().toArray(new String[]{})));
         propertyTypeColumn.setCellValueFactory(p -> p.getValue().propertyTypeProperty());
         propertyTypeColumn.setEditable(false);
 
         //Multiplicity start
         TableColumn<PropertyColumnUI, Long> lowerColumn = new TableColumn<>("lower");
         lowerColumn.setCellValueFactory(p -> p.getValue().lowerProperty().asObject());
-        lowerColumn.setCellFactory(TextField2TableCell.forTableColumn(new StringConverter<>() {
+        lowerColumn.setCellFactory(TextFieldTableCell.forTableColumn(new StringConverter<>() {
             @Override
             public String toString(Long object) {
                 return String.valueOf(object);
@@ -126,6 +125,7 @@ public class ControllerUtil {
                 return Long.parseLong(string);
             }
         }));
+
         TableColumn<PropertyColumnUI, Long> upperColumn = new TableColumn<>("upper");
         upperColumn.setCellValueFactory(p -> p.getValue().upperProperty().asObject());
         upperColumn.setCellFactory(TextFieldTableCell.forTableColumn(new StringConverter<>() {
@@ -205,8 +205,8 @@ public class ControllerUtil {
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
 
         TableColumn<IndexUI, String> indexTypeColumn = new TableColumn<>("indexType");
-        indexTypeColumn.setCellFactory(ComboBox2TableCell.forTableColumn(IndexType.UNIQUE.getName()));
-//        indexTypeColumn.setCellValueFactory(p -> p.getValue().getName());
+        indexTypeColumn.setCellFactory(ComboBoxTableCell.forTableColumn(IndexType.UNIQUE.getName()));
+        indexTypeColumn.setCellValueFactory(p -> p.getValue().indexTypeProperty());
         indexTypeColumn.setEditable(false);
 
         TableColumn<IndexUI, Boolean> delete = new TableColumn<>("delete");

@@ -20,7 +20,7 @@ import java.util.Collection;
 
 public abstract class BaseNameFormController extends BaseController {
 
-    public static final int TOP_LABEL_MIN_WIDTH = 100;
+    public static final int TOP_LABEL_MIN_WIDTH = 200;
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseNameFormController.class);
     protected final ToggleSwitch editToggleSwitch;
     protected final LeftPaneController leftPaneController;
@@ -123,7 +123,6 @@ public abstract class BaseNameFormController extends BaseController {
     protected abstract void rename();
 
     protected void delete() {
-
     }
 
     protected void cancelName() {

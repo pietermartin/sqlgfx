@@ -30,33 +30,41 @@ public final class EdgeLabelUI implements ISqlgTopologyUI {
         init(this.edgeLabel.get());
     }
 
+    public void reset() {
+        init(this.edgeLabel.get());
+    }
+
     private void init(EdgeLabel edgeLabel) {
-        this.name = new SimpleStringProperty(edgeLabel.getName());
-        this.propertyColumnUIs = FXCollections.observableArrayList();
-        for (PropertyColumn propertyColumn : edgeLabel.getProperties().values()) {
-            this.propertyColumnUIs.add(new PropertyColumnUI(null, this, propertyColumn));
+        if (this.name == null) {
+            this.name = new SimpleStringProperty(edgeLabel.getName());
+            this.propertyColumnUIs = FXCollections.observableArrayList();
+            for (PropertyColumn propertyColumn : edgeLabel.getProperties().values()) {
+                this.propertyColumnUIs.add(new PropertyColumnUI(null, this, propertyColumn));
+            }
+            this.outEdgeRoleUIs = FXCollections.observableArrayList();
+            for (EdgeRole outEdgeRole : edgeLabel.getOutEdgeRoles()) {
+                this.outEdgeRoleUIs.add(new EdgeRoleUI(null, this, outEdgeRole));
+            }
+            this.inEdgeRoleUIs = FXCollections.observableArrayList();
+            for (EdgeRole inEdgeRole : edgeLabel.getInEdgeRoles()) {
+                this.inEdgeRoleUIs.add(new EdgeRoleUI(null, this, inEdgeRole));
+            }
+            this.indexUIs = FXCollections.observableArrayList();
+            for (Index index : edgeLabel.getIndexes().values()) {
+                this.indexUIs.add(
+                        new IndexUI(null, this, index)
+                );
+            }
+            this.partitionUIs = FXCollections.observableArrayList();
+            for (Partition partition : edgeLabel.getPartitions().values()) {
+                this.partitionUIs.add(
+                        new PartitionUI(this, partition)
+                );
+            }
+            this.delete = new SimpleBooleanProperty(false);
+        } else {
+            this.name.set(edgeLabel.getName());
         }
-        this.outEdgeRoleUIs = FXCollections.observableArrayList();
-        for (EdgeRole outEdgeRole : edgeLabel.getOutEdgeRoles()) {
-            this.outEdgeRoleUIs.add(new EdgeRoleUI(null, this, outEdgeRole));
-        }
-        this.inEdgeRoleUIs = FXCollections.observableArrayList();
-        for (EdgeRole inEdgeRole : edgeLabel.getInEdgeRoles()) {
-            this.inEdgeRoleUIs.add(new EdgeRoleUI(null, this, inEdgeRole));
-        }
-        this.indexUIs = FXCollections.observableArrayList();
-        for (Index index : edgeLabel.getIndexes().values()) {
-            this.indexUIs.add(
-                    new IndexUI(null, this, index)
-            );
-        }
-        this.partitionUIs = FXCollections.observableArrayList();
-        for (Partition partition : edgeLabel.getPartitions().values()) {
-            this.partitionUIs.add(
-                    new PartitionUI(this, partition)
-            );
-        }
-        this.delete = new SimpleBooleanProperty(false);
     }
 
     public EdgeLabel getEdgeLabel() {

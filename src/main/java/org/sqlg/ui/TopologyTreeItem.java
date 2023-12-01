@@ -8,6 +8,7 @@ import org.umlg.sqlg.structure.topology.Index;
 
 import java.util.Comparator;
 
+import static org.sqlg.ui.Fontawesome.Type.Light;
 import static org.sqlg.ui.Fontawesome.Type.Solid;
 
 public class TopologyTreeItem extends TreeItem<ISqlgTopologyUI> {
@@ -199,10 +200,13 @@ public class TopologyTreeItem extends TreeItem<ISqlgTopologyUI> {
                 metaIndex.getChildren().addAll(indexTreeItems);
 
                 TreeItem<ISqlgTopologyUI> metaPartition = new TreeItem<>(new MetaTopology(PARTITIONS, vertexLabelUI));
+                metaPartition.setGraphic(Fontawesome.SPLIT.label(Solid));
                 metaVertexLabelTreeItems.add(metaPartition);
                 ObservableList<TreeItem<ISqlgTopologyUI>> partitionTreeItems = FXCollections.observableArrayList();
                 for (PartitionUI partitionUI : vertexLabelUI.getPartitionUIs()) {
-                    partitionTreeItems.add(new TopologyTreeItem(partitionUI));
+                    TopologyTreeItem topologyTreeItem = new TopologyTreeItem(partitionUI);
+                    topologyTreeItem.setGraphic(Fontawesome.FILE_DASHED_LINE.label(Light));
+                    partitionTreeItems.add(topologyTreeItem);
                 }
                 metaPartition.getChildren().addAll(partitionTreeItems);
                 return metaVertexLabelTreeItems;
@@ -251,6 +255,7 @@ public class TopologyTreeItem extends TreeItem<ISqlgTopologyUI> {
                 metaIndex.getChildren().addAll(indexTreeItems);
 
                 TreeItem<ISqlgTopologyUI> metaPartition = new TreeItem<>(new MetaTopology(PARTITIONS, edgeLabelUI));
+                metaPartition.setGraphic(Fontawesome.SPLIT.label(Solid));
                 metaEdgeLabelTreeItems.add(metaPartition);
                 ObservableList<TreeItem<ISqlgTopologyUI>> partitionTreeItems = FXCollections.observableArrayList();
                 for (PartitionUI partitionUI : edgeLabelUI.getPartitionUIs()) {
@@ -264,12 +269,15 @@ public class TopologyTreeItem extends TreeItem<ISqlgTopologyUI> {
             case PartitionUI partitionUI -> {
                 ObservableList<TreeItem<ISqlgTopologyUI>> metaSubPartitionTreeItems = FXCollections.observableArrayList();
                 TreeItem<ISqlgTopologyUI> metaSubPartition = new TreeItem<>(new MetaTopology(SUB_PARTITIONS, partitionUI));
+                metaSubPartition.setGraphic(Fontawesome.SPLIT.label(Solid));
                 metaSubPartitionTreeItems.add(metaSubPartition);
                 ObservableList<TreeItem<ISqlgTopologyUI>> subPartitionsTreeItems = FXCollections.observableArrayList();
                 ObservableList<PartitionUI> subPartitionUIS = partitionUI.getSubPartitionUIs();
                 subPartitionUIS.sort(Comparator.comparing(PartitionUI::getName));
                 for (PartitionUI subPartitionUI : subPartitionUIS) {
-                    subPartitionsTreeItems.add(new TopologyTreeItem(subPartitionUI));
+                    TopologyTreeItem topologyTreeItem = new TopologyTreeItem(subPartitionUI);
+                    topologyTreeItem.setGraphic(Fontawesome.FILE_DASHED_LINE.label(Light));
+                    subPartitionsTreeItems.add(topologyTreeItem);
                 }
                 metaSubPartition.getChildren().addAll(subPartitionsTreeItems);
                 return metaSubPartitionTreeItems;

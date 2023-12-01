@@ -4,10 +4,7 @@ import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
@@ -19,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sqlg.ui.model.EdgeLabelUI;
 import org.sqlg.ui.model.SchemaUI;
+import org.umlg.sqlg.structure.SqlgGraph;
 
 public class EdgeLabelTableViewController extends BaseController {
 
@@ -82,11 +80,40 @@ public class EdgeLabelTableViewController extends BaseController {
         VBox.setVgrow(vBox, Priority.ALWAYS);
 
         save.disableProperty().bind(Bindings.createBooleanBinding(() -> !this.editToggleSwitch.selectedProperty().get(), this.editToggleSwitch.selectedProperty()));
-        save.setOnAction(x -> {
+        save.setOnAction(ignore -> {
+            SqlgGraph sqlgGraph = schemaUI.getGraphConfiguration().getSqlgGraph();
+            try {
+                for (EdgeLabelUI edgeLabelUI : schemaUI.getEdgeLabelUIS()) {
+                    if (edgeLabelUI.isDelete()) {
+                        edgeLabelUI.getEdgeLabel().remove();
+                    } else if (!edgeLabelUI.getName().equals(edgeLabelUI.getEdgeLabel().getName())) {
+                        edgeLabelUI.getEdgeLabel().rename(edgeLabelUI.getName());
+                    }
+                }
+                sqlgGraph.tx().commit();
+                showDialog(
+                        Alert.AlertType.INFORMATION,
+                        "Success",
+                        "Saved EdgeLabels"
+                );
+            } catch (Exception e) {
+                showDialog(
+                        Alert.AlertType.ERROR,
+                        "Error",
+                        "Failed to save EdgeLabels",
+                        e,
+                        ignore1 -> {
+                        }
+                );
+            } finally {
+                sqlgGraph.tx().rollback();
+            }
 
         });
         cancel.setOnAction(x -> {
-
+            for (EdgeLabelUI edgeLabelUI : schemaUI.getEdgeLabelUIS()) {
+                edgeLabelUI.reset();
+            }
         });
         this.root.getChildren().add(vBox);
     }

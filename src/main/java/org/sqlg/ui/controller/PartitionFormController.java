@@ -24,6 +24,8 @@ public class PartitionFormController extends BaseNameFormController {
     public PartitionFormController(LeftPaneController leftPaneController, PartitionUI partitionUI) {
         super(leftPaneController, partitionUI);
         this.partitionUI = partitionUI;
+        this.sqlgTreeDataFormNameTxt.disableProperty().unbind();
+        this.sqlgTreeDataFormNameTxt.setDisable(true);
     }
 
     @Override
@@ -38,30 +40,7 @@ public class PartitionFormController extends BaseNameFormController {
 
     @Override
     protected void rename() {
-        SqlgGraph sqlgGraph = getSqlgGraph();
-        try {
-            this.partitionUI.getPartition().rename(this.sqlgTreeDataFormNameTxt.getText());
-            sqlgGraph.tx().commit();
-//            Platform.runLater(() -> this.partitionUI.selectInTree(this.sqlgTreeDataFormNameTxt.getText()));
-            showDialog(
-                    Alert.AlertType.INFORMATION,
-                    "Success",
-                    "Renamed Partition to '" + this.sqlgTreeDataFormNameTxt.getText() + "'"
-            );
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
-            showDialog(
-                    Alert.AlertType.ERROR,
-                    "Error",
-                    "Failed to renamed Partition to '" + this.sqlgTreeDataFormNameTxt.getText() + "'",
-                    e,
-                    ignore -> this.sqlgTreeDataFormNameTxt.setText(this.partitionUI.getPartition().getName())
-            );
-        } finally {
-            sqlgGraph.tx().rollback();
-        }
     }
-
 
     @Override
     protected Collection<Node> additionalChildren(ISqlgTopologyUI sqlgTopologyUI) {
@@ -96,6 +75,7 @@ public class PartitionFormController extends BaseNameFormController {
         GridPane gridPane = new GridPane();
         gridPane.setHgap(5);
         gridPane.setVgap(5);
+        gridPane.setPadding(new Insets(0, 5, 0, 5));
         int rowIndex = 0;
 
         Label propertyTypeLabel = new Label("propertyType");

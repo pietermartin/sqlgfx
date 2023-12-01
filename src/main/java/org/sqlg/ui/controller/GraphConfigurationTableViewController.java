@@ -233,6 +233,7 @@ public class GraphConfigurationTableViewController extends BaseController {
             showDialog(Alert.AlertType.WARNING, "Rename", String.format("GraphGroup '%s' already exists.", this.graphGroupNameTxt.getText()));
         } else {
             this.graphGroup.setName(this.graphGroupNameTxt.getText());
+            this.graphGroup.getUser().getRoot().persistConfig();
             this.leftPaneController.refreshTree();
 
         }

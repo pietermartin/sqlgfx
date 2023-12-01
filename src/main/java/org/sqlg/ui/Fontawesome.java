@@ -26,7 +26,9 @@ public enum Fontawesome {
     XMARK('\uf00d'),
     DATABASE('\uf1c0'),
     SERVER('\uf233'),
-    ARROWS_ROTATE_RIGHT('\uf01e');
+    ARROWS_ROTATE_RIGHT('\uf01e'),
+    SPLIT('\ue254'),
+    FILE_DASHED_LINE('\uf877');
     final char unicode;
 
     Fontawesome(char unicode) {

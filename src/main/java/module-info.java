@@ -10,7 +10,7 @@ module org.sqlg {
 
     requires org.controlsfx.controls;
 
-    requires atlantafx.base;
+//    requires atlantafx.base;
 
     requires net.synedra.validatorfx;
 

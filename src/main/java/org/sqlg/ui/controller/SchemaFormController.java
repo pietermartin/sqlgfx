@@ -15,6 +15,7 @@ public class SchemaFormController extends BaseNameFormController {
     public SchemaFormController(LeftPaneController leftPaneController, SchemaUI schemaUI) {
         super(leftPaneController, schemaUI);
         this.schemaUI = schemaUI;
+        this.editToggleSwitch.setDisable(true);
     }
 
     @Override

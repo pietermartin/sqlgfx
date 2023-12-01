@@ -31,6 +31,11 @@ public final class VertexLabelUI implements ISqlgTopologyUI {
         init(vertexLabel);
     }
 
+    public void reset() {
+        VertexLabel _vertexLabel = getSchemaUI().getSchema().getVertexLabel(this.vertexLabel.getValue().getName()).orElseThrow();
+        init(_vertexLabel);
+    }
+
     public VertexLabel getVertexLabel() {
         return vertexLabel.get();
     }
@@ -125,35 +130,39 @@ public final class VertexLabelUI implements ISqlgTopologyUI {
     }
 
     private void init(VertexLabel vertexLabel) {
-        this.name = new SimpleStringProperty(vertexLabel.getName());
-        this.partitionType = new SimpleStringProperty(vertexLabel.getPartitionType().name());
-        this.partitionExpression = new SimpleStringProperty(vertexLabel.getPartitionExpression());
-        this.propertyColumnUIs = FXCollections.observableArrayList();
-        for (PropertyColumn propertyColumn : vertexLabel.getProperties().values()) {
-            this.propertyColumnUIs.add(new PropertyColumnUI(this, null, propertyColumn));
+        if (this.name == null) {
+            this.name = new SimpleStringProperty(vertexLabel.getName());
+            this.partitionType = new SimpleStringProperty(vertexLabel.getPartitionType().name());
+            this.partitionExpression = new SimpleStringProperty(vertexLabel.getPartitionExpression());
+            this.propertyColumnUIs = FXCollections.observableArrayList();
+            for (PropertyColumn propertyColumn : vertexLabel.getProperties().values()) {
+                this.propertyColumnUIs.add(new PropertyColumnUI(this, null, propertyColumn));
+            }
+            this.propertyColumnUIs.sort(Comparator.comparing(PropertyColumnUI::getName));
+            this.outEdgeRoleUIs = FXCollections.observableArrayList();
+            for (EdgeRole outEdgeRole : vertexLabel.getOutEdgeRoles().values()) {
+                this.outEdgeRoleUIs.add(new EdgeRoleUI(this, null, outEdgeRole));
+            }
+            this.inEdgeRoleUIs = FXCollections.observableArrayList();
+            for (EdgeRole inEdgeRole : vertexLabel.getInEdgeRoles().values()) {
+                this.inEdgeRoleUIs.add(new EdgeRoleUI(this, null, inEdgeRole));
+            }
+            this.indexUIs = FXCollections.observableArrayList();
+            for (Index index : vertexLabel.getIndexes().values()) {
+                this.indexUIs.add(
+                        new IndexUI(this, null, index)
+                );
+            }
+            this.partitionUIs = FXCollections.observableArrayList();
+            for (Partition partition : vertexLabel.getPartitions().values()) {
+                this.partitionUIs.add(
+                        new PartitionUI(this, partition)
+                );
+            }
+            this.delete = new SimpleBooleanProperty(false);
+        } else {
+            this.name.set(vertexLabel.getName());
         }
-        this.propertyColumnUIs.sort(Comparator.comparing(PropertyColumnUI::getName));
-        this.outEdgeRoleUIs = FXCollections.observableArrayList();
-        for (EdgeRole outEdgeRole : vertexLabel.getOutEdgeRoles().values()) {
-            this.outEdgeRoleUIs.add(new EdgeRoleUI(this, null, outEdgeRole));
-        }
-        this.inEdgeRoleUIs = FXCollections.observableArrayList();
-        for (EdgeRole inEdgeRole : vertexLabel.getInEdgeRoles().values()) {
-            this.inEdgeRoleUIs.add(new EdgeRoleUI(this, null, inEdgeRole));
-        }
-        this.indexUIs = FXCollections.observableArrayList();
-        for (Index index : vertexLabel.getIndexes().values()) {
-            this.indexUIs.add(
-                    new IndexUI(this, null, index)
-            );
-        }
-        this.partitionUIs = FXCollections.observableArrayList();
-        for (Partition partition : vertexLabel.getPartitions().values()) {
-            this.partitionUIs.add(
-                    new PartitionUI(this, partition)
-            );
-        }
-        this.delete = new SimpleBooleanProperty(false);
     }
 
     public void refresh() {

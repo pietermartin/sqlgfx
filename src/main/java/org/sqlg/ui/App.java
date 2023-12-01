@@ -48,26 +48,25 @@ public class App extends Application {
 //        Application.setUserAgentStylesheet(new NordLight().getUserAgentStylesheet());
 //        Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
 
-//        resetDb();
+        resetDb();
 
         InputStream isOtfBrands_Regular = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Brands-Regular-400.otf");
-        InputStream isOtfDuotone_Solid = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Duotone-Solid-900.otf");
-        InputStream isOtfLight = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Pro-Light-300.otf");
-        InputStream isOtfRegular = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Pro-Regular-400.otf");
-        InputStream isOtfSolid = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Pro-Solid-900.otf");
-        InputStream isOtfThin = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Pro-Thin-100.otf");
-        InputStream isOtfSharp_Light = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Sharp-Light-300.otf");
-        InputStream isOtfSharp_Regular = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Sharp-Regular-400.otf");
-        InputStream isOtfSharp_Solid = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Sharp-Solid-900.otf");
-
         Font fontBrands_Regular = Font.loadFont(isOtfBrands_Regular, -1);
+        InputStream isOtfDuotone_Solid = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Duotone-Solid-900.otf");
         Font fontDuotone_Solid = Font.loadFont(isOtfDuotone_Solid, -1);
+        InputStream isOtfLight = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Pro-Light-300.otf");
         Font fontLight = Font.loadFont(isOtfLight, -1);
+        InputStream isOtfRegular = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Pro-Regular-400.otf");
         Font fontRegular = Font.loadFont(isOtfRegular, -1);
+        InputStream isOtfSolid = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Pro-Solid-900.otf");
         Font fontSolid = Font.loadFont(isOtfSolid, -1);
+        InputStream isOtfThin = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Pro-Thin-100.otf");
         Font fontThin = Font.loadFont(isOtfThin, -1);
+        InputStream isOtfSharp_Light = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Sharp-Light-300.otf");
         Font fontSharp_Light = Font.loadFont(isOtfSharp_Light, -1);
+        InputStream isOtfSharp_Regular = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Sharp-Regular-400.otf");
         Font fontSharp_Regular = Font.loadFont(isOtfSharp_Regular, -1);
+        InputStream isOtfSharp_Solid = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Sharp-Solid-900.otf");
         Font fontSharp_Solid = Font.loadFont(isOtfSharp_Solid, -1);
 
         Root root = new Root();

@@ -4,20 +4,18 @@ import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
+import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.controlsfx.control.ToggleSwitch;
-import org.controlsfx.control.tableview2.cell.ComboBox2TableCell;
 import org.sqlg.ui.model.SchemaUI;
 import org.sqlg.ui.model.VertexLabelUI;
+import org.umlg.sqlg.structure.SqlgGraph;
 import org.umlg.sqlg.structure.topology.PartitionType;
 
 import java.util.Arrays;
@@ -57,11 +55,10 @@ public class VertexLabelTableViewController extends BaseController {
         nameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
 
-
-        TableColumn<VertexLabelUI, ?> partitionColumn = new TableColumn<>("Partition");
         TableColumn<VertexLabelUI, String> partitionTypeColumn = new TableColumn<>("partitionType");
-        partitionTypeColumn.setCellFactory(ComboBox2TableCell.forTableColumn(Arrays.stream(PartitionType.values()).map(PartitionType::name).toList().toArray(new String[]{})));
+        partitionTypeColumn.setCellFactory(ComboBoxTableCell.forTableColumn(Arrays.stream(PartitionType.values()).map(PartitionType::name).toList().toArray(new String[]{})));
         partitionTypeColumn.setCellValueFactory(p -> p.getValue().partitionTypeProperty());
+        partitionTypeColumn.setEditable(false);
 
         TableColumn<VertexLabelUI, Boolean> delete = new TableColumn<>("delete");
         delete.setText("delete");
@@ -87,11 +84,39 @@ public class VertexLabelTableViewController extends BaseController {
         VBox.setVgrow(vBox, Priority.ALWAYS);
 
         save.disableProperty().bind(Bindings.createBooleanBinding(() -> !this.editToggleSwitch.selectedProperty().get(), this.editToggleSwitch.selectedProperty()));
-        save.setOnAction(x -> {
-
+        save.setOnAction(ignore -> {
+            SqlgGraph sqlgGraph = schemaUI.getGraphConfiguration().getSqlgGraph();
+            try {
+                for (VertexLabelUI vertexLabelUI : schemaUI.getVertexLabelUIs()) {
+                    if (vertexLabelUI.isDelete()) {
+                        vertexLabelUI.getVertexLabel().remove();
+                    } else if (!vertexLabelUI.getName().equals(vertexLabelUI.getVertexLabel().getName())) {
+                        vertexLabelUI.getVertexLabel().rename(vertexLabelUI.getName());
+                    }
+                }
+                sqlgGraph.tx().commit();
+                showDialog(
+                        Alert.AlertType.INFORMATION,
+                        "Success",
+                        "Saved VertexLabels"
+                );
+            } catch (Exception e) {
+                showDialog(
+                        Alert.AlertType.ERROR,
+                        "Error",
+                        "Failed to save VertexLabels",
+                        e,
+                        ignore1 -> {
+                        }
+                );
+            } finally {
+                sqlgGraph.tx().rollback();
+            }
         });
-        cancel.setOnAction(x -> {
-
+        cancel.setOnAction(ignore -> {
+            for (VertexLabelUI vertexLabelUI : schemaUI.getVertexLabelUIs()) {
+                vertexLabelUI.reset();
+            }
         });
         this.root.getChildren().add(vBox);
     }

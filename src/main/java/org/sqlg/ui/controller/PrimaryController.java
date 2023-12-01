@@ -126,7 +126,11 @@ public class PrimaryController extends BaseController {
                     } else if (topologyInf instanceof VertexLabel vertexLabel) {
                         Platform.runLater(() -> {
                             LOGGER.debug("VertexLabel creation: {}/{}/{}/{}", graphGroup.getName(), graphConfiguration.getName(), vertexLabel.getSchema().getName(), vertexLabel.getName());
-                            leftPaneController.addVertexLabel(graphGroup, graphConfiguration, vertexLabel);
+                            leftPaneController.addVertexLabel(
+                                    graphGroup,
+                                    graphConfiguration,
+                                    vertexLabel
+                            );
                         });
                     } else if (topologyInf instanceof EdgeRole edgeRole) {
                         Platform.runLater(() -> {
@@ -159,7 +163,7 @@ public class PrimaryController extends BaseController {
                         });
                     } else if (oldValue instanceof VertexLabel oldVertexLabel) {
                         Platform.runLater(() -> {
-                            LOGGER.debug("VertexLabel deletion: {}/{}/{}", graphGroup.getName(), graphConfiguration.getName(), oldVertexLabel.getName());
+                            LOGGER.debug("VertexLabel deletion: {}/{}/{}/{}", graphGroup.getName(), graphConfiguration.getName(), oldVertexLabel.getSchema().getName(), oldVertexLabel.getName());
                             leftPaneController.deleteVertexLabel(
                                     graphGroup,
                                     graphConfiguration,
@@ -357,6 +361,7 @@ public class PrimaryController extends BaseController {
     }
 
     public void alert(String heading, String message, Exception e) {
-        showDialog(Alert.AlertType.ERROR, heading, message, e, (ignore) -> {});
+        showDialog(Alert.AlertType.ERROR, heading, message, e, (ignore) -> {
+        });
     }
 }

@@ -39,7 +39,7 @@ public class PropertyColumnTableViewController extends BaseController {
         this.editToggleSwitch.setLayoutX(70);
         this.editToggleSwitch.setLayoutY(168);
         HBox editBox = new HBox();
-        editBox.setPadding(new Insets(12, 0, 0, 5));
+        editBox.setPadding(new Insets(12, 5, 0, 0));
         editBox.setAlignment(Pos.CENTER_RIGHT);
         editBox.getChildren().addAll(editToggleSwitch);
 

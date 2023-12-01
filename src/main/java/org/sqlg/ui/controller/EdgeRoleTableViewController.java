@@ -6,6 +6,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
+import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.HBox;
@@ -14,8 +15,6 @@ import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.controlsfx.control.ToggleSwitch;
-import org.controlsfx.control.tableview2.cell.ComboBox2TableCell;
-import org.controlsfx.control.tableview2.cell.TextField2TableCell;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sqlg.ui.model.EdgeLabelUI;
@@ -72,14 +71,14 @@ public class EdgeRoleTableViewController extends BaseController {
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
 
         TableColumn<EdgeRoleUI, Direction> directionColumn = new TableColumn<>("direction");
-        directionColumn.setCellFactory(ComboBox2TableCell.forTableColumn(Arrays.stream(Direction.values()).toList().toArray(new Direction[]{})));
+        directionColumn.setCellFactory(ComboBoxTableCell.forTableColumn(Arrays.stream(Direction.values()).toList().toArray(new Direction[]{})));
         directionColumn.setCellValueFactory(p -> p.getValue().directionProperty());
         directionColumn.setEditable(false);
 
         //Multiplicity start
         TableColumn<EdgeRoleUI, Long> lowerColumn = new TableColumn<>("lower");
         lowerColumn.setCellValueFactory(p -> p.getValue().lowerProperty().asObject());
-        lowerColumn.setCellFactory(TextField2TableCell.forTableColumn(new StringConverter<>() {
+        lowerColumn.setCellFactory(TextFieldTableCell.forTableColumn(new StringConverter<>() {
             @Override
             public String toString(Long object) {
                 return String.valueOf(object);

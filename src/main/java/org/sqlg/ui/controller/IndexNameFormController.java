@@ -15,6 +15,8 @@ public class IndexNameFormController extends BaseNameFormController {
     public IndexNameFormController(LeftPaneController leftPaneController, IndexUI indexUI) {
         super(leftPaneController, indexUI);
         this.indexUI = indexUI;
+        this.sqlgTreeDataFormNameTxt.disableProperty().unbind();
+        this.sqlgTreeDataFormNameTxt.setDisable(true);
     }
 
     @Override
@@ -25,13 +27,17 @@ public class IndexNameFormController extends BaseNameFormController {
             return this.indexUI.getEdgeLabelUI().getSchemaUI().getGraphConfiguration().getSqlgGraph();
         }
     }
-    
+
     @Override
     protected void rename() {
 
     }
 
-//    @Override
+    @Override
+    protected void delete() {
+        this.indexUI.getIndex().remove();
+    }
+
     protected void save() {
         this.indexUI.getIndex().rename(this.sqlgTreeDataFormNameTxt.getText());
     }

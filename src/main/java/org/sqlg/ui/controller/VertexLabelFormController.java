@@ -2,12 +2,12 @@ package org.sqlg.ui.controller;
 
 import javafx.application.Platform;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.slf4j.Logger;
@@ -89,25 +89,35 @@ public class VertexLabelFormController extends AbstractLabelControllerName {
     protected Collection<Node> additionalChildren(ISqlgTopologyUI sqlgTopologyUI) {
         VertexLabelUI vertexLabelUI = (VertexLabelUI) sqlgTopologyUI;
 
-        HBox partitionTypeHBox = new HBox(5);
-        partitionTypeHBox.setPadding(new Insets(0, 5, 0, 5));
+
+        GridPane partitionGridPane = new GridPane();
+        partitionGridPane.setHgap(100);
+        partitionGridPane.setVgap(5);
+        partitionGridPane.setPadding(new Insets(5, 5, 5, 5));
+        int rowIndex = 0;
+
+        Label partitionTypeLabel = new Label("partitionType");
+        GridPane.setConstraints(partitionTypeLabel, 0, rowIndex);
         TextField partitionTypeTextField = new TextField(vertexLabelUI.getPartitionType());
         partitionTypeTextField.setEditable(false);
         partitionTypeTextField.setDisable(true);
-        Label partitionTypeLabel = new Label("partitionType");
-        partitionTypeLabel.setMinWidth(TOP_LABEL_MIN_WIDTH);
-        partitionTypeHBox.setAlignment(Pos.CENTER_LEFT);
-        partitionTypeHBox.getChildren().addAll(partitionTypeLabel, partitionTypeTextField);
+        GridPane.setConstraints(partitionTypeTextField, 1, rowIndex);
+        rowIndex++;
 
-        HBox partitionExpressionHBox = new HBox(5);
-        partitionExpressionHBox.setPadding(new Insets(0, 5, 0, 5));
+        Label partitionExpresssionLabel = new Label("partitionExpression");
+        GridPane.setConstraints(partitionExpresssionLabel, 0, rowIndex);
         TextField partitionExpressionTextField = new TextField(vertexLabelUI.getPartitionExpression());
         partitionExpressionTextField.setEditable(false);
         partitionExpressionTextField.setDisable(true);
-        Label partitionExpresssionLabel = new Label("partitionExpression");
-        partitionExpresssionLabel.setMinWidth(TOP_LABEL_MIN_WIDTH);
-        partitionExpressionHBox.setAlignment(Pos.CENTER_LEFT);
-        partitionExpressionHBox.getChildren().addAll(partitionExpresssionLabel, partitionExpressionTextField);
+        GridPane.setConstraints(partitionExpressionTextField, 1, rowIndex);
+
+        ColumnConstraints column1 = new ColumnConstraints();
+        column1.setPercentWidth(20);
+        ColumnConstraints column2 = new ColumnConstraints();
+        column2.setPercentWidth(80);
+        column2.setHgrow(Priority.ALWAYS);
+        partitionGridPane.getColumnConstraints().addAll(column1, column2); // each get 50% of width
+        partitionGridPane.getChildren().addAll(partitionTypeLabel, partitionTypeTextField, partitionExpresssionLabel, partitionExpressionTextField);
 
         Node propertiesTableView = ControllerUtil.propertyColumnsTableView(
                 vertexLabelUI.getPropertyColumnUIs(),
@@ -145,8 +155,12 @@ public class VertexLabelFormController extends AbstractLabelControllerName {
                 ignore -> cancelIndexes()
         );
         VBox.setVgrow(indexesTableView, Priority.ALWAYS);
-        return List.of(partitionTypeHBox, partitionExpressionHBox, propertiesTableView, indexesTableView);
+        return List.of(partitionGridPane, propertiesTableView, indexesTableView);
     }
 
+    @Override
+    protected void cancelPropertyColumns() {
+        System.out.println("cancelPropertyColumns");
+    }
 
 }
