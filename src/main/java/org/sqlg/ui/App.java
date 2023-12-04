@@ -45,7 +45,7 @@ public class App extends Application {
 //        Application.setUserAgentStylesheet(new NordLight().getUserAgentStylesheet());
 //        Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
 
-        resetDb();
+//        resetDb();
 
         InputStream isOtfBrands_Regular = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Brands-Regular-400.otf");
         assert isOtfBrands_Regular != null;
