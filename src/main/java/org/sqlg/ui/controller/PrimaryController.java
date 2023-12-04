@@ -3,11 +3,9 @@ package org.sqlg.ui.controller;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
-import javafx.scene.control.Alert;
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.ToolBar;
-import javafx.scene.control.TreeItem;
+import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
@@ -16,6 +14,7 @@ import org.controlsfx.control.BreadCrumbBar;
 import org.controlsfx.control.StatusBar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.sqlg.ui.Fontawesome;
 import org.sqlg.ui.model.GraphConfiguration;
 import org.sqlg.ui.model.GraphGroup;
 import org.sqlg.ui.model.Root;
@@ -31,6 +30,7 @@ public class PrimaryController extends BaseController {
     private static final Logger LOGGER = LoggerFactory.getLogger(PrimaryController.class);
     private final Root root;
     private BorderPane borderPane;
+    private TabPane tabPane;
     private LeftPaneController leftPaneController;
     private User user;
     private final ObservableList<GraphGroup> graphGroups = FXCollections.observableArrayList(new ArrayList<>());
@@ -79,6 +79,19 @@ public class PrimaryController extends BaseController {
         this.borderPane.setCenter(splitPane);
         BorderPane borderPaneLeft = new BorderPane();
         AnchorPane anchorPaneRight = new AnchorPane();
+        anchorPaneRight.setPadding(Insets.EMPTY);
+
+        this.tabPane = new TabPane();
+        Tab viewTab = new Tab("View", null);
+        viewTab.setGraphic(Fontawesome.GEAR.label(Fontawesome.Type.Solid));
+        viewTab.setClosable(false);
+        this.tabPane.getTabs().add(viewTab);
+        AnchorPane.setTopAnchor(this.tabPane, 0D);
+        AnchorPane.setRightAnchor(this.tabPane, 0D);
+        AnchorPane.setBottomAnchor(this.tabPane, 0D);
+        AnchorPane.setLeftAnchor(this.tabPane, 0D);
+        anchorPaneRight.getChildren().add(this.tabPane);
+
         splitPane.getItems().addAll(borderPaneLeft, anchorPaneRight);
         StatusBar statusbar = new StatusBar();
         this.borderPane.setBottom(statusbar);
@@ -88,7 +101,7 @@ public class PrimaryController extends BaseController {
                 this,
                 this.graphGroups,
                 borderPaneLeft,
-                anchorPaneRight
+                viewTab
         );
         this.leftPaneController.initialize();
 
@@ -364,4 +377,13 @@ public class PrimaryController extends BaseController {
         showDialog(Alert.AlertType.ERROR, heading, message, e, (ignore) -> {
         });
     }
+
+    public void addGremlinTab(GraphConfiguration graphConfiguration) {
+        if (graphConfiguration.isOpen()) {
+            new GremlinQueryTab(this.tabPane, graphConfiguration);
+        } else {
+            showDialog(Alert.AlertType.INFORMATION, graphConfiguration.getName(), "The graph needs to be opened to query.");
+        }
+    }
+
 }

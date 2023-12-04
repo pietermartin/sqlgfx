@@ -56,11 +56,16 @@ public class User {
 
     public void fromJson(ObjectNode userObjectNode) {
         ArrayNode graphGroupArrayNode = (ArrayNode) userObjectNode.get("graphGroups");
-        for (JsonNode graphGroupJson : graphGroupArrayNode) {
-            String graphGroupName = graphGroupJson.get("name").asText();
-            GraphGroup graphGroup = new GraphGroup(this, graphGroupName);
+        if (graphGroupArrayNode.isEmpty()) {
+            GraphGroup graphGroup = new GraphGroup(this, "default");
             this.getGraphGroups().add(graphGroup);
-            graphGroup.fromJson(graphGroupJson);
+        } else {
+            for (JsonNode graphGroupJson : graphGroupArrayNode) {
+                String graphGroupName = graphGroupJson.get("name").asText();
+                GraphGroup graphGroup = new GraphGroup(this, graphGroupName);
+                this.getGraphGroups().add(graphGroup);
+                graphGroup.fromJson(graphGroupJson);
+            }
         }
     }
 

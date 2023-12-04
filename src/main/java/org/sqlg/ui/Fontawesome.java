@@ -28,7 +28,12 @@ public enum Fontawesome {
     SERVER('\uf233'),
     ARROWS_ROTATE_RIGHT('\uf01e'),
     SPLIT('\ue254'),
-    FILE_DASHED_LINE('\uf877');
+    FILE_DASHED_LINE('\uf877'),
+    PLAY('\uf04b'),
+    STOP('\uf04d'),
+    SPINNER('\uf110'),
+    MAGNIFYING_GLASS('\uf002'),
+    GEAR('\uf013');
     final char unicode;
 
     Fontawesome(char unicode) {
@@ -52,8 +57,14 @@ public enum Fontawesome {
     }
 
     public Label label(Type type) {
+        return label(type, 14);
+    }
+
+    public Label label(Type type, int fontSize) {
         Label label = new Label();
         label.getStyleClass().add("fontawesome");
+        label.setStyle("-fx-font-size: " + fontSize);
+
         label.setText(this.unicode());
 //        label.setText("AAA");
 //        label.setPadding(Insets.EMPTY);

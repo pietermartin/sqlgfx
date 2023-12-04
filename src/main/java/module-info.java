@@ -8,6 +8,12 @@ module org.sqlg {
     requires javafx.controls;
     requires javafx.fxml;
 
+    requires org.fxmisc.richtext;
+    requires org.fxmisc.flowless;
+    requires org.fxmisc.undo;
+
+    requires org.antlr.antlr4.runtime;
+
     requires org.controlsfx.controls;
 
 //    requires atlantafx.base;
@@ -19,7 +25,7 @@ module org.sqlg {
     requires com.fasterxml.jackson.databind;
 
     requires gremlin.core;
-//    requires gremlin.language;
+    requires gremlin.language;
     requires gremlin.shaded;
 
     requires sqlg.core;

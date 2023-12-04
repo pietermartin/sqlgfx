@@ -3,12 +3,9 @@ package org.sqlg.ui;
 import javafx.application.Application;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import org.apache.commons.collections4.set.ListOrderedSet;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.MapConfiguration;
@@ -51,22 +48,31 @@ public class App extends Application {
         resetDb();
 
         InputStream isOtfBrands_Regular = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Brands-Regular-400.otf");
+        assert isOtfBrands_Regular != null;
         Font fontBrands_Regular = Font.loadFont(isOtfBrands_Regular, -1);
         InputStream isOtfDuotone_Solid = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Duotone-Solid-900.otf");
+        assert isOtfDuotone_Solid != null;
         Font fontDuotone_Solid = Font.loadFont(isOtfDuotone_Solid, -1);
         InputStream isOtfLight = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Pro-Light-300.otf");
+        assert isOtfLight != null;
         Font fontLight = Font.loadFont(isOtfLight, -1);
         InputStream isOtfRegular = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Pro-Regular-400.otf");
+        assert isOtfRegular != null;
         Font fontRegular = Font.loadFont(isOtfRegular, -1);
         InputStream isOtfSolid = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Pro-Solid-900.otf");
+        assert isOtfSolid != null;
         Font fontSolid = Font.loadFont(isOtfSolid, -1);
         InputStream isOtfThin = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Pro-Thin-100.otf");
+        assert isOtfThin != null;
         Font fontThin = Font.loadFont(isOtfThin, -1);
         InputStream isOtfSharp_Light = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Sharp-Light-300.otf");
+        assert isOtfSharp_Light != null;
         Font fontSharp_Light = Font.loadFont(isOtfSharp_Light, -1);
         InputStream isOtfSharp_Regular = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Sharp-Regular-400.otf");
+        assert isOtfSharp_Regular != null;
         Font fontSharp_Regular = Font.loadFont(isOtfSharp_Regular, -1);
         InputStream isOtfSharp_Solid = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Sharp-Solid-900.otf");
+        assert isOtfSharp_Solid != null;
         Font fontSharp_Solid = Font.loadFont(isOtfSharp_Solid, -1);
 
         Root root = new Root();
@@ -74,9 +80,9 @@ public class App extends Application {
         Parent parent = primaryController.initialize();
 
         Scene scene = new Scene(parent);
-        scene.getRoot().setEffect(new DropShadow(10, Color.rgb(100, 100, 100)));
-        scene.setFill(Color.TRANSPARENT);
-        stage.initStyle(StageStyle.DECORATED);
+//        scene.getRoot().setEffect(new DropShadow(10, Color.rgb(100, 100, 100)));
+//        scene.setFill(Color.TRANSPARENT);
+//        stage.initStyle(StageStyle.DECORATED);
 
         //noinspection DataFlowIssue
         scene.getStylesheets().add(App.class.getResource("styles.css").toExternalForm());

@@ -40,3 +40,4 @@ build/
 /.idea/inspectionProfiles/Project_Default.xml
 /src/main/resources/org/sqlg/ui/images/kit-1f0259751e-desktop/metadata/
 /src/main/resources/org/sqlg/ui/images/kit-1f0259751e-desktop/svgs/
+/dependency-reduced-pom.xml

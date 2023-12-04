@@ -10,19 +10,9 @@
         <maven.compiler.target>21</maven.compiler.target>
         <sqlg.version>3.0.3-SNAPSHOT</sqlg.version>
         <jfx.version>22-ea+16</jfx.version>
-<!--        <jfx.version>21.0.1</jfx.version>-->
+        <antlr4.version>4.9.1</antlr4.version>
+        <log4j.version>2.19.0</log4j.version>
     </properties>
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.kordamp.ikonli</groupId>
-                <artifactId>ikonli-bom</artifactId>
-                <version>12.3.1</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
     <dependencies>
         <dependency>
             <groupId>org.openjfx</groupId>
@@ -39,6 +29,11 @@
             <artifactId>controlsfx</artifactId>
             <version>11.2.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.fxmisc.richtext</groupId>
+            <artifactId>richtextfx</artifactId>
+            <version>0.11.2</version>
+        </dependency>
 <!--        <dependency>-->
 <!--            <groupId>io.github.mkpaz</groupId>-->
 <!--            <artifactId>atlantafx-base</artifactId>-->
@@ -50,8 +45,6 @@
             <version>0.4.2</version>
         </dependency>
 
-
-        <!-- logging -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -60,17 +53,17 @@
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
-            <version>2.19.0</version>
+            <version>${log4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-            <version>2.19.0</version>
+            <version>${log4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j2-impl</artifactId>
-            <version>2.19.0</version>
+            <version>${log4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.umlg</groupId>
@@ -81,6 +74,11 @@
             <groupId>org.umlg</groupId>
             <artifactId>sqlg-postgres-dialect</artifactId>
             <version>${sqlg.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4-runtime</artifactId>
+            <version>${antlr4.version}</version>
         </dependency>
     </dependencies>
     <build>
@@ -107,6 +105,27 @@
                         <id>default-cli</id>
                         <configuration>
                             <mainClass>org.sqlg.ui.App</mainClass>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.4.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>org.sqlg.ui.FXAppLauncher</mainClass>
+                                </transformer>
+                            </transformers>
                         </configuration>
                     </execution>
                 </executions>
