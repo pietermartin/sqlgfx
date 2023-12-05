@@ -21,6 +21,8 @@ public class Root {
         this.objectMapper = new ObjectMapper();
         String homeProp = System.getProperty("user.home");
         this.configPath = new File(homeProp).toPath().resolve(".sqlgfx");
+        //noinspection ResultOfMethodCallIgnored
+        this.configPath.toFile().mkdir();
         ListOrderedSet<User> users = readConfig();
         if (users.isEmpty()) {
             User fake = new User(this, "fake", null);
