@@ -23,6 +23,7 @@ module org.sqlg {
     requires java.sql;
     requires org.apache.commons.configuration2;
     requires com.fasterxml.jackson.databind;
+    requires org.apache.commons.collections4;
 
     requires gremlin.core;
     requires gremlin.language;
@@ -31,8 +32,6 @@ module org.sqlg {
     requires sqlg.core;
     requires sqlg.c3p0;
     requires sqlg.postgres.dialect;
-
-    requires org.apache.commons.collections4;
 
     exports org.sqlg.ui;
     opens org.sqlg.ui to javafx.fxml;
