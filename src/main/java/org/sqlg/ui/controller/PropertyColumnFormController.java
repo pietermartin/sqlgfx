@@ -45,7 +45,26 @@ public class PropertyColumnFormController extends BaseNameFormController {
 
     @Override
     protected void delete() {
-        this.propertyColumnUI.getPropertyColumn().remove();
+        try {
+            this.propertyColumnUI.getPropertyColumn().remove();
+            showDialog(
+                    Alert.AlertType.INFORMATION,
+                    "Success",
+                    STR."Deleted PropertyColumn '\{this.sqlgTreeDataFormNameTxt.getText()}'"
+            );
+        } catch (Exception e) {
+            getSqlgGraph().tx().rollback();
+            LOGGER.error(e.getMessage(), e);
+            showDialog(
+                    Alert.AlertType.ERROR,
+                    "Error",
+                    STR."Failed to delete PropertyColumn '\{this.sqlgTreeDataFormNameTxt.getText()}'",
+                    e,
+                    ignore -> {
+                        System.out.println("asd");
+                    }
+            );
+        }
     }
 
     @Override
@@ -62,39 +81,39 @@ public class PropertyColumnFormController extends BaseNameFormController {
                     GraphConfiguration graphConfiguration = schemaUI.getGraphConfiguration();
                     GraphGroup graphGroup = graphConfiguration.getGraphGroup();
                     this.leftPaneController.selectPropertyColumn(
-                                    graphGroup,
-                                    graphConfiguration,
-                                    schemaUI.getSchema(),
-                                    vertexLabelUI.getVertexLabel(),
-                                    this.sqlgTreeDataFormNameTxt.getText()
-                            );
+                            graphGroup,
+                            graphConfiguration,
+                            schemaUI.getSchema(),
+                            vertexLabelUI.getVertexLabel(),
+                            this.sqlgTreeDataFormNameTxt.getText()
+                    );
                 } else {
                     EdgeLabelUI edgeLabelUI = this.propertyColumnUI.getEdgeLabelUI();
                     SchemaUI schemaUI = edgeLabelUI.getSchemaUI();
                     GraphConfiguration graphConfiguration = schemaUI.getGraphConfiguration();
                     GraphGroup graphGroup = graphConfiguration.getGraphGroup();
                     this.leftPaneController.selectPropertyColumn(
-                                    graphGroup,
-                                    graphConfiguration,
-                                    schemaUI.getSchema(),
-                                    edgeLabelUI.getEdgeLabel(),
-                                    this.sqlgTreeDataFormNameTxt.getText()
-                            );
+                            graphGroup,
+                            graphConfiguration,
+                            schemaUI.getSchema(),
+                            edgeLabelUI.getEdgeLabel(),
+                            this.sqlgTreeDataFormNameTxt.getText()
+                    );
                 }
             });
             showDialog(
                     Alert.AlertType.INFORMATION,
                     "Success",
-                    "Renamed PropertyColumn to '" + this.sqlgTreeDataFormNameTxt.getText() + "'"
+                    STR."Renamed PropertyColumn to '\{this.sqlgTreeDataFormNameTxt.getText()}'"
             );
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
             showDialog(
                     Alert.AlertType.ERROR,
                     "Error",
-                    "Failed to renamed PropertyColumn to '" + this.sqlgTreeDataFormNameTxt.getText() + "'",
+                    STR."Failed to renamed PropertyColumn to '\{this.sqlgTreeDataFormNameTxt.getText()}'",
                     e,
-                    result -> this.sqlgTreeDataFormNameTxt.setText(this.propertyColumnUI.getPropertyColumn().getName())
+                    ignore -> this.sqlgTreeDataFormNameTxt.setText(this.propertyColumnUI.getPropertyColumn().getName())
             );
         } finally {
             sqlgGraph.tx().rollback();
@@ -236,9 +255,9 @@ public class PropertyColumnFormController extends BaseNameFormController {
     void save() {
         try {
             if (this.propertyColumnUI.getLower() != this.propertyColumnUI.getPropertyColumn().getPropertyDefinition().multiplicity().lower() ||
-                            this.propertyColumnUI.getUpper() != this.propertyColumnUI.getPropertyColumn().getPropertyDefinition().multiplicity().upper() ||
-                            !this.propertyColumnUI.getDefaultLiteral().equals(this.propertyColumnUI.getPropertyColumn().getPropertyDefinition().defaultLiteral()) ||
-                            !this.propertyColumnUI.getCheckConstraint().equals(this.propertyColumnUI.getPropertyColumn().getPropertyDefinition().checkConstraint())
+                    this.propertyColumnUI.getUpper() != this.propertyColumnUI.getPropertyColumn().getPropertyDefinition().multiplicity().upper() ||
+                    !this.propertyColumnUI.getDefaultLiteral().equals(this.propertyColumnUI.getPropertyColumn().getPropertyDefinition().defaultLiteral()) ||
+                    !this.propertyColumnUI.getCheckConstraint().equals(this.propertyColumnUI.getPropertyColumn().getPropertyDefinition().checkConstraint())
             ) {
                 PropertyDefinition updatedPropertyDefinition = PropertyDefinition.of(
                         PropertyType.valueOf(this.propertyColumnUI.getPropertyType()),

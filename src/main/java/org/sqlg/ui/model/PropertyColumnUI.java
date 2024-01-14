@@ -83,6 +83,15 @@ public final class PropertyColumnUI implements ISqlgTopologyUI {
     }
 
     @Override
+    public String getQualifiedName() {
+        if (getVertexLabelUI() != null) {
+            return STR."\{getVertexLabelUI().getQualifiedName()}.\{getPropertyColumn().getName()}";
+        } else {
+            return STR."\{getEdgeLabelUI().getQualifiedName()}.\{getPropertyColumn().getName()}";
+        }
+    }
+
+    @Override
     public StringProperty nameProperty() {
         return this.name;
     }

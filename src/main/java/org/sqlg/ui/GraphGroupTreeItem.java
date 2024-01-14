@@ -4,7 +4,7 @@ import javafx.scene.control.TreeItem;
 import org.sqlg.ui.controller.LeftPaneController;
 import org.sqlg.ui.model.ISqlgTopologyUI;
 
-public class GraphGroupTreeItem  extends TreeItem<ISqlgTopologyUI> {
+public class GraphGroupTreeItem extends TreeItem<ISqlgTopologyUI> {
 
     private final LeftPaneController leftPaneController;
 

@@ -170,22 +170,28 @@ public class ControllerUtil {
 
         tableView.setItems(propertyColumnUIs);
 
-        ButtonBar buttonBar = new ButtonBar();
-        buttonBar.setPadding(new Insets(0, 5, 0, 0));
-        Button save = new Button("Save");
-        ButtonBar.setButtonData(save, ButtonBar.ButtonData.OK_DONE);
-        Button cancel = new Button("Cancel");
-        ButtonBar.setButtonData(cancel, ButtonBar.ButtonData.CANCEL_CLOSE);
-        buttonBar.getButtons().addAll(save, cancel);
-        VBox vBox = new VBox(5, tableView, buttonBar);
-        vBox.setPadding(new Insets(0, 0, 5, 0));
-        VBox.setVgrow(buttonBar, Priority.NEVER);
+        VBox vBox;
+        if (saveAction != null || cancelAction != null) {
+            ButtonBar buttonBar = new ButtonBar();
+            buttonBar.setPadding(new Insets(0, 5, 0, 0));
+            Button save = new Button("Save");
+            ButtonBar.setButtonData(save, ButtonBar.ButtonData.OK_DONE);
+            Button cancel = new Button("Cancel");
+            ButtonBar.setButtonData(cancel, ButtonBar.ButtonData.CANCEL_CLOSE);
+            buttonBar.getButtons().addAll(save, cancel);
+            vBox = new VBox(5, tableView, buttonBar);
+            VBox.setVgrow(buttonBar, Priority.NEVER);
+            vBox.setPadding(new Insets(0, 0, 5, 0));
+            save.disableProperty().bind(Bindings.createBooleanBinding(() -> !editableProperty.get(), editableProperty));
+            save.setOnAction(saveAction);
+            cancel.setOnAction(cancelAction);
+        } else {
+            vBox = new VBox(5, tableView);
+            vBox.setPadding(new Insets(0, 0, 0, 0));
+        }
         VBox.setVgrow(tableView, Priority.ALWAYS);
         VBox.setVgrow(vBox, Priority.ALWAYS);
 
-        save.disableProperty().bind(Bindings.createBooleanBinding(() -> !editableProperty.get(), editableProperty));
-        save.setOnAction(saveAction);
-        cancel.setOnAction(cancelAction);
         return vBox;
     }
 

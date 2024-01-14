@@ -25,9 +25,10 @@ module org.sqlg {
     requires com.fasterxml.jackson.databind;
     requires org.apache.commons.collections4;
 
-    requires gremlin.core;
-    requires gremlin.language;
-    requires gremlin.shaded;
+    requires org.apache.tinkerpop.gremlin.core;
+    requires org.apache.tinkerpop.gremlin.language;
+//    requires gremlin.core;
+//    requires gremlin.language;
 
     requires sqlg.core;
     requires sqlg.c3p0;
@@ -38,5 +39,4 @@ module org.sqlg {
     exports org.sqlg.ui.model;
     opens org.sqlg.ui.model to javafx.fxml;
     exports org.sqlg.ui.controller;
-    opens org.sqlg.ui.controller to javafx.fxml;
 }

@@ -10,9 +10,9 @@ import org.umlg.sqlg.structure.topology.Partition;
 
 public final class PartitionUI implements ISqlgTopologyUI {
 
-    private VertexLabelUI vertexLabelUI;
-    private EdgeLabelUI edgeLabelUI;
-    private PartitionUI parentPartitionUI;
+    private final VertexLabelUI vertexLabelUI;
+    private final EdgeLabelUI edgeLabelUI;
+    private final PartitionUI parentPartitionUI;
     private final SimpleObjectProperty<Partition> partition;
     private final SimpleStringProperty name;
     private final SimpleStringProperty from;
@@ -68,6 +68,19 @@ public final class PartitionUI implements ISqlgTopologyUI {
     @Override
     public String getName() {
         return name.get();
+    }
+
+    @Override
+    public String getQualifiedName() {
+        if (this.parentPartitionUI != null) {
+            return STR."\{this.parentPartitionUI.getQualifiedName()}.\{name.get()}";
+        } else {
+            if (getVertexLabelUI()!= null) {
+                return STR."\{getVertexLabelUI().getQualifiedName()}.\{name.get()}";
+            } else {
+                return STR."\{getEdgeLabelUI().getQualifiedName()}.\{name.get()}";
+            }
+        }
     }
 
     @Override

@@ -1,6 +1,10 @@
 package org.sqlg.ui.controller;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.Node;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import org.sqlg.ui.model.ISqlgTopologyUI;
 import org.sqlg.ui.model.IndexUI;
 import org.umlg.sqlg.structure.SqlgGraph;
@@ -44,6 +48,14 @@ public class IndexNameFormController extends BaseNameFormController {
 
     @Override
     protected Collection<Node> additionalChildren(ISqlgTopologyUI sqlgTopologyUI) {
-        return List.of();
+        IndexUI indexUI = (IndexUI) sqlgTopologyUI;
+        Node propertiesTableView = ControllerUtil.propertyColumnsTableView(
+                indexUI.getPropertyColumnUIs(),
+                BooleanProperty.booleanProperty(new SimpleBooleanProperty(false)),
+                null,
+                null
+        );
+        VBox.setVgrow(propertiesTableView, Priority.ALWAYS);
+        return List.of(propertiesTableView);
     }
 }

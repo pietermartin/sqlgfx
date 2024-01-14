@@ -44,7 +44,7 @@ public class TopologyTreeItem extends TreeItem<ISqlgTopologyUI> {
     private void internalSetGraphic(ISqlgTopologyUI value) {
         switch (value) {
             case EdgeLabelUI edgeLabelUI -> {
-                setGraphic(Fontawesome.EDGE.label(Solid));
+                setGraphic(Fontawesome.CODE_MERGE.label(Solid));
             }
             case EdgeRoleUI edgeRoleUI -> {
             }
@@ -140,7 +140,7 @@ public class TopologyTreeItem extends TreeItem<ISqlgTopologyUI> {
                 metaVertexLabels.getChildren().addAll(vertexLabelTreeItems);
 
                 TreeItem<ISqlgTopologyUI> metaEdgeLabels = new TreeItem<>(new MetaTopology(EDGE_LABELS, schemaUI));
-                metaEdgeLabels.setGraphic(Fontawesome.CODE_MERGE.label(Solid));
+                metaEdgeLabels.setGraphic(Fontawesome.LINES_LEANING.label(Solid));
                 metaSchemaTreeItems.add(metaEdgeLabels);
                 ObservableList<TreeItem<ISqlgTopologyUI>> edgeLabelTreeItems = FXCollections.observableArrayList();
                 ObservableList<EdgeLabelUI> edgeLabelUIS = schemaUI.getEdgeLabelUIS();

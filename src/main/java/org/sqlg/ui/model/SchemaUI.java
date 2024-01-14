@@ -37,8 +37,14 @@ public final class SchemaUI implements ISqlgTopologyUI {
         return graphConfiguration;
     }
 
+    @Override
     public String getName() {
         return name.get();
+    }
+
+    @Override
+    public String getQualifiedName() {
+        return STR."\{getGraphConfiguration().getName()}.\{getSchema().getName()}";
     }
 
     public SimpleStringProperty nameProperty() {

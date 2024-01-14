@@ -18,7 +18,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.collections4.iterators.ArrayIterator;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinLexer;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinParser;
-import org.apache.tinkerpop.gremlin.language.grammar2.GremlinAntlrToJava;
+import org.apache.tinkerpop.gremlin.core.grammar.GremlinAntlrToJava;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.fxmisc.flowless.VirtualizedScrollPane;

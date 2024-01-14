@@ -39,12 +39,25 @@ public final class EdgeRoleUI implements ISqlgTopologyUI {
     }
 
     @Override
+    public String getQualifiedName() {
+        if (getVertexLabelUI() != null) {
+            return STR."\{getVertexLabelUI().getQualifiedName()}.\{this.name.get()}";
+        } else {
+            return STR."\{getEdgeLabelUI().getQualifiedName()}.\{this.name.get()}";
+        }
+    }
+
+    @Override
     public StringProperty nameProperty() {
         return this.name;
     }
 
     public VertexLabelUI getVertexLabelUI() {
         return vertexLabelUI;
+    }
+
+    public EdgeLabelUI getEdgeLabelUI() {
+        return edgeLabelUI;
     }
 
     public EdgeRole getEdgeRole() {
@@ -56,8 +69,16 @@ public final class EdgeRoleUI implements ISqlgTopologyUI {
         this.edgeRole.set(edgeRole);
     }
 
+    public Direction getDirection() {
+        return direction.get();
+    }
+
     public SimpleObjectProperty<Direction> directionProperty() {
         return direction;
+    }
+
+    public void setDirection(Direction direction) {
+        this.direction.set(direction);
     }
 
     public SimpleLongProperty lowerProperty() {
@@ -68,8 +89,16 @@ public final class EdgeRoleUI implements ISqlgTopologyUI {
         return upper;
     }
 
+    public boolean isUnique() {
+        return unique.get();
+    }
+
     public SimpleBooleanProperty uniqueProperty() {
         return unique;
+    }
+
+    public void setUnique(boolean unique) {
+        this.unique.set(unique);
     }
 
     public SimpleBooleanProperty orderedProperty() {

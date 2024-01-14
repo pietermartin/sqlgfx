@@ -59,6 +59,10 @@ fontawesome-Brands_Regular {
 /*    -fx-text-fill: #536569;*/
 /*}*/
 
+.tree-item-hover {
+    -fx-cursor: hand;
+}
+
 .sqlgfx-name-box {
     -fx-background-color: #dfdfdf;
 }

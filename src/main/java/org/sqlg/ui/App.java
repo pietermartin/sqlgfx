@@ -3,9 +3,12 @@ package org.sqlg.ui;
 import javafx.application.Application;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import org.apache.commons.collections4.set.ListOrderedSet;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.MapConfiguration;
@@ -45,7 +48,7 @@ public class App extends Application {
 //        Application.setUserAgentStylesheet(new NordLight().getUserAgentStylesheet());
 //        Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
 
-//        resetDb();
+        resetSqlgfxDb();
 
         InputStream isOtfBrands_Regular = LeftPaneController.class.getResourceAsStream("/org/sqlg/ui/images/kit-1f0259751e-desktop/otfs/Font Awesome 6 Brands-Regular-400.otf");
         assert isOtfBrands_Regular != null;
@@ -80,9 +83,9 @@ public class App extends Application {
         Parent parent = primaryController.initialize();
 
         Scene scene = new Scene(parent);
-//        scene.getRoot().setEffect(new DropShadow(10, Color.rgb(100, 100, 100)));
-//        scene.setFill(Color.TRANSPARENT);
-//        stage.initStyle(StageStyle.DECORATED);
+        scene.getRoot().setEffect(new DropShadow(10, Color.rgb(100, 100, 100)));
+        scene.setFill(Color.TRANSPARENT);
+        stage.initStyle(StageStyle.DECORATED);
 
         //noinspection DataFlowIssue
         scene.getStylesheets().add(App.class.getResource("styles.css").toExternalForm());
@@ -97,7 +100,7 @@ public class App extends Application {
         launch();
     }
 
-    private void resetDb() {
+    private void resetSqlgfxDb() {
         Configuration configuration = new MapConfiguration(new HashMap<>() {{
             put("jdbc.url", "jdbc:postgresql://localhost:5432/sqlgfx");
             put("jdbc.username", "postgres");
@@ -127,9 +130,27 @@ public class App extends Application {
                                 "'aa'",
                                 "(" + sqlgGraph.getSqlDialect().maybeWrapInQoutes("a1") + " <> 'a')")
                 );
+                put(
+                        "a2",
+                        PropertyDefinition.of(
+                                PropertyType.STRING,
+                                Multiplicity.of(1, 1, true),
+                                "'aa'",
+                                "(" + sqlgGraph.getSqlDialect().maybeWrapInQoutes("a2") + " <> 'a')")
+                );
+                put(
+                        "a3",
+                        PropertyDefinition.of(
+                                PropertyType.INTEGER,
+                                Multiplicity.of(1, 1, true),
+                                "2",
+                                "(" + sqlgGraph.getSqlDialect().maybeWrapInQoutes("a3") + " <> 1)")
+                );
             }});
             PropertyColumn a1PropertyColumn = aVertexLabel.getProperty("a1").orElseThrow();
-            aVertexLabel.ensureIndexExists(IndexType.UNIQUE, List.of(a1PropertyColumn));
+            PropertyColumn a2PropertyColumn = aVertexLabel.getProperty("a2").orElseThrow();
+            PropertyColumn a3PropertyColumn = aVertexLabel.getProperty("a3").orElseThrow();
+            aVertexLabel.ensureIndexExists(IndexType.UNIQUE, List.of(a1PropertyColumn, a2PropertyColumn, a3PropertyColumn));
 
             VertexLabel aaVertexLabel = aSchema.ensureVertexLabelExist("AA", new LinkedHashMap<>() {{
                 put(

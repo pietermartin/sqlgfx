@@ -107,7 +107,6 @@ public class IndexTableViewController extends BaseController {
             cancel();
         });
 
-
         TableView<PropertyColumnUI> indexPropertyTableView = new TableView<>();
         indexPropertyTableView.setEditable(false);
         indexPropertyTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_LAST_COLUMN);

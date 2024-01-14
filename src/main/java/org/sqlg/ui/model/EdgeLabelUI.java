@@ -94,6 +94,11 @@ public final class EdgeLabelUI implements ISqlgTopologyUI {
     }
 
     @Override
+    public String getQualifiedName() {
+        return STR."\{getSchemaUI().getGraphConfiguration().getName()}.\{getEdgeLabel().getFullName()}";
+    }
+
+    @Override
     public StringProperty nameProperty() {
         return this.name;
     }

@@ -12,8 +12,11 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.paint.Color;
 import org.apache.tinkerpop.gremlin.structure.Direction;
+import org.controlsfx.control.textfield.AutoCompletionBinding;
+import org.controlsfx.control.textfield.TextFields;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sqlg.ui.Fontawesome;
@@ -23,6 +26,7 @@ import org.sqlg.ui.TopologyTreeItem;
 import org.sqlg.ui.model.*;
 import org.umlg.sqlg.structure.topology.*;
 
+import java.lang.reflect.Field;
 import java.util.*;
 
 import static org.sqlg.ui.Fontawesome.Type.Solid;
@@ -31,6 +35,11 @@ public class LeftPaneController {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(LeftPaneController.class);
     private final PrimaryController primaryController;
+
+    private AutoCompletionBinding<String> autoCompletionBinding;
+    private final Set<String> possibleSuggestions = new HashSet<>();
+    private TextField searchTextField;
+
     private TreeView<ISqlgTopologyUI> topologyTreeView;
     private TreeItem<ISqlgTopologyUI> selectedTreeItem;
     private final ObservableList<GraphGroup> graphGroups;
@@ -92,7 +101,91 @@ public class LeftPaneController {
         };
     }
 
+    private void internalPartitionSuggestion(String parent, Partition partition) {
+        String _parent = STR."\{parent}.\{partition.getName()}";
+        this.possibleSuggestions.add(_parent);
+        for (Partition subPartition : partition.getPartitions().values()) {
+            internalPartitionSuggestion(_parent, subPartition);
+        }
+    }
+
+    public void addToSuggestions(GraphConfiguration graphConfiguration) {
+        Topology topology = graphConfiguration.getSqlgGraph().getTopology();
+        String graphConfigurationName = graphConfiguration.getName();
+        for (Schema schema : topology.getSchemas()) {
+            this.possibleSuggestions.add(STR."\{graphConfigurationName}.\{schema.getName()}");
+            for (VertexLabel vertexLabel : schema.getVertexLabels().values()) {
+                this.possibleSuggestions.add(STR."\{graphConfigurationName}.\{vertexLabel.getFullName()}");
+                for (PropertyColumn propertyColumn : vertexLabel.getProperties().values()) {
+                    this.possibleSuggestions.add(STR."\{graphConfigurationName}.\{vertexLabel.getFullName()}.\{propertyColumn.getName()}");
+                }
+                for (EdgeRole outEdgeRole : vertexLabel.getOutEdgeRoles().values()) {
+                    this.possibleSuggestions.add(STR."\{graphConfigurationName}.\{vertexLabel.getFullName()}.\{outEdgeRole.getName()}");
+                }
+                for (EdgeRole inEdgeRole : vertexLabel.getInEdgeRoles().values()) {
+                    this.possibleSuggestions.add(STR."\{graphConfigurationName}.\{vertexLabel.getFullName()}.\{inEdgeRole.getName()}");
+                }
+                for (Index index: vertexLabel.getIndexes().values()) {
+                    this.possibleSuggestions.add(STR."\{graphConfigurationName}.\{vertexLabel.getFullName()}.\{index.getName()}");
+                }
+                for (Partition partition : vertexLabel.getPartitions().values()) {
+                    internalPartitionSuggestion(STR."\{graphConfigurationName}.\{vertexLabel.getFullName()}", partition);
+                }
+            }
+            for (EdgeLabel edgeLabel : schema.getEdgeLabels().values()) {
+                this.possibleSuggestions.add(STR."\{graphConfigurationName}.\{edgeLabel.getFullName()}");
+                for (PropertyColumn propertyColumn : edgeLabel.getProperties().values()) {
+                    this.possibleSuggestions.add(STR."\{graphConfigurationName}.\{edgeLabel.getFullName()}.\{propertyColumn.getName()}");
+                }
+                for (EdgeRole outEdgeRole : edgeLabel.getOutEdgeRoles()) {
+                    this.possibleSuggestions.add(STR."\{graphConfigurationName}.\{edgeLabel.getFullName()}.\{outEdgeRole.getName()}");
+                }
+                for (EdgeRole inEdgeRole : edgeLabel.getInEdgeRoles()) {
+                    this.possibleSuggestions.add(STR."\{graphConfigurationName}.\{edgeLabel.getFullName()}.\{inEdgeRole.getName()}");
+                }
+                for (Index index: edgeLabel.getIndexes().values()) {
+                    this.possibleSuggestions.add(STR."\{graphConfigurationName}.\{edgeLabel.getFullName()}.\{index.getName()}");
+                }
+                for (Partition partition : edgeLabel.getPartitions().values()) {
+                    internalPartitionSuggestion(STR."\{graphConfigurationName}.\{edgeLabel.getFullName()}", partition);
+                }
+            }
+        }
+        // we dispose the old binding and recreate a new binding
+        if (autoCompletionBinding != null) {
+            autoCompletionBinding.dispose();
+        }
+        autoCompletionBinding = TextFields.bindAutoCompletion(this.searchTextField, possibleSuggestions);
+        autoCompletionBinding.setPrefWidth(searchTextField.getWidth());
+    }
+
     protected void initialize() {
+
+        this.searchTextField = TextFields.createClearableTextField();
+        this.searchTextField.setPromptText("search");
+        TextFields.bindAutoCompletion(
+                this.searchTextField,
+                ignore -> List.of());
+        this.searchTextField.setOnKeyPressed(
+                ke -> {
+                    if (Objects.requireNonNull(ke.getCode()) == KeyCode.ENTER) {
+                        TreeItem<ISqlgTopologyUI> topologyTreeItem = search(
+                                this.topologyTreeView.getRoot(),
+                                this.searchTextField.getText()
+                        );
+                        if (topologyTreeItem != null) {
+                            this.topologyTreeView.getSelectionModel().select(topologyTreeItem);
+                        }
+                    }
+                }
+        );
+
+        HBox searchHBox = new HBox(5);
+        searchHBox.setPadding(new Insets(5, 5, 5, 5));
+        searchHBox.getChildren().add(this.searchTextField);
+        HBox.setHgrow(this.searchTextField, Priority.ALWAYS);
+        this.leftBorderPane.setTop(searchHBox);
+
         this.topologyTreeView = new TreeView<>();
         this.leftBorderPane.setCenter(this.topologyTreeView);
 
@@ -103,7 +196,7 @@ public class LeftPaneController {
 
         for (GraphGroup graphGroup : this.graphGroups) {
             GraphGroupTreeItem graphGroupTreeItem = new GraphGroupTreeItem(this, graphGroup);
-            graphGroupTreeItem.setGraphic(Fontawesome.LAYER_GROUP.label(Solid));
+            graphGroupTreeItem.setGraphic(Fontawesome.BARS.label(Solid));
             graphGroupTreeItem.setExpanded(true);
             dummyRoot.getChildren().add(graphGroupTreeItem);
             graphGroup.getGraphConfigurations().addListener(graphConfigurationListChangeListener(this, graphGroupTreeItem));
@@ -196,7 +289,7 @@ public class LeftPaneController {
         });
 
         this.topologyTreeView.getSelectionModel().selectedItemProperty().addListener(
-                (observable, oldValue, newValue) -> {
+                (ignore1, ignore2, newValue) -> {
                     Parent view = null;
                     if (newValue != null) {
                         this.selectedTreeItem = newValue;
@@ -258,49 +351,53 @@ public class LeftPaneController {
 
                             MetaTopology metaTopology = (MetaTopology) newValue.getValue();
 
-                            if (metaTopology.getParent() instanceof VertexLabelUI vertexLabelUI) {
-                                if (metaTopology.getName().equals(TopologyTreeItem.PROPERTY_COLUMNS)) {
-                                    PropertyColumnTableViewController propertyColumnTableViewController = new PropertyColumnTableViewController(this, vertexLabelUI, null);
-                                    view = propertyColumnTableViewController.getView();
-                                } else if (metaTopology.getName().equals(TopologyTreeItem.OUT_EDGE_ROLES)) {
-                                    EdgeRoleTableViewController edgeRoleTableViewController = new EdgeRoleTableViewController(this, vertexLabelUI, null, Direction.OUT);
-                                    view = edgeRoleTableViewController.getView();
-                                } else if (metaTopology.getName().equals(TopologyTreeItem.IN_EDGE_ROLES)) {
-                                    EdgeRoleTableViewController edgeRoleTableViewController = new EdgeRoleTableViewController(this, vertexLabelUI, null, Direction.IN);
-                                    view = edgeRoleTableViewController.getView();
-                                } else if (metaTopology.getName().equals(TopologyTreeItem.INDEXES)) {
-                                    IndexTableViewController indexTableViewController = new IndexTableViewController(this, vertexLabelUI, null);
-                                    view = indexTableViewController.getView();
-                                } else if (metaTopology.getName().equals(TopologyTreeItem.PARTITIONS)) {
-                                    PartitionTableViewController propertyColumnTableViewController = new PartitionTableViewController(this, vertexLabelUI, null, null);
-                                    view = propertyColumnTableViewController.getView();
-                                } else {
-                                    throw new IllegalStateException(String.format("Unexpected metaTopology '%s'", metaTopology.getName()));
+                            switch (metaTopology.getParent()) {
+                                case VertexLabelUI vertexLabelUI -> {
+                                    if (metaTopology.getName().equals(TopologyTreeItem.PROPERTY_COLUMNS)) {
+                                        PropertyColumnTableViewController propertyColumnTableViewController = new PropertyColumnTableViewController(this, vertexLabelUI, null);
+                                        view = propertyColumnTableViewController.getView();
+                                    } else if (metaTopology.getName().equals(TopologyTreeItem.OUT_EDGE_ROLES)) {
+                                        EdgeRoleTableViewController edgeRoleTableViewController = new EdgeRoleTableViewController(this, vertexLabelUI, null, Direction.OUT);
+                                        view = edgeRoleTableViewController.getView();
+                                    } else if (metaTopology.getName().equals(TopologyTreeItem.IN_EDGE_ROLES)) {
+                                        EdgeRoleTableViewController edgeRoleTableViewController = new EdgeRoleTableViewController(this, vertexLabelUI, null, Direction.IN);
+                                        view = edgeRoleTableViewController.getView();
+                                    } else if (metaTopology.getName().equals(TopologyTreeItem.INDEXES)) {
+                                        IndexTableViewController indexTableViewController = new IndexTableViewController(this, vertexLabelUI, null);
+                                        view = indexTableViewController.getView();
+                                    } else if (metaTopology.getName().equals(TopologyTreeItem.PARTITIONS)) {
+                                        PartitionTableViewController propertyColumnTableViewController = new PartitionTableViewController(this, vertexLabelUI, null, null);
+                                        view = propertyColumnTableViewController.getView();
+                                    } else {
+                                        throw new IllegalStateException(String.format("Unexpected metaTopology '%s'", metaTopology.getName()));
+                                    }
                                 }
-                            } else if (metaTopology.getParent() instanceof EdgeLabelUI edgeLabelUI) {
-                                if (metaTopology.getName().equals(TopologyTreeItem.PROPERTY_COLUMNS)) {
-                                    PropertyColumnTableViewController propertyColumnTableViewController = new PropertyColumnTableViewController(this, null, edgeLabelUI);
-                                    view = propertyColumnTableViewController.getView();
-                                } else if (metaTopology.getName().equals(TopologyTreeItem.OUT_EDGE_ROLES)) {
-                                    EdgeRoleTableViewController edgeRoleTableViewController = new EdgeRoleTableViewController(this, null, edgeLabelUI, Direction.OUT);
-                                    view = edgeRoleTableViewController.getView();
-                                } else if (metaTopology.getName().equals(TopologyTreeItem.IN_EDGE_ROLES)) {
-                                    EdgeRoleTableViewController edgeRoleTableViewController = new EdgeRoleTableViewController(this, null, edgeLabelUI, Direction.IN);
-                                    view = edgeRoleTableViewController.getView();
-                                } else if (metaTopology.getName().equals(TopologyTreeItem.INDEXES)) {
-                                    IndexTableViewController indexTableViewController = new IndexTableViewController(this, null, edgeLabelUI);
-                                    view = indexTableViewController.getView();
-                                } else if (metaTopology.getName().equals(TopologyTreeItem.PARTITIONS)) {
-                                    PartitionTableViewController propertyColumnTableViewController = new PartitionTableViewController(this, null, edgeLabelUI, null);
-                                    view = propertyColumnTableViewController.getView();
-                                } else {
-                                    throw new IllegalStateException(String.format("Unexpected metaTopology '%s'", metaTopology.getName()));
+                                case EdgeLabelUI edgeLabelUI -> {
+                                    if (metaTopology.getName().equals(TopologyTreeItem.PROPERTY_COLUMNS)) {
+                                        PropertyColumnTableViewController propertyColumnTableViewController = new PropertyColumnTableViewController(this, null, edgeLabelUI);
+                                        view = propertyColumnTableViewController.getView();
+                                    } else if (metaTopology.getName().equals(TopologyTreeItem.OUT_EDGE_ROLES)) {
+                                        EdgeRoleTableViewController edgeRoleTableViewController = new EdgeRoleTableViewController(this, null, edgeLabelUI, Direction.OUT);
+                                        view = edgeRoleTableViewController.getView();
+                                    } else if (metaTopology.getName().equals(TopologyTreeItem.IN_EDGE_ROLES)) {
+                                        EdgeRoleTableViewController edgeRoleTableViewController = new EdgeRoleTableViewController(this, null, edgeLabelUI, Direction.IN);
+                                        view = edgeRoleTableViewController.getView();
+                                    } else if (metaTopology.getName().equals(TopologyTreeItem.INDEXES)) {
+                                        IndexTableViewController indexTableViewController = new IndexTableViewController(this, null, edgeLabelUI);
+                                        view = indexTableViewController.getView();
+                                    } else if (metaTopology.getName().equals(TopologyTreeItem.PARTITIONS)) {
+                                        PartitionTableViewController propertyColumnTableViewController = new PartitionTableViewController(this, null, edgeLabelUI, null);
+                                        view = propertyColumnTableViewController.getView();
+                                    } else {
+                                        throw new IllegalStateException(String.format("Unexpected metaTopology '%s'", metaTopology.getName()));
+                                    }
                                 }
-                            } else if (metaTopology.getParent() instanceof PartitionUI partitionUI) {
-                                PartitionTableViewController propertyColumnTableViewController = new PartitionTableViewController(this, null, null, partitionUI);
-                                view = propertyColumnTableViewController.getView();
-                            } else {
-                                throw new IllegalStateException("Expected VertexLabelUI or EdgeLabelUI, instead got " + newValue.getValue().getClass().getSimpleName());
+                                case PartitionUI partitionUI -> {
+                                    PartitionTableViewController propertyColumnTableViewController = new PartitionTableViewController(this, null, null, partitionUI);
+                                    view = propertyColumnTableViewController.getView();
+                                }
+                                case null, default ->
+                                        throw new IllegalStateException("Expected VertexLabelUI or EdgeLabelUI, instead got " + newValue.getValue().getClass().getSimpleName());
                             }
                         } else if (treeItemLevel == PROPERTY_COLUMN_OR_EDGE_LABEL_INDEX) {
                             if (newValue.getValue() instanceof PropertyColumnUI propertyColumnUI) {
@@ -309,8 +406,9 @@ public class LeftPaneController {
                             } else if (newValue.getValue() instanceof IndexUI indexUI) {
                                 IndexNameFormController indexFormController = new IndexNameFormController(this, indexUI);
                                 view = indexFormController.getView();
-                            } else if (newValue.getValue() instanceof EdgeRoleUI) {
-                                view = new Pane();
+                            } else if (newValue.getValue() instanceof EdgeRoleUI edgeRoleUI) {
+                                EdgeRoleFormController edgeRoleFormController = new EdgeRoleFormController(this, edgeRoleUI);
+                                view = edgeRoleFormController.getView();
                             } else if (newValue.getValue() instanceof PartitionUI partitionUI) {
                                 PartitionFormController partitionFormController = new PartitionFormController(this, partitionUI);
                                 view = partitionFormController.getView();
@@ -954,12 +1052,11 @@ public class LeftPaneController {
         Queue<TreeItem<ISqlgTopologyUI>> queue = new ArrayDeque<>(root.getChildren());
         while (!queue.isEmpty()) {
             TreeItem<ISqlgTopologyUI> currentNode = queue.remove();
-            if (currentNode.getValue().getName().equals(value)) {
+            if (currentNode.getValue().getQualifiedName().equals(value)) {
                 return currentNode;
             } else {
                 ISqlgTopologyUI sqlgTreeData = currentNode.getValue();
-                if (!(sqlgTreeData instanceof GraphConfiguration) ||
-                        (sqlgTreeData instanceof GraphConfiguration graphConfiguration) && graphConfiguration.isOpen()) {
+                if (!(sqlgTreeData instanceof GraphConfiguration graphConfiguration) || graphConfiguration.isOpen()) {
                     queue.addAll(currentNode.getChildren());
                 }
             }
@@ -1024,6 +1121,7 @@ public class LeftPaneController {
                     } else if (treeItem instanceof GraphGroupTreeItem graphGroupTreeItem) {
                         setText(getItem().getName());
                         setGraphic(getTreeItem().getGraphic());
+                        getStyleClass().add("tree-item-hover");
                         if (getContextMenu() == null) {
                             final ContextMenu contextMenu = new ContextMenu();
                             MenuItem addGraphMenu = new MenuItem("Add graph group");
@@ -1031,7 +1129,7 @@ public class LeftPaneController {
                             addGraphMenu.setOnAction(ignore -> {
                                 GraphGroup graphGroup = primaryController.addDefaultGraphGroup();
                                 TreeItem<ISqlgTopologyUI> _graphGroupTreeItem = new TreeItem<>(graphGroup);
-                                _graphGroupTreeItem.setGraphic(Fontawesome.LAYER_GROUP.label(Solid));
+                                _graphGroupTreeItem.setGraphic(Fontawesome.BARS.label(Solid));
                                 graphGroup.getGraphConfigurations().addListener(graphConfigurationListChangeListener(LeftPaneController.this, graphGroupTreeItem));
                                 _graphGroupTreeItem.setExpanded(false);
                                 topologyTreeView.getRoot().getChildren().add(_graphGroupTreeItem);
@@ -1172,4 +1270,20 @@ public class LeftPaneController {
         return (x | 1) == x;
     }
 
+    private Map<String, Color> allColorsWithName() {
+        Map<String, Color> map = new HashMap<>();
+        try {
+            for (Field f : Color.class.getFields()) {
+                Object obj = f.get(null);
+                if (obj instanceof Color) {
+                    map.put(f.getName(), (Color) obj);
+                }
+            }
+        } catch (IllegalArgumentException | IllegalAccessException e) {
+            map.put("red", Color.RED);
+            map.put("green", Color.GREEN);
+            map.put("blue", Color.BLUE);
+        }
+        return map;
+    }
 }

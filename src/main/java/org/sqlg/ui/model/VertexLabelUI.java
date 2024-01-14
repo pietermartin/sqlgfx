@@ -62,6 +62,11 @@ public final class VertexLabelUI implements ISqlgTopologyUI {
     }
 
     @Override
+    public String getQualifiedName() {
+        return STR."\{getSchemaUI().getGraphConfiguration().getName()}.\{getVertexLabel().getFullName()}";
+    }
+
+    @Override
     public StringProperty nameProperty() {
         return this.name;
     }

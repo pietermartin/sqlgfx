@@ -3,11 +3,14 @@ package org.sqlg.ui.controller;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.VPos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import org.sqlg.ui.Fontawesome;
 import org.sqlg.ui.model.GraphGroup;
 import org.sqlg.ui.model.Root;
 import org.sqlg.ui.model.User;
@@ -31,6 +34,8 @@ public class LoginFormController extends BaseController {
 
     public void initialise() {
         GridPane gridPane = new GridPane();
+        gridPane.setMinWidth(400);
+        gridPane.setMaxWidth(400);
         gridPane.setHgap(5);
         gridPane.setVgap(5);
 
@@ -54,29 +59,42 @@ public class LoginFormController extends BaseController {
         PasswordField passwordField = new PasswordField();
         GridPane.setConstraints(passwordField, 1, rowIndex);
         Bindings.bindBidirectional(passwordField.textProperty(), this.password);
+        rowIndex++;
+
+        Button login = new Button("Login");
+        GridPane.setConstraints(login, 1, rowIndex, 1, 1, HPos.RIGHT, VPos.CENTER);
+        rowIndex++;
+
+        Label informationLabelGraphic  = new Label();
+        informationLabelGraphic.setGraphic(Fontawesome.CIRCLE_INFO.label(Fontawesome.Type.Light));
+        GridPane.setConstraints(informationLabelGraphic, 1, rowIndex);
+        rowIndex++;
+
+        Label infomrationLabel = new Label("Database connections are saved locally.\nThe password is not saved! There is no way to recover a forgotten password.\nThe password is used, together with the username, to encrypt and decrypt the connection details.");
+        infomrationLabel.setWrapText(true);
+        GridPane.setConstraints(infomrationLabel, 1, rowIndex);
 
         ColumnConstraints column1 = new ColumnConstraints();
-        column1.setPercentWidth(30);
+        column1.setPercentWidth(20);
         ColumnConstraints column2 = new ColumnConstraints();
         column2.setPercentWidth(70);
-        gridPane.getColumnConstraints().addAll(column1, column2); // each get 50% of width
+        ColumnConstraints column3 = new ColumnConstraints();
+        column3.setPercentWidth(10);
+        gridPane.getColumnConstraints().addAll(column1, column2, column3);
         gridPane.getChildren().addAll(
                 nameLabel, nameTextField,
-                passwordLabel, passwordField
+                passwordLabel, passwordField,
+                login,
+                informationLabelGraphic,
+                infomrationLabel
         );
         VBox.setVgrow(gridPane, Priority.ALWAYS);
 
-        ButtonBar buttonBar = new ButtonBar();
-        buttonBar.setPadding(new Insets(0, 5, 0, 0));
-        Button login = new Button("Login");
-        buttonBar.getButtons().addAll(login);
-
-        VBox vBox = new VBox(5, gridPane, buttonBar);
+        VBox vBox = new VBox(5, gridPane);
         vBox.setPadding(new Insets(0, 0, 5, 0));
         vBox.setAlignment(Pos.CENTER);
 
         VBox.setVgrow(gridPane, Priority.NEVER);
-        VBox.setVgrow(buttonBar, Priority.NEVER);
 
         login.setOnAction(ignore -> {
             try {
@@ -90,7 +108,7 @@ public class LoginFormController extends BaseController {
             }
         });
 
-//        this.outerHBox.setStyle("-fx-background-color: red;");
+//        outerHBox.setStyle("-fx-background-color: red;");
 //        vBox.setStyle("-fx-background-color: blue;");
         outerHBox.getChildren().add(vBox);
         outerHBox.setAlignment(Pos.CENTER);

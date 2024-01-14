@@ -6,6 +6,10 @@ public sealed interface ISqlgTopologyUI permits MetaTopology, GraphGroup, GraphC
 
     String getName();
 
+    default String getQualifiedName() {
+        return getName();
+    }
+
     StringProperty nameProperty();
 
     default String getTopologyTypeName() {

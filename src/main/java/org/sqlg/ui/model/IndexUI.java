@@ -4,7 +4,10 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import org.umlg.sqlg.structure.topology.Index;
+import org.umlg.sqlg.structure.topology.PropertyColumn;
 
 public final class IndexUI implements ISqlgTopologyUI {
 
@@ -14,6 +17,7 @@ public final class IndexUI implements ISqlgTopologyUI {
     private SimpleStringProperty indexType;
     private SimpleStringProperty name;
     private SimpleBooleanProperty delete;
+    private ObservableList<PropertyColumnUI> propertyColumnUIs;
 
     public IndexUI(VertexLabelUI vertexLabelUI, EdgeLabelUI edgeLabelUI, Index index) {
         assert ((vertexLabelUI != null && edgeLabelUI == null) || (vertexLabelUI == null && edgeLabelUI != null)) : "vertexLabelUI or edgeLabelUI must be null";
@@ -29,6 +33,14 @@ public final class IndexUI implements ISqlgTopologyUI {
             this.name = new SimpleStringProperty(index.getName());
             this.indexType = new SimpleStringProperty(index.getIndexType().getName());
             this.delete = new SimpleBooleanProperty(false);
+            this.propertyColumnUIs = FXCollections.observableArrayList();
+            for (PropertyColumn propertyColumn : index.getProperties()) {
+                if (vertexLabelUI == null) {
+                    this.propertyColumnUIs.add(new PropertyColumnUI(null, this.edgeLabelUI, propertyColumn));
+                } else {
+                    this.propertyColumnUIs.add(new PropertyColumnUI(this.vertexLabelUI, null, propertyColumn));
+                }
+            }
         } else {
             this.name.set(index.getName());
             this.indexType.set(index.getIndexType().getName());
@@ -78,6 +90,15 @@ public final class IndexUI implements ISqlgTopologyUI {
     }
 
     @Override
+    public String getQualifiedName() {
+        if (getVertexLabelUI() != null) {
+            return STR."\{getVertexLabelUI().getQualifiedName()}.\{getIndex().getName()}";
+        } else {
+            return STR."\{getEdgeLabelUI().getQualifiedName()}.\{getIndex().getName()}";
+        }
+    }
+
+    @Override
     public StringProperty nameProperty() {
         return this.name;
     }
@@ -88,6 +109,14 @@ public final class IndexUI implements ISqlgTopologyUI {
 
     public SimpleBooleanProperty deleteProperty() {
         return delete;
+    }
+
+    public ObservableList<PropertyColumnUI> getPropertyColumnUIs() {
+        return propertyColumnUIs;
+    }
+
+    public void setPropertyColumnUIs(ObservableList<PropertyColumnUI> propertyColumnUIs) {
+        this.propertyColumnUIs = propertyColumnUIs;
     }
 
     @Override

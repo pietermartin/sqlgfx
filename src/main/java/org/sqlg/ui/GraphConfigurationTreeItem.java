@@ -38,10 +38,7 @@ public class GraphConfigurationTreeItem extends TreeItem<ISqlgTopologyUI> {
     @Override
     public ObservableList<TreeItem<ISqlgTopologyUI>> getChildren() {
         if (this.isFirstTimeChildren) {
-
             if (this.isGraphOpened) {
-                // First getChildren() call, so we actually go off and
-                // determine the children of the File contained in this TreeItem.
                 this.isFirstTimeChildren = false;
                 super.getChildren().setAll(buildMetaSchemaAndSchemaTreeItems());
             } else {
@@ -73,6 +70,7 @@ public class GraphConfigurationTreeItem extends TreeItem<ISqlgTopologyUI> {
                 childrenLoadedStatus = ChildrenLoadedStatus.LOADING;
                 try {
                     graphConfiguration.openSqlgGraph(leftPaneController.getPrimaryController().listen(graphConfiguration));
+                    leftPaneController.addToSuggestions(graphConfiguration);
                     isGraphOpened = true;
                     isGraphOpening = false;
                     isFirstTimeChildren = false;

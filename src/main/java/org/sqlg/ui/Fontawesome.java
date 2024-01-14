@@ -7,6 +7,7 @@ public enum Fontawesome {
 
     COLUMNS('\ue361'),
     LAYER_GROUP('\uf5fd'),
+    BARS('\uf0c9'),
     LIST_UL('\uf0ca'),
     OBJECT_COLUMN('\ue3c1'),
     TABLE('\uf0ce'),
@@ -33,7 +34,10 @@ public enum Fontawesome {
     STOP('\uf04d'),
     SPINNER('\uf110'),
     MAGNIFYING_GLASS('\uf002'),
-    GEAR('\uf013');
+    GEAR('\uf013'),
+    CIRCLE_INFO('\uf05a'),
+    SQUARE_QUESTION('\uf2fd'),
+    LINES_LEANING('\ue51e');
     final char unicode;
 
     Fontawesome(char unicode) {
