@@ -6,13 +6,10 @@ module org.sqlg {
     requires javafx.base;
     requires javafx.graphics;
     requires javafx.controls;
-    requires javafx.fxml;
 
     requires org.fxmisc.richtext;
     requires org.fxmisc.flowless;
     requires org.fxmisc.undo;
-
-    requires org.antlr.antlr4.runtime;
 
     requires org.controlsfx.controls;
 
@@ -21,14 +18,10 @@ module org.sqlg {
     requires net.synedra.validatorfx;
 
     requires java.sql;
-    requires org.apache.commons.configuration2;
     requires com.fasterxml.jackson.databind;
     requires org.apache.commons.collections4;
 
-    requires org.apache.tinkerpop.gremlin.core;
-    requires org.apache.tinkerpop.gremlin.language;
-//    requires gremlin.core;
-//    requires gremlin.language;
+    requires sqlg.tinkerpop.shaded;
 
     requires sqlg.core;
     requires sqlg.c3p0;
