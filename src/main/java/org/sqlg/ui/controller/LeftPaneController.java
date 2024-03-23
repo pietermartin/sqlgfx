@@ -152,11 +152,11 @@ public class LeftPaneController {
             }
         }
         // we dispose the old binding and recreate a new binding
-        if (autoCompletionBinding != null) {
-            autoCompletionBinding.dispose();
+        if (this.autoCompletionBinding != null) {
+            this.autoCompletionBinding.dispose();
         }
-        autoCompletionBinding = TextFields.bindAutoCompletion(this.searchTextField, possibleSuggestions);
-        autoCompletionBinding.setPrefWidth(searchTextField.getWidth());
+        this.autoCompletionBinding = TextFields.bindAutoCompletion(this.searchTextField, this.possibleSuggestions);
+        this.autoCompletionBinding.setPrefWidth(this.searchTextField.getWidth());
     }
 
     protected void initialize() {
@@ -175,6 +175,7 @@ public class LeftPaneController {
                         );
                         if (topologyTreeItem != null) {
                             this.topologyTreeView.getSelectionModel().select(topologyTreeItem);
+                            this.topologyTreeView.scrollTo(this.topologyTreeView.getSelectionModel().getSelectedIndex());
                         }
                     }
                 }
@@ -772,7 +773,7 @@ public class LeftPaneController {
         if (graphGroupTreeItem != null) {
             TreeItem<ISqlgTopologyUI> graphConfigurationTreeItem = search(graphGroupTreeItem, graphConfiguration.getName());
             if (graphConfigurationTreeItem != null) {
-                TreeItem<ISqlgTopologyUI> schemaTreeItem = search(graphConfigurationTreeItem, schema.getName());
+                TreeItem<ISqlgTopologyUI> schemaTreeItem = search(graphConfigurationTreeItem, STR."\{graphConfiguration.getName()}.\{schema.getName()}");
                 if (schemaTreeItem != null) {
                     SchemaUI schemaUI = (SchemaUI) schemaTreeItem.getValue();
 
