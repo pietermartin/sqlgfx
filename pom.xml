@@ -103,16 +103,9 @@
                             <mainClass>org.sqlg.ui.App</mainClass>
                             <options>
                                 <option>--enable-preview</option>
-                                <option>--add-opens=javafx.controls/javafx.scene.control.skin=org.controlsfx.controls</option>
-                                <option>--add-exports=javafx.base/com.sun.javafx.event=org.controlsfx.controls</option>
-                                <option>--add-exports=javafx.graphics/com.sun.javafx.scene=org.controlsfx.controls</option>
-                                <option>--add-exports=javafx.graphics/com.sun.javafx.scene.traversal=org.controlsfx.controls</option>
-                                <option>--add-opens=javafx.controls/javafx.scene.control.skin=org.controlsfx.controls</option>
-                                <option>--add-exports=javafx.graphics/com.sun.javafx.css=org.controlsfx.controls</option>
-                                <option>--add-opens=javafx.controls/javafx.scene.control.skin=org.controlsfx.controls</option>
-                                <option>--add-exports=javafx.graphics/com.sun.javafx.scene=org.controlsfx.controls</option>
-                                <option>--add-exports=javafx.graphics/com.sun.javafx.scene.traversal=org.controlsfx.controls</option>
-                                <option>--add-opens=javafx.controls/javafx.scene.control.skin=org.controlsfx.controls</option>
+                                <option>--add-opens=javafx.controls/javafx.scene.control.skin=ALL-UNNAMED</option>
+                                <option>--add-opens=javafx.controls/javafx.scene.control.skin=ALL-UNNAMED</option>
+                                <option>--add-exports=javafx.base/com.sun.javafx.event=ALL-UNNAMED</option>
                             </options>
                         </configuration>
                     </execution>
