@@ -83,7 +83,7 @@ public class TopologyTreeItem extends TreeItem<ISqlgTopologyUI> {
                 return false;
             }
             case SchemaUI schemaUI -> {
-                return schemaUI.getSchema().getVertexLabels().isEmpty();
+                return schemaUI.getVertexLabelUIs().isEmpty();
             }
             case VertexLabelUI vertexLabelUI -> {
                 return false;

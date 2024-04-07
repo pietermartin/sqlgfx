@@ -142,25 +142,40 @@ public class PrimaryController extends BaseController {
                             leftPaneController.addVertexLabel(
                                     graphGroup,
                                     graphConfiguration,
+                                    vertexLabel.getSchema(),
                                     vertexLabel
                             );
                         });
                     } else if (topologyInf instanceof EdgeRole edgeRole) {
                         Platform.runLater(() -> {
                             LOGGER.debug("EdgeRole creation: {}/{}/{}/{}", graphGroup.getName(), graphConfiguration.getName(), edgeRole.getEdgeLabel().getSchema().getName(), edgeRole.getName());
-                            leftPaneController.addEdgeRole(graphGroup, graphConfiguration, edgeRole);
+                            leftPaneController.addEdgeRole(
+                                    graphGroup,
+                                    graphConfiguration,
+                                    edgeRole
+                            );
                         });
                     } else if (topologyInf instanceof EdgeLabel edgeLabel) {
                         Platform.runLater(() -> {
                             LOGGER.debug("EdgeLabel creation: {}/{}/{}/{}", graphGroup.getName(), graphConfiguration.getName(), edgeLabel.getSchema().getName(), edgeLabel.getName());
-                            leftPaneController.addEdgeLabel(graphGroup, graphConfiguration, edgeLabel);
+                            leftPaneController.addEdgeLabel(
+                                    graphGroup,
+                                    graphConfiguration,
+                                    edgeLabel
+                            );
                         });
                     } else if (topologyInf instanceof PropertyColumn propertyColumn) {
                         Platform.runLater(() -> {
                             LOGGER.debug("PropertyColumn creation: {}/{}/{}/{}/{}", graphGroup.getName(), graphConfiguration.getName(), propertyColumn.getParentLabel().getSchema().getName(), propertyColumn.getParentLabel().getName(), propertyColumn.getName());
                             AbstractLabel abstractLabel = propertyColumn.getParentLabel();
                             Schema schema = abstractLabel.getSchema();
-                            leftPaneController.addPropertyColumn(graphGroup, graphConfiguration, schema, abstractLabel, propertyColumn);
+                            leftPaneController.addPropertyColumn(
+                                    graphGroup,
+                                    graphConfiguration,
+                                    schema,
+                                    abstractLabel,
+                                    propertyColumn
+                            );
                         });
                     } else if (topologyInf instanceof Index ignore) {
 
@@ -172,7 +187,11 @@ public class PrimaryController extends BaseController {
                     if (topologyInf instanceof Schema schema) {
                         Platform.runLater(() -> {
                             LOGGER.debug("Schema deletion: {}/{}/{}", graphGroup.getName(), graphConfiguration.getName(), schema.getName());
-                            leftPaneController.deleteSchema(graphGroup, graphConfiguration, schema);
+                            leftPaneController.deleteSchema(
+                                    graphGroup,
+                                    graphConfiguration,
+                                    schema
+                            );
                         });
                     } else if (oldValue instanceof VertexLabel oldVertexLabel) {
                         Platform.runLater(() -> {
@@ -318,13 +337,11 @@ public class PrimaryController extends BaseController {
                         if (!vertexLabel.getName().equals(oldValue.getName())) {
                             Platform.runLater(() -> {
                                 LOGGER.debug("VertexLabel update: {}/{}/{}", graphGroup.getName(), graphConfiguration.getName(), vertexLabel.getName());
-                                leftPaneController.refreshTree();
                             });
                         }
                     } else if (topologyInf instanceof EdgeLabel edgeLabel) {
                         Platform.runLater(() -> {
                             LOGGER.debug("EdgeLabel update: {}/{}/{}", graphGroup.getName(), graphConfiguration.getName(), edgeLabel.getName());
-                            leftPaneController.refreshTree();
                             for (VertexLabel outVertexLabel : edgeLabel.getOutVertexLabels()) {
                                 leftPaneController.refreshEdgeLabel(
                                         graphGroup,
@@ -358,13 +375,11 @@ public class PrimaryController extends BaseController {
                                     (PropertyColumn) oldValue,
                                     propertyColumn
                             );
-                            leftPaneController.refreshTree();
                         });
                     } else if (topologyInf instanceof Index index) {
                         Platform.runLater(() -> {
                             AbstractLabel abstractLabel = index.getParentLabel();
                             LOGGER.debug("Index update: {}/{}/{}/{}", graphGroup.getName(), graphConfiguration.getName(), abstractLabel.getName(), index.getName());
-                            leftPaneController.refreshTree();
                         });
                     }
                 }
