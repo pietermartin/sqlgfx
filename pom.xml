@@ -4,6 +4,33 @@
     <groupId>org.sqlg</groupId>
     <artifactId>sqlgfx</artifactId>
     <version>1.0.0-SNAPSHOT</version>
+
+    <repositories>
+        <repository>
+            <id>snapshots.sonata.org</id>
+            <name>Sonata Snapshot Repository</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>apache</id>
+            <name>Apache Snapshots</name>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+                <checksumPolicy>fail</checksumPolicy>
+            </snapshots>
+            <url>https://repository.apache.org/content/groups/snapshots</url>
+            <layout>default</layout>
+        </repository>
+    </repositories>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>21</maven.compiler.source>
