@@ -60,13 +60,20 @@ public enum Fontawesome {
         Sharp_Solid,
     }
 
+    public Label label(Type type, int fontSize) {
+        return label(type, fontSize, null);
+    }
+
     public Label label(Type type) {
         return label(type, 14);
     }
 
-    public Label label(Type type, int fontSize) {
+    public Label label(Type type, int fontSize, String style) {
         Label label = new Label();
         label.getStyleClass().add("fontawesome");
+        if (style != null) {
+            label.getStyleClass().add(style);
+        }
         label.setStyle("-fx-font-size: " + fontSize);
 
         label.setText(this.unicode());

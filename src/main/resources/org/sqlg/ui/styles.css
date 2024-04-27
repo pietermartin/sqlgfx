@@ -72,3 +72,11 @@ fontawesome-Brands_Regular {
     -fx-border-width: 1 0 0 0;
     -fx-border-style: segments(10, 15, 15, 15) line-cap round;
 }
+
+.font-awesome-green {
+    -fx-text-fill: green;
+}
+
+.font-awesome-blue {
+    -fx-text-fill: blue;
+}

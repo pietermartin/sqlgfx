@@ -125,7 +125,7 @@ public class LeftPaneController {
                 for (EdgeRole inEdgeRole : vertexLabel.getInEdgeRoles().values()) {
                     this.possibleSuggestions.add(STR."\{graphConfigurationName}.\{vertexLabel.getFullName()}.\{inEdgeRole.getName()}");
                 }
-                for (Index index: vertexLabel.getIndexes().values()) {
+                for (Index index : vertexLabel.getIndexes().values()) {
                     this.possibleSuggestions.add(STR."\{graphConfigurationName}.\{vertexLabel.getFullName()}.\{index.getName()}");
                 }
                 for (Partition partition : vertexLabel.getPartitions().values()) {
@@ -143,7 +143,7 @@ public class LeftPaneController {
                 for (EdgeRole inEdgeRole : edgeLabel.getInEdgeRoles()) {
                     this.possibleSuggestions.add(STR."\{graphConfigurationName}.\{edgeLabel.getFullName()}.\{inEdgeRole.getName()}");
                 }
-                for (Index index: edgeLabel.getIndexes().values()) {
+                for (Index index : edgeLabel.getIndexes().values()) {
                     this.possibleSuggestions.add(STR."\{graphConfigurationName}.\{edgeLabel.getFullName()}.\{index.getName()}");
                 }
                 for (Partition partition : edgeLabel.getPartitions().values()) {
@@ -1168,7 +1168,18 @@ public class LeftPaneController {
                         close.setGraphic(Fontawesome.XMARK.label(Solid));
                         Button refresh = new Button();
                         refresh.disableProperty().bind(Bindings.createBooleanBinding(() -> !graphConfiguration.isOpen(), graphConfiguration.sqlgGraphOpenPropertyProperty()));
-                        refresh.setGraphic(Fontawesome.ARROWS_ROTATE_RIGHT.label(Solid));
+                        refresh.graphicProperty().bind(Bindings.createObjectBinding(
+                                        () -> {
+                                            if (graphConfiguration.isRefreshTopologyProperty()) {
+                                                return Fontawesome.ARROWS_ROTATE_RIGHT.label(Solid, 14, "font-awesome-green");
+                                            } else {
+                                                return Fontawesome.ARROWS_ROTATE_RIGHT.label(Solid, 14);
+                                            }
+                                        },
+                                        graphConfiguration.refreshTopologyPropertyProperty()
+                                )
+                        );
+
                         HBox hBox = new HBox(5);
                         Insets closeInsets = new Insets(1, 4, 1, 4);
                         Insets refreshInsets = new Insets(1, 4, 1, 4);
@@ -1186,6 +1197,7 @@ public class LeftPaneController {
                             graphConfiguration.refreshSqlgGraph();
                             graphConfigurationTreeItem.refreshGraph();
                             graphConfigurationTreeItem.setExpanded(false);
+                            graphConfiguration.refreshTopologyPropertyProperty().set(false);
                         });
                         if (getContextMenu() == null) {
                             final ContextMenu contextMenu = new ContextMenu();

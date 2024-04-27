@@ -36,6 +36,7 @@ public final class GraphConfiguration implements ISqlgTopologyUI {
     private static final Logger LOGGER = LoggerFactory.getLogger(GraphConfiguration.class);
     private SqlgGraph sqlgGraph;
     private final BooleanProperty sqlgGraphOpenProperty = new SimpleBooleanProperty(false);
+    private final BooleanProperty refreshTopologyProperty = new SimpleBooleanProperty(false);
     private final GraphGroup graphGroup;
     private final ObservableList<SchemaUI> schemaUis = FXCollections.observableArrayList(new ArrayList<>());
     private final static String ALGORHYTHM = "AES/CBC/PKCS5Padding";
@@ -244,6 +245,14 @@ public final class GraphConfiguration implements ISqlgTopologyUI {
 
     public BooleanProperty sqlgGraphOpenPropertyProperty() {
         return sqlgGraphOpenProperty;
+    }
+
+    public boolean isRefreshTopologyProperty() {
+        return refreshTopologyProperty.get();
+    }
+
+    public BooleanProperty refreshTopologyPropertyProperty() {
+        return refreshTopologyProperty;
     }
 
     @Override
