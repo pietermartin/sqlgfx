@@ -92,4 +92,9 @@ public final class SchemaUI implements ISqlgTopologyUI {
     public void remove() {
         getSchema().remove();
     }
+
+    @Override
+    public String toString() {
+        return STR."SchemaUI{name=\{name.get()}\{'}'}";
+    }
 }

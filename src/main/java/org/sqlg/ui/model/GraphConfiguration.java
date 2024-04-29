@@ -265,16 +265,12 @@ public final class GraphConfiguration implements ISqlgTopologyUI {
 
     @Override
     public int hashCode() {
-        return Objects.hash(graphGroup, name, url, jdbcUser);
+        return Objects.hash(graphGroup, name.get(), url.get(), jdbcUser.get());
     }
 
     @Override
     public String toString() {
-        return "GraphConfiguration{" +
-                "name=" + name +
-                ", url=" + url +
-                ", username=" + jdbcUser +
-                '}';
+        return STR."GraphConfiguration{name=\{name.get()}, url=\{url.get()}, username=\{jdbcUser.get()}\{'}'}";
     }
 
     public ObjectNode toJson(ObjectMapper objectMapper) {

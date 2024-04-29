@@ -13,8 +13,8 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import javafx.scene.paint.Color;
 import org.apache.tinkerpop.gremlin.structure.Direction;
+import org.controlsfx.control.BreadCrumbBar;
 import org.controlsfx.control.textfield.AutoCompletionBinding;
 import org.controlsfx.control.textfield.TextFields;
 import org.slf4j.Logger;
@@ -26,7 +26,6 @@ import org.sqlg.ui.TopologyTreeItem;
 import org.sqlg.ui.model.*;
 import org.umlg.sqlg.structure.topology.*;
 
-import java.lang.reflect.Field;
 import java.util.*;
 
 import static org.sqlg.ui.Fontawesome.Type.Solid;
@@ -44,6 +43,7 @@ public class LeftPaneController {
     private TreeItem<ISqlgTopologyUI> selectedTreeItem;
     private final ObservableList<GraphGroup> graphGroups;
     private final BorderPane leftBorderPane;
+    private final BreadCrumbBar<ISqlgTopologyUI> breadCrumbBar;
     private final Tab viewTab;
 
     private final int GRAPH_GROUP_INDEX = 1;
@@ -59,11 +59,13 @@ public class LeftPaneController {
 
     public LeftPaneController(
             PrimaryController primaryController,
+            BreadCrumbBar<ISqlgTopologyUI> breadCrumbBar,
             ObservableList<GraphGroup> graphGroups,
             BorderPane leftBorderPane,
             Tab viewTab) {
 
         this.primaryController = primaryController;
+        this.breadCrumbBar = breadCrumbBar;
         this.graphGroups = graphGroups;
         this.leftBorderPane = leftBorderPane;
         this.viewTab = viewTab;
@@ -197,7 +199,7 @@ public class LeftPaneController {
 
         for (GraphGroup graphGroup : this.graphGroups) {
             GraphGroupTreeItem graphGroupTreeItem = new GraphGroupTreeItem(this, graphGroup);
-            graphGroupTreeItem.setGraphic(Fontawesome.BARS.label(Solid));
+            graphGroupTreeItem.setGraphic(TopologyTreeItem.graphicForTreeItem(graphGroup));
             graphGroupTreeItem.setExpanded(true);
             dummyRoot.getChildren().add(graphGroupTreeItem);
             graphGroup.getGraphConfigurations().addListener(graphConfigurationListChangeListener(this, graphGroupTreeItem));
@@ -209,6 +211,8 @@ public class LeftPaneController {
         }
         this.topologyTreeView.setCellFactory(ignore -> {
             SqlgTreeCellImpl sqlgTreeCell = new SqlgTreeCellImpl();
+
+
             sqlgTreeCell.setOnDragDetected(event -> {
                 if (!(sqlgTreeCell.getItem() instanceof GraphGroup graphGroup)) {
                     return;
@@ -245,7 +249,6 @@ public class LeftPaneController {
 
                     String _graphGroupToMove = event.getDragboard().getString();
                     GraphGroup graphGroupToDropOn = (GraphGroup) sqlgTreeCell.getItem();
-                    TreeItem<ISqlgTopologyUI> graphGroupToDropOnTreeItem = sqlgTreeCell.getTreeItem();
 
                     GraphGroup graphGroupToMove = graphGroups.stream()
                             .filter(graphGroup -> graphGroup.getName().equals(_graphGroupToMove))
@@ -294,6 +297,7 @@ public class LeftPaneController {
                     Parent view = null;
                     if (newValue != null) {
                         this.selectedTreeItem = newValue;
+                        this.breadCrumbBar.setSelectedCrumb(this.selectedTreeItem);
                         int treeItemLevel = this.topologyTreeView.getTreeItemLevel(newValue);
                         if (treeItemLevel == GRAPH_GROUP_INDEX) {
                             Optional<GraphGroup> graphGroupOpt = this.graphGroups.stream().filter(g -> g.getName().equals(newValue.getValue().getName())).findAny();
@@ -1132,34 +1136,32 @@ public class LeftPaneController {
                         setText(getItem().getName());
                         setGraphic(getTreeItem().getGraphic());
                         getStyleClass().add("tree-item-hover");
-                        if (getContextMenu() == null) {
-                            final ContextMenu contextMenu = new ContextMenu();
-                            MenuItem addGraphMenu = new MenuItem("Add graph group");
-                            addGraphMenu.setGraphic(Fontawesome.PLUS.label(Solid));
-                            addGraphMenu.setOnAction(ignore -> {
-                                GraphGroup graphGroup = primaryController.addDefaultGraphGroup();
-                                TreeItem<ISqlgTopologyUI> _graphGroupTreeItem = new TreeItem<>(graphGroup);
-                                _graphGroupTreeItem.setGraphic(Fontawesome.BARS.label(Solid));
-                                graphGroup.getGraphConfigurations().addListener(graphConfigurationListChangeListener(LeftPaneController.this, graphGroupTreeItem));
-                                _graphGroupTreeItem.setExpanded(false);
-                                topologyTreeView.getRoot().getChildren().add(_graphGroupTreeItem);
-                            });
-                            MenuItem deleteGraphMenu = new MenuItem("Delete graph group");
-                            deleteGraphMenu.setGraphic(Fontawesome.MINUS.label(Solid));
-                            deleteGraphMenu.setUserData(graphGroupTreeItem);
-                            deleteGraphMenu.setOnAction(ev -> {
-                                MenuItem menuItem = (MenuItem) ev.getSource();
-                                GraphGroupTreeItem _graphGroupTreeItem = (GraphGroupTreeItem) menuItem.getUserData();
-                                GraphGroup graphGroup = (GraphGroup) _graphGroupTreeItem.getValue();
-                                User user = graphGroup.getUser();
-                                user.getGraphGroups().remove(graphGroup);
-                                TreeItem<ISqlgTopologyUI> root = LeftPaneController.this.topologyTreeView.getRoot();
-                                root.getChildren().remove(_graphGroupTreeItem);
-                                user.getRoot().persistConfig();
-                            });
-                            contextMenu.getItems().addAll(addGraphMenu, deleteGraphMenu);
-                            setContextMenu(contextMenu);
-                        }
+                        final ContextMenu contextMenu = new ContextMenu();
+                        MenuItem addGraphMenu = new MenuItem("Add graph group");
+                        addGraphMenu.setGraphic(Fontawesome.PLUS.label(Solid));
+                        addGraphMenu.setOnAction(ignore -> {
+                            GraphGroup graphGroup = primaryController.addDefaultGraphGroup();
+                            TreeItem<ISqlgTopologyUI> _graphGroupTreeItem = new TreeItem<>(graphGroup);
+                            _graphGroupTreeItem.setGraphic(Fontawesome.BARS.label(Solid));
+                            graphGroup.getGraphConfigurations().addListener(graphConfigurationListChangeListener(LeftPaneController.this, graphGroupTreeItem));
+                            _graphGroupTreeItem.setExpanded(false);
+                            topologyTreeView.getRoot().getChildren().add(_graphGroupTreeItem);
+                        });
+                        MenuItem deleteGraphMenu = new MenuItem("Delete graph group");
+                        deleteGraphMenu.setGraphic(Fontawesome.MINUS.label(Solid));
+                        deleteGraphMenu.setUserData(graphGroupTreeItem);
+                        deleteGraphMenu.setOnAction(ev -> {
+                            MenuItem menuItem = (MenuItem) ev.getSource();
+                            GraphGroupTreeItem _graphGroupTreeItem = (GraphGroupTreeItem) menuItem.getUserData();
+                            GraphGroup graphGroup = (GraphGroup) _graphGroupTreeItem.getValue();
+                            User user = graphGroup.getUser();
+                            user.getGraphGroups().remove(graphGroup);
+                            TreeItem<ISqlgTopologyUI> root = LeftPaneController.this.topologyTreeView.getRoot();
+                            root.getChildren().remove(_graphGroupTreeItem);
+                            user.getRoot().persistConfig();
+                        });
+                        contextMenu.getItems().addAll(addGraphMenu, deleteGraphMenu);
+                        setContextMenu(contextMenu);
                     } else if (treeItem instanceof GraphConfigurationTreeItem graphConfigurationTreeItem) {
                         GraphConfiguration graphConfiguration = (GraphConfiguration) graphConfigurationTreeItem.getValue();
 
@@ -1199,19 +1201,21 @@ public class LeftPaneController {
                             graphConfigurationTreeItem.setExpanded(false);
                             graphConfiguration.refreshTopologyPropertyProperty().set(false);
                         });
-                        if (getContextMenu() == null) {
-                            final ContextMenu contextMenu = new ContextMenu();
-                            MenuItem addGremlinTab = new MenuItem("Open query");
-                            addGremlinTab.setGraphic(Fontawesome.PLUS.label(Solid));
-                            contextMenu.getItems().addAll(addGremlinTab);
-                            setContextMenu(contextMenu);
-                            addGremlinTab.setOnAction(ignore -> {
-                                primaryController.addGremlinTab(graphConfiguration);
-                            });
-                        }
+
+                        final ContextMenu contextMenu = new ContextMenu();
+                        MenuItem addGremlinTab = new MenuItem("Open query " + getTreeItem().getValue().getName());
+                        addGremlinTab.setGraphic(Fontawesome.PLUS.label(Solid));
+                        contextMenu.getItems().add(addGremlinTab);
+                        setContextMenu(contextMenu);
+                        addGremlinTab.setOnAction(ignore -> {
+                            primaryController.addGremlinTab(graphConfiguration);
+                        });
+                        setText(getItem().getName());
+
                     } else {
                         setText(getItem().getName());
                         setGraphic(getTreeItem().getGraphic());
+                        setContextMenu(null);
                     }
                 }
             }
@@ -1292,20 +1296,4 @@ public class LeftPaneController {
         return (x | 1) == x;
     }
 
-    private Map<String, Color> allColorsWithName() {
-        Map<String, Color> map = new HashMap<>();
-        try {
-            for (Field f : Color.class.getFields()) {
-                Object obj = f.get(null);
-                if (obj instanceof Color) {
-                    map.put(f.getName(), (Color) obj);
-                }
-            }
-        } catch (IllegalArgumentException | IllegalAccessException e) {
-            map.put("red", Color.RED);
-            map.put("green", Color.GREEN);
-            map.put("blue", Color.BLUE);
-        }
-        return map;
-    }
 }

@@ -2,17 +2,18 @@ package org.sqlg.ui;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.Node;
 import javafx.scene.control.TreeItem;
 import org.sqlg.ui.model.*;
 import org.umlg.sqlg.structure.topology.Index;
 
 import java.util.Comparator;
 
-import static org.sqlg.ui.Fontawesome.Type.Light;
-import static org.sqlg.ui.Fontawesome.Type.Solid;
+import static org.sqlg.ui.Fontawesome.Type.*;
 
 public class TopologyTreeItem extends TreeItem<ISqlgTopologyUI> {
 
+    public static final String SCHEMAS_LABELS = "Schemas";
     public static final String VERTEX_LABELS = "VertexLabels";
     public static final String EDGE_LABELS = "EdgeLabels";
     public static final String PROPERTY_COLUMNS = "PropertyColumns";
@@ -44,7 +45,7 @@ public class TopologyTreeItem extends TreeItem<ISqlgTopologyUI> {
     private void internalSetGraphic(ISqlgTopologyUI value) {
         switch (value) {
             case EdgeLabelUI edgeLabelUI -> {
-                setGraphic(Fontawesome.CODE_MERGE.label(Solid));
+                setGraphic(graphicForTreeItem(edgeLabelUI));
             }
             case EdgeRoleUI edgeRoleUI -> {
             }
@@ -53,21 +54,78 @@ public class TopologyTreeItem extends TreeItem<ISqlgTopologyUI> {
             case GraphGroup graphGroup -> {
             }
             case IndexUI indexUI -> {
-                setGraphic(Fontawesome.INDENT.label(Solid));
+                setGraphic(graphicForTreeItem(indexUI));
             }
             case MetaTopology metaTopology -> {
             }
             case PartitionUI partitionUI -> {
             }
             case PropertyColumnUI propertyColumnUI -> {
-                setGraphic(Fontawesome.CHART_SIMPLE_HORIZONTAL.label(Solid));
+                setGraphic(graphicForTreeItem(propertyColumnUI));
             }
             case SchemaUI schemaUI -> {
             }
             case VertexLabelUI vertexLabelUI -> {
-                setGraphic(Fontawesome.TABLE.label(Solid));
+                setGraphic(graphicForTreeItem(vertexLabelUI));
             }
         }
+    }
+
+    public static Node graphicForTreeItem(ISqlgTopologyUI value) {
+        switch (value) {
+            case EdgeLabelUI edgeLabelUI -> {
+                return Fontawesome.CODE_MERGE.label(Solid);
+            }
+            case EdgeRoleUI edgeRoleUI -> {
+            }
+            case GraphConfiguration graphConfiguration -> {
+                return Fontawesome.DATABASE.label(Solid);
+            }
+            case GraphGroup graphGroup -> {
+                return Fontawesome.BARS.label(Solid);
+            }
+            case IndexUI indexUI -> {
+                return Fontawesome.INDENT.label(Solid);
+            }
+            case MetaTopology metaTopology -> {
+                if (metaTopology.getName().equals("dummy")) {
+                    return Fontawesome.PLAY.label(Solid);
+                } else  if (metaTopology.getName().equals(SCHEMAS_LABELS)) {
+                    return Fontawesome.SERVER.label(Regular);
+                } else  if (metaTopology.getName().equals(OUT_EDGE_ROLES)) {
+                    return Fontawesome.ARROW_RIGHT.label(Solid);
+                } else if (metaTopology.getName().equals(IN_EDGE_ROLES)) {
+                    return Fontawesome.ARROW_LEFT.label(Solid);
+                } else if (metaTopology.getName().equals(INDEXES)) {
+                    return Fontawesome.BLOCK_QUOTE.label(Solid);
+                } else if (metaTopology.getName().equals(PROPERTY_COLUMNS)) {
+                    return Fontawesome.TABLE_COLUMNS.label(Solid);
+                } else if (metaTopology.getName().equals(EDGE_LABELS)) {
+                    return Fontawesome.LINES_LEANING.label(Solid);
+                } else if (metaTopology.getName().equals(VERTEX_LABELS)) {
+                    return Fontawesome.OBJECT_COLUMN.label(Solid);
+                } else if (metaTopology.getName().equals(PARTITIONS)) {
+                    return Fontawesome.SPLIT.label(Solid);
+                } else if (metaTopology.getName().equals(SUB_PARTITIONS)) {
+                    return Fontawesome.SPLIT.label(Solid);
+                } else {
+                    throw new IllegalStateException();
+                }
+            }
+            case PartitionUI partitionUI -> {
+                return Fontawesome.FILE_DASHED_LINE.label(Light);
+            }
+            case PropertyColumnUI propertyColumnUI -> {
+                return Fontawesome.CHART_SIMPLE_HORIZONTAL.label(Solid);
+            }
+            case SchemaUI schemaUI -> {
+                return Fontawesome.LIST_UL.label(Regular);
+            }
+            case VertexLabelUI vertexLabelUI -> {
+                return Fontawesome.TABLE.label(Solid);
+            }
+        }
+        return null;
     }
 
     @Override
@@ -127,8 +185,9 @@ public class TopologyTreeItem extends TreeItem<ISqlgTopologyUI> {
             }
             case SchemaUI schemaUI -> {
                 ObservableList<TreeItem<ISqlgTopologyUI>> metaSchemaTreeItems = FXCollections.observableArrayList();
-                TreeItem<ISqlgTopologyUI> metaVertexLabels = new TreeItem<>(new MetaTopology(VERTEX_LABELS, schemaUI));
-                metaVertexLabels.setGraphic(Fontawesome.OBJECT_COLUMN.label(Solid));
+                MetaTopology metaTopology = new MetaTopology(VERTEX_LABELS, schemaUI);
+                TreeItem<ISqlgTopologyUI> metaVertexLabels = new TreeItem<>(metaTopology);
+                metaVertexLabels.setGraphic(TopologyTreeItem.graphicForTreeItem(metaTopology));
                 metaSchemaTreeItems.add(metaVertexLabels);
                 ObservableList<TreeItem<ISqlgTopologyUI>> vertexLabelTreeItems = FXCollections.observableArrayList();
                 ObservableList<VertexLabelUI> vertexLabelUIS = schemaUI.getVertexLabelUIs();
@@ -139,8 +198,9 @@ public class TopologyTreeItem extends TreeItem<ISqlgTopologyUI> {
                 }
                 metaVertexLabels.getChildren().addAll(vertexLabelTreeItems);
 
-                TreeItem<ISqlgTopologyUI> metaEdgeLabels = new TreeItem<>(new MetaTopology(EDGE_LABELS, schemaUI));
-                metaEdgeLabels.setGraphic(Fontawesome.LINES_LEANING.label(Solid));
+                metaTopology = new MetaTopology(EDGE_LABELS, schemaUI);
+                TreeItem<ISqlgTopologyUI> metaEdgeLabels = new TreeItem<>(metaTopology);
+                metaEdgeLabels.setGraphic(TopologyTreeItem.graphicForTreeItem(metaTopology));
                 metaSchemaTreeItems.add(metaEdgeLabels);
                 ObservableList<TreeItem<ISqlgTopologyUI>> edgeLabelTreeItems = FXCollections.observableArrayList();
                 ObservableList<EdgeLabelUI> edgeLabelUIS = schemaUI.getEdgeLabelUIS();
@@ -154,8 +214,9 @@ public class TopologyTreeItem extends TreeItem<ISqlgTopologyUI> {
             }
             case VertexLabelUI vertexLabelUI -> {
                 ObservableList<TreeItem<ISqlgTopologyUI>> metaVertexLabelTreeItems = FXCollections.observableArrayList();
-                TreeItem<ISqlgTopologyUI> metaPropertyColumn = new TreeItem<>(new MetaTopology(PROPERTY_COLUMNS, vertexLabelUI));
-                metaPropertyColumn.setGraphic(Fontawesome.TABLE_COLUMNS.label(Solid));
+                MetaTopology metaTopology = new MetaTopology(PROPERTY_COLUMNS, vertexLabelUI);
+                TreeItem<ISqlgTopologyUI> metaPropertyColumn = new TreeItem<>(metaTopology);
+                metaPropertyColumn.setGraphic(TopologyTreeItem.graphicForTreeItem(metaTopology));
                 metaVertexLabelTreeItems.add(metaPropertyColumn);
 
                 ObservableList<TreeItem<ISqlgTopologyUI>> propertyColumnTreeItems = FXCollections.observableArrayList();
@@ -167,8 +228,9 @@ public class TopologyTreeItem extends TreeItem<ISqlgTopologyUI> {
                 }
                 metaPropertyColumn.getChildren().addAll(propertyColumnTreeItems);
 
-                TreeItem<ISqlgTopologyUI> metaOutEdgeRoles = new TreeItem<>(new MetaTopology(OUT_EDGE_ROLES, vertexLabelUI));
-                metaOutEdgeRoles.setGraphic(Fontawesome.ARROW_RIGHT.label(Solid));
+                metaTopology = new MetaTopology(OUT_EDGE_ROLES, vertexLabelUI);
+                TreeItem<ISqlgTopologyUI> metaOutEdgeRoles = new TreeItem<>(metaTopology);
+                metaOutEdgeRoles.setGraphic(TopologyTreeItem.graphicForTreeItem(metaTopology));
                 metaVertexLabelTreeItems.add(metaOutEdgeRoles);
                 ObservableList<TreeItem<ISqlgTopologyUI>> outEdgeRoleTreeItems = FXCollections.observableArrayList();
                 ObservableList<EdgeRoleUI> edgeRoleUIS = vertexLabelUI.getOutEdgeRoleUIs();
@@ -178,8 +240,9 @@ public class TopologyTreeItem extends TreeItem<ISqlgTopologyUI> {
                 }
                 metaOutEdgeRoles.getChildren().addAll(outEdgeRoleTreeItems);
 
-                TreeItem<ISqlgTopologyUI> metaInEdgeRoles = new TreeItem<>(new MetaTopology(IN_EDGE_ROLES, vertexLabelUI));
-                metaInEdgeRoles.setGraphic(Fontawesome.ARROW_LEFT.label(Solid));
+                metaTopology = new MetaTopology(IN_EDGE_ROLES, vertexLabelUI);
+                TreeItem<ISqlgTopologyUI> metaInEdgeRoles = new TreeItem<>(metaTopology);
+                metaInEdgeRoles.setGraphic(TopologyTreeItem.graphicForTreeItem(metaTopology));
                 metaVertexLabelTreeItems.add(metaInEdgeRoles);
                 ObservableList<TreeItem<ISqlgTopologyUI>> inEdgeRoleTreeItems = FXCollections.observableArrayList();
                 ObservableList<EdgeRoleUI> inEdgeRoleUIS = vertexLabelUI.getInEdgeRoleUIs();
@@ -189,8 +252,9 @@ public class TopologyTreeItem extends TreeItem<ISqlgTopologyUI> {
                 }
                 metaInEdgeRoles.getChildren().addAll(inEdgeRoleTreeItems);
 
-                TreeItem<ISqlgTopologyUI> metaIndex = new TreeItem<>(new MetaTopology(INDEXES, vertexLabelUI));
-                metaIndex.setGraphic(Fontawesome.BLOCK_QUOTE.label(Solid));
+                metaTopology = new MetaTopology(INDEXES, vertexLabelUI);
+                TreeItem<ISqlgTopologyUI> metaIndex = new TreeItem<>(metaTopology);
+                metaIndex.setGraphic(TopologyTreeItem.graphicForTreeItem(metaTopology));
                 metaVertexLabelTreeItems.add(metaIndex);
                 ObservableList<TreeItem<ISqlgTopologyUI>> indexTreeItems = FXCollections.observableArrayList();
                 for (IndexUI indexUI : vertexLabelUI.getIndexUIs()) {
@@ -213,20 +277,22 @@ public class TopologyTreeItem extends TreeItem<ISqlgTopologyUI> {
             }
             case EdgeLabelUI edgeLabelUI -> {
                 ObservableList<TreeItem<ISqlgTopologyUI>> metaEdgeLabelTreeItems = FXCollections.observableArrayList();
-                TreeItem<ISqlgTopologyUI> metaPropertyColumn = new TreeItem<>(new MetaTopology(PROPERTY_COLUMNS, edgeLabelUI));
-                metaPropertyColumn.setGraphic(Fontawesome.TABLE_COLUMNS.label(Solid));
+                MetaTopology metaTopology = new MetaTopology(PROPERTY_COLUMNS, edgeLabelUI);
+                TreeItem<ISqlgTopologyUI> metaPropertyColumn = new TreeItem<>(metaTopology);
+                metaPropertyColumn.setGraphic(TopologyTreeItem.graphicForTreeItem(metaTopology));
                 metaEdgeLabelTreeItems.add(metaPropertyColumn);
 
                 ObservableList<TreeItem<ISqlgTopologyUI>> propertyColumnTreeItems = FXCollections.observableArrayList();
                 for (PropertyColumnUI propertyColumnUI : edgeLabelUI.getPropertyColumnUIs()) {
                     TopologyTreeItem topologyTreeItem = new TopologyTreeItem(propertyColumnUI);
-                    topologyTreeItem.setGraphic(Fontawesome.CHART_SIMPLE_HORIZONTAL.label(Solid));
+                    topologyTreeItem.setGraphic(TopologyTreeItem.graphicForTreeItem(propertyColumnUI));
                     propertyColumnTreeItems.add(topologyTreeItem);
                 }
                 metaPropertyColumn.getChildren().addAll(propertyColumnTreeItems);
 
-                TreeItem<ISqlgTopologyUI> metaOutEdgeRoles = new TreeItem<>(new MetaTopology(OUT_EDGE_ROLES, edgeLabelUI));
-                metaOutEdgeRoles.setGraphic(Fontawesome.ARROW_RIGHT.label(Solid));
+                metaTopology = new MetaTopology(OUT_EDGE_ROLES, edgeLabelUI);
+                TreeItem<ISqlgTopologyUI> metaOutEdgeRoles = new TreeItem<>(metaTopology);
+                metaOutEdgeRoles.setGraphic(TopologyTreeItem.graphicForTreeItem(metaTopology));
                 metaEdgeLabelTreeItems.add(metaOutEdgeRoles);
                 ObservableList<TreeItem<ISqlgTopologyUI>> outEdgeRoleTreeItems = FXCollections.observableArrayList();
                 for (EdgeRoleUI outEdgeRoleUI : edgeLabelUI.getOutEdgeRoleUIs()) {
@@ -234,8 +300,9 @@ public class TopologyTreeItem extends TreeItem<ISqlgTopologyUI> {
                 }
                 metaOutEdgeRoles.getChildren().addAll(outEdgeRoleTreeItems);
 
-                TreeItem<ISqlgTopologyUI> metaInEdgeRoles = new TreeItem<>(new MetaTopology(IN_EDGE_ROLES, edgeLabelUI));
-                metaInEdgeRoles.setGraphic(Fontawesome.ARROW_LEFT.label(Solid));
+                metaTopology = new MetaTopology(IN_EDGE_ROLES, edgeLabelUI);
+                TreeItem<ISqlgTopologyUI> metaInEdgeRoles = new TreeItem<>(metaTopology);
+                metaInEdgeRoles.setGraphic(TopologyTreeItem.graphicForTreeItem(metaTopology));
                 metaEdgeLabelTreeItems.add(metaInEdgeRoles);
                 ObservableList<TreeItem<ISqlgTopologyUI>> inEdgeRoleTreeItems = FXCollections.observableArrayList();
                 for (EdgeRoleUI inEdgeRoleUI : edgeLabelUI.getInEdgeRoleUIs()) {
@@ -243,19 +310,22 @@ public class TopologyTreeItem extends TreeItem<ISqlgTopologyUI> {
                 }
                 metaInEdgeRoles.getChildren().addAll(inEdgeRoleTreeItems);
 
-                TreeItem<ISqlgTopologyUI> metaIndex = new TreeItem<>(new MetaTopology(INDEXES, edgeLabelUI));
-                metaIndex.setGraphic(Fontawesome.BLOCK_QUOTE.label(Solid));
+                metaTopology = new MetaTopology(INDEXES, edgeLabelUI);
+                TreeItem<ISqlgTopologyUI> metaIndex = new TreeItem<>(metaTopology);
+                metaIndex.setGraphic(TopologyTreeItem.graphicForTreeItem(metaTopology));
                 metaEdgeLabelTreeItems.add(metaIndex);
                 ObservableList<TreeItem<ISqlgTopologyUI>> indexTreeItems = FXCollections.observableArrayList();
                 for (Index index : edgeLabelUI.getEdgeLabel().getIndexes().values()) {
-                    TopologyTreeItem topologyTreeItem = new TopologyTreeItem(new IndexUI(null, edgeLabelUI, index));
-                    topologyTreeItem.setGraphic(Fontawesome.INDENT.label(Solid));
+                    IndexUI indexUI = new IndexUI(null, edgeLabelUI, index);
+                    TopologyTreeItem topologyTreeItem = new TopologyTreeItem(indexUI);
+                    topologyTreeItem.setGraphic(TopologyTreeItem.graphicForTreeItem(indexUI));
                     indexTreeItems.add(topologyTreeItem);
                 }
                 metaIndex.getChildren().addAll(indexTreeItems);
 
-                TreeItem<ISqlgTopologyUI> metaPartition = new TreeItem<>(new MetaTopology(PARTITIONS, edgeLabelUI));
-                metaPartition.setGraphic(Fontawesome.SPLIT.label(Solid));
+                metaTopology = new MetaTopology(PARTITIONS, edgeLabelUI);
+                TreeItem<ISqlgTopologyUI> metaPartition = new TreeItem<>(metaTopology);
+                metaPartition.setGraphic(TopologyTreeItem.graphicForTreeItem(metaTopology));
                 metaEdgeLabelTreeItems.add(metaPartition);
                 ObservableList<TreeItem<ISqlgTopologyUI>> partitionTreeItems = FXCollections.observableArrayList();
                 for (PartitionUI partitionUI : edgeLabelUI.getPartitionUIs()) {
@@ -268,15 +338,16 @@ public class TopologyTreeItem extends TreeItem<ISqlgTopologyUI> {
             }
             case PartitionUI partitionUI -> {
                 ObservableList<TreeItem<ISqlgTopologyUI>> metaSubPartitionTreeItems = FXCollections.observableArrayList();
-                TreeItem<ISqlgTopologyUI> metaSubPartition = new TreeItem<>(new MetaTopology(SUB_PARTITIONS, partitionUI));
-                metaSubPartition.setGraphic(Fontawesome.SPLIT.label(Solid));
+                MetaTopology metaTopology = new MetaTopology(SUB_PARTITIONS, partitionUI);
+                TreeItem<ISqlgTopologyUI> metaSubPartition = new TreeItem<>(metaTopology);
+                metaSubPartition.setGraphic(TopologyTreeItem.graphicForTreeItem(metaTopology));
                 metaSubPartitionTreeItems.add(metaSubPartition);
                 ObservableList<TreeItem<ISqlgTopologyUI>> subPartitionsTreeItems = FXCollections.observableArrayList();
                 ObservableList<PartitionUI> subPartitionUIS = partitionUI.getSubPartitionUIs();
                 subPartitionUIS.sort(Comparator.comparing(PartitionUI::getName));
                 for (PartitionUI subPartitionUI : subPartitionUIS) {
                     TopologyTreeItem topologyTreeItem = new TopologyTreeItem(subPartitionUI);
-                    topologyTreeItem.setGraphic(Fontawesome.FILE_DASHED_LINE.label(Light));
+                    topologyTreeItem.setGraphic(TopologyTreeItem.graphicForTreeItem(subPartitionUI));
                     subPartitionsTreeItems.add(topologyTreeItem);
                 }
                 metaSubPartition.getChildren().addAll(subPartitionsTreeItems);

@@ -89,6 +89,7 @@ public class App extends Application {
 
         //noinspection DataFlowIssue
         scene.getStylesheets().add(App.class.getResource("styles.css").toExternalForm());
+        scene.getStylesheets().add(App.class.getResource("keyword.css").toExternalForm());
         stage.setScene(scene);
         //noinspection DataFlowIssue
         stage.getIcons().add(new Image(App.class.getResource("sqlg.png").toExternalForm()));

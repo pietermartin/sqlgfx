@@ -13,7 +13,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.collections4.iterators.ArrayIterator;
@@ -49,35 +48,40 @@ public class GremlinQueryTab {
 
     private final SqlgGraph sqlgGraph;
 
-    private final Stage stage;
     private final AtomicReference<Thread> atomicReference = new AtomicReference<>();
     private Button executeGremlin;
     private ProgressIndicator progressIndicator;
     private CodeArea gremlinCodeArea;
     private CodeArea resultCodeArea;
 
-    private static final String[] SPECIAL = new String[] {
-            "g"
-    };
-
-    private static final String[] KEYWORDS = new String[] {
+    private static final String[] KEYWORDS_1 = new String[]{
             "V", "out", "in", "select",
             "toList", "toSet", "hasLabel", "has"
     };
 
-    private static final String SPECIAL_PATTERN = "\\b(" + String.join("|", SPECIAL) + ")\\b";
-    private static final String KEYWORD_PATTERN = "\\b(" + String.join("|", KEYWORDS) + ")\\b";
-    private static final String PAREN_PATTERN = "\\(|\\)";
-    private static final String BRACE_PATTERN = "\\{|\\}";
-    private static final String BRACKET_PATTERN = "\\[|\\]";
-    private static final String SEMICOLON_PATTERN = "\\;";
+    private static final String[] KEYWORDS_2 = new String[]{
+            "as"
+    };
+
+    private static final String[] KEYWORDS_3 = new String[]{
+            "g"
+    };
+
+    private static final String KEYWORD_1_PATTERN = "\\b(" + String.join("|", KEYWORDS_1) + ")\\b";
+    private static final String KEYWORD_2_PATTERN = "\\b(" + String.join("|", KEYWORDS_2) + ")\\b";
+    private static final String KEYWORD_3_PATTERN = "\\b(" + String.join("|", KEYWORDS_3) + ")\\b";
+    private static final String PAREN_PATTERN = "[()]";
+    private static final String BRACE_PATTERN = "[{}]";
+    private static final String BRACKET_PATTERN = "[\\[\\]]";
+    private static final String SEMICOLON_PATTERN = ";";
     private static final String STRING_PATTERN = "\"([^\"\\\\]|\\\\.)*\"";
     private static final String COMMENT_PATTERN = "//[^\n]*" + "|" + "/\\*(.|\\R)*?\\*/"   // for whole text processing (text blocks)
             + "|" + "/\\*[^\\v]*" + "|" + "^\\h*\\*([^\\v]*|/)";  // for visible paragraph processing (line by line)
 
     private static final Pattern PATTERN = Pattern.compile(
-            "(?<KEYWORD>" + KEYWORD_PATTERN + ")"
-                    + "|(?<SPECIAL>" + SPECIAL_PATTERN + ")"
+            "(?<KEYWORD1>" + KEYWORD_1_PATTERN + ")"
+                    + "|(?<KEYWORD2>" + KEYWORD_2_PATTERN + ")"
+                    + "|(?<KEYWORD3>" + KEYWORD_3_PATTERN + ")"
                     + "|(?<PAREN>" + PAREN_PATTERN + ")"
                     + "|(?<BRACE>" + BRACE_PATTERN + ")"
                     + "|(?<BRACKET>" + BRACKET_PATTERN + ")"
@@ -86,9 +90,8 @@ public class GremlinQueryTab {
                     + "|(?<COMMENT>" + COMMENT_PATTERN + ")"
     );
 
-    public GremlinQueryTab(Stage stage, TabPane tabPane, GraphConfiguration graphConfiguration) {
+    public GremlinQueryTab(TabPane tabPane, GraphConfiguration graphConfiguration) {
         assert graphConfiguration.isOpen() : "graphConfiguration must be open";
-        this.stage = stage;
         this.sqlgGraph = graphConfiguration.getSqlgGraph();
         Node node = prepareGremlinTab();
         Tab tab = new Tab(graphConfiguration.getName(), node);
@@ -255,16 +258,19 @@ public class GremlinQueryTab {
         int lastKwEnd = 0;
         StyleSpansBuilder<Collection<String>> spansBuilder
                 = new StyleSpansBuilder<>();
-        while(matcher.find()) {
+        while (matcher.find()) {
             String styleClass =
-                    matcher.group("KEYWORD") != null ? "keyword" :
-                            matcher.group("PAREN") != null ? "paren" :
-                                    matcher.group("BRACE") != null ? "brace" :
-                                            matcher.group("BRACKET") != null ? "bracket" :
-                                                    matcher.group("SEMICOLON") != null ? "semicolon" :
-                                                            matcher.group("STRING") != null ? "string" :
-                                                                    matcher.group("COMMENT") != null ? "comment" :
-                                                                            null; /* never happens */ assert styleClass != null;
+                    matcher.group("KEYWORD1") != null ? "keyword1" :
+                            matcher.group("KEYWORD2") != null ? "keyword2" :
+                                    matcher.group("KEYWORD3") != null ? "keyword3" :
+                                            matcher.group("PAREN") != null ? "paren" :
+                                                    matcher.group("BRACE") != null ? "brace" :
+                                                            matcher.group("BRACKET") != null ? "bracket" :
+                                                                    matcher.group("SEMICOLON") != null ? "semicolon" :
+                                                                            matcher.group("STRING") != null ? "string" :
+                                                                                    matcher.group("COMMENT") != null ? "comment" :
+                                                                                            null; /* never happens */
+            assert styleClass != null;
             spansBuilder.add(Collections.emptyList(), matcher.start() - lastKwEnd);
             spansBuilder.add(Collections.singleton(styleClass), matcher.end() - matcher.start());
             lastKwEnd = matcher.end();

@@ -79,14 +79,12 @@ public final class GraphGroup implements ISqlgTopologyUI {
 
     @Override
     public int hashCode() {
-        return Objects.hash(name);
+        return Objects.hash(name.get());
     }
 
     @Override
     public String toString() {
-        return "GraphGroup{" +
-                "name=" + name +
-                '}';
+        return STR."GraphGroup{name=\{name.get()}\{'}'}";
     }
 
     public ObjectNode toJson(ObjectMapper objectMapper) {

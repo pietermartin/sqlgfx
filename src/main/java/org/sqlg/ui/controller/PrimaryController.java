@@ -5,6 +5,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
@@ -17,11 +18,9 @@ import org.controlsfx.control.StatusBar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sqlg.ui.Fontawesome;
+import org.sqlg.ui.TopologyTreeItem;
 import org.sqlg.ui.log4j2.LogListener;
-import org.sqlg.ui.model.GraphConfiguration;
-import org.sqlg.ui.model.GraphGroup;
-import org.sqlg.ui.model.Root;
-import org.sqlg.ui.model.User;
+import org.sqlg.ui.model.*;
 import org.umlg.sqlg.structure.TopologyListener;
 import org.umlg.sqlg.structure.topology.*;
 
@@ -35,7 +34,6 @@ public class PrimaryController extends BaseController {
     private BorderPane borderPane;
     private TabPane tabPane;
     private LeftPaneController leftPaneController;
-    private LogController logController;
     private User user;
     private final ObservableList<GraphGroup> graphGroups = FXCollections.observableArrayList(new ArrayList<>());
 
@@ -101,28 +99,39 @@ public class PrimaryController extends BaseController {
 
         rightSplitPane.setDividerPosition(0, 0.95D);
         rightSplitPane.setOrientation(Orientation.VERTICAL);
-        VBox logVBox= new VBox();
+        VBox logVBox = new VBox();
         rightSplitPane.getItems().addAll(this.tabPane, logVBox);
-        this.logController = new LogController(logVBox);
-        LogListener.INSTANCE.setLogController(this.logController);
+        LogController logController = new LogController(logVBox);
+        LogListener.INSTANCE.setLogController(logController);
 
         splitPane.getItems().addAll(borderPaneLeft, anchorPaneRight);
         StatusBar statusbar = new StatusBar();
         this.borderPane.setBottom(statusbar);
 
         this.graphGroups.addAll(this.user.getGraphGroups());
+
+        BreadCrumbBar<ISqlgTopologyUI> breadCrumbBar = new BreadCrumbBar<>();
+        breadCrumbBar.setCrumbFactory(crumb -> {
+            BreadCrumbBar.BreadCrumbButton button = new BreadCrumbBar.BreadCrumbButton(crumb.getValue() != null ? crumb.getValue().getName() : "");
+            Node graphic = TopologyTreeItem.graphicForTreeItem(crumb.getValue());
+            if (graphic == null) {
+                System.out.println(crumb.getValue().toString() + " is null");
+            } else {
+                button.setGraphic(graphic);
+            }
+            return button;
+        });
+        toolbar.getItems().add(breadCrumbBar);
+
         this.leftPaneController = new LeftPaneController(
                 this,
+                breadCrumbBar,
                 this.graphGroups,
                 borderPaneLeft,
                 viewTab
         );
         this.leftPaneController.initialize();
 
-        BreadCrumbBar<String> breadCrumbBar = new BreadCrumbBar<>();
-        toolbar.getItems().add(breadCrumbBar);
-        TreeItem<String> leaf = new TreeItem<>("New Crumb #");
-        breadCrumbBar.setSelectedCrumb(leaf);
     }
 
 
@@ -415,7 +424,7 @@ public class PrimaryController extends BaseController {
 
     public void addGremlinTab(GraphConfiguration graphConfiguration) {
         if (graphConfiguration.isOpen()) {
-            new GremlinQueryTab(this.stage, this.tabPane, graphConfiguration);
+            new GremlinQueryTab(this.tabPane, graphConfiguration);
         } else {
             showDialog(Alert.AlertType.INFORMATION, graphConfiguration.getName(), "The graph needs to be opened to query.");
         }
