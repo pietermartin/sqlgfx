@@ -9,7 +9,7 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.MapConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sqlg.ui.AESUtil;
+import org.sqlg.ui.util.AESUtil;
 import org.umlg.sqlg.structure.SqlgDataSource;
 import org.umlg.sqlg.structure.SqlgDataSourceFactory;
 import org.umlg.sqlg.structure.SqlgGraph;

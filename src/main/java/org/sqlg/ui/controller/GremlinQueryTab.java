@@ -16,6 +16,7 @@ import javafx.scene.layout.VBox;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.collections4.iterators.ArrayIterator;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinAntlrToJava;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinLexer;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinParser;
@@ -27,6 +28,8 @@ import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
 import org.reactfx.Subscription;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sqlg.ui.Fontawesome;
 import org.sqlg.ui.model.GraphConfiguration;
 import org.umlg.sqlg.structure.SqlgGraph;
@@ -46,6 +49,7 @@ import static org.sqlg.ui.Fontawesome.Type.Solid;
 
 public class GremlinQueryTab {
 
+    private final Logger LOGGER = LoggerFactory.getLogger(GremlinQueryTab.class);
     private final SqlgGraph sqlgGraph;
 
     private final AtomicReference<Thread> atomicReference = new AtomicReference<>();
@@ -187,11 +191,15 @@ public class GremlinQueryTab {
         executeGremlin.setGraphic(progressIndicator);
         atomicReference.set(Thread.startVirtualThread(() -> {
             try {
+                StopWatch stopWatch = StopWatch.createStarted();
+                LOGGER.info("=== gremlin start ===");
+                LOGGER.debug(gremlinCodeArea.textProperty().getValue());
                 Traversal<?, ?> traversal = parseGremlin(
                         sqlgGraph.traversal(),
                         gremlinCodeArea.textProperty().getValue()
                 );
                 String result = traversalResultToString(traversal);
+                LOGGER.info("=== gremlin end ===, execution time: {}", stopWatch);
                 Platform.runLater(() -> {
                     resultCodeArea.appendText(result);
                     executeGremlin.setGraphic(Fontawesome.PLAY.label(Solid, 15));
@@ -256,8 +264,7 @@ public class GremlinQueryTab {
     private StyleSpans<Collection<String>> computeHighlighting(String text) {
         Matcher matcher = PATTERN.matcher(text);
         int lastKwEnd = 0;
-        StyleSpansBuilder<Collection<String>> spansBuilder
-                = new StyleSpansBuilder<>();
+        StyleSpansBuilder<Collection<String>> spansBuilder = new StyleSpansBuilder<>();
         while (matcher.find()) {
             String styleClass =
                     matcher.group("KEYWORD1") != null ? "keyword1" :

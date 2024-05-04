@@ -1,4 +1,4 @@
-package org.sqlg.ui;
+package org.sqlg.ui.util;
 
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;

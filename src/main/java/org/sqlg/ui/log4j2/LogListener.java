@@ -1,7 +1,10 @@
 package org.sqlg.ui.log4j2;
 
+import org.apache.logging.log4j.core.Layout;
 import org.apache.logging.log4j.core.LogEvent;
 import org.sqlg.ui.controller.LogController;
+
+import java.io.Serializable;
 
 public class LogListener {
 
@@ -11,9 +14,9 @@ public class LogListener {
     private LogListener() {
     }
 
-    public void log(LogEvent event) {
+    public void log(Layout<? extends Serializable> layout,  LogEvent event) {
         if (this.logController != null) {
-            this.logController.appendLog(event);
+            this.logController.appendLog(layout, event);
         }
     }
 

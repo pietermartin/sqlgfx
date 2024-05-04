@@ -76,3 +76,28 @@ fontawesome-Brands_Regular {
 .font-awesome-green {
     -fx-text-fill: green;
 }
+
+.log-trace {
+    -fx-fill: #0000EE;
+}
+
+.log-debug {
+    -fx-fill: #00CCCC;
+}
+
+.log-info {
+    -fx-fill: #00CD00;
+}
+
+.log-warn {
+    -fx-fill: #A66F00;
+}
+
+.log-error {
+    -fx-fill: #CD0000;
+}
+
+.log-fatal {
+    -fx-fill: #CD0000;
+}
+

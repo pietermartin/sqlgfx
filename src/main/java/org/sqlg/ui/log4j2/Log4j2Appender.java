@@ -33,14 +33,13 @@ public class Log4j2Appender extends AbstractAppender {
         if (layout == null) {
             layout = PatternLayout.createDefaultLayout();
         }
-
         return new Log4j2Appender(name, filter, layout);
     }
 
     @Override
     public void append(LogEvent event) {
         try {
-            LogListener.INSTANCE.log(event);
+            LogListener.INSTANCE.log(getLayout(), event);
         } catch (Exception ex) {
             if (!ignoreExceptions()) {
                 throw new AppenderLoggingException(ex);

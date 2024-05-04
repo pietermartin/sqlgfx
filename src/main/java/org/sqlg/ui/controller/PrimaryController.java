@@ -5,12 +5,11 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.controlsfx.control.BreadCrumbBar;
@@ -21,11 +20,13 @@ import org.sqlg.ui.Fontawesome;
 import org.sqlg.ui.TopologyTreeItem;
 import org.sqlg.ui.log4j2.LogListener;
 import org.sqlg.ui.model.*;
+import org.sqlg.ui.util.MemoryUtil;
 import org.umlg.sqlg.structure.TopologyListener;
 import org.umlg.sqlg.structure.topology.*;
 
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.concurrent.*;
 
 public class PrimaryController extends BaseController {
 
@@ -36,10 +37,17 @@ public class PrimaryController extends BaseController {
     private LeftPaneController leftPaneController;
     private User user;
     private final ObservableList<GraphGroup> graphGroups = FXCollections.observableArrayList(new ArrayList<>());
+    private ScheduledExecutorService scheduledExecutorService;
 
     public PrimaryController(Stage stage, Root root) {
         super(stage);
         this.root = root;
+    }
+
+    public void stop() {
+        if (this.scheduledExecutorService != null) {
+            this.scheduledExecutorService.close();
+        }
     }
 
     public Parent initialize() {
@@ -101,12 +109,46 @@ public class PrimaryController extends BaseController {
         rightSplitPane.setOrientation(Orientation.VERTICAL);
         VBox logVBox = new VBox();
         rightSplitPane.getItems().addAll(this.tabPane, logVBox);
+
         LogController logController = new LogController(logVBox);
         LogListener.INSTANCE.setLogController(logController);
 
         splitPane.getItems().addAll(borderPaneLeft, anchorPaneRight);
         StatusBar statusbar = new StatusBar();
+
+        Label memoryLabel = new Label("-");
+        HBox memoryBox = new HBox(memoryLabel);
+        StackPane rootStackPane = new StackPane(memoryBox);
+        rootStackPane.setMinWidth(300);
+        rootStackPane.setMaxWidth(300);
+        rootStackPane.setVisible(true);
+        StackPane leftstackPane = new StackPane();
+        leftstackPane.setStyle("-fx-background-color:#55555550");
+        leftstackPane.setVisible(true);
+        rootStackPane.getChildren().addAll(leftstackPane);
+        statusbar.getRightItems().addAll(rootStackPane);
+        StackPane.setAlignment(leftstackPane, Pos.CENTER_LEFT);
         this.borderPane.setBottom(statusbar);
+
+        this.scheduledExecutorService = Executors.newScheduledThreadPool(0, Thread.ofVirtual().factory());
+        Runnable scheduledRunnable= () -> {
+            long maxMemory = Runtime.getRuntime().maxMemory();
+            long totalMemory = Runtime.getRuntime().totalMemory();
+            long freeMemory = Runtime.getRuntime().freeMemory();
+            long usedMemory = totalMemory - freeMemory;
+            String humanMaxMemory = MemoryUtil.humanReadableByteCountBin(maxMemory);
+            String humanTotalMemory = MemoryUtil.humanReadableByteCountBin(totalMemory);
+            String humanUsedMemory = MemoryUtil.humanReadableByteCountBin(usedMemory);
+            double usedMemoryDouble = Long.valueOf(usedMemory).doubleValue();
+            double totalMemoryDouble = Long.valueOf(totalMemory).doubleValue();
+            double maxMemoryDouble = Long.valueOf(maxMemory).doubleValue();
+            double width = (usedMemoryDouble / maxMemoryDouble) * memoryLabel.getWidth();
+            leftstackPane.setMaxWidth(width);
+            Platform.runLater(() -> {
+                memoryLabel.setText(STR."used: \{humanUsedMemory}, total: \{humanTotalMemory}, max: \{humanMaxMemory}");
+            });
+        };
+        this.scheduledExecutorService.scheduleAtFixedRate(scheduledRunnable, 1, 1, TimeUnit.SECONDS);
 
         this.graphGroups.addAll(this.user.getGraphGroups());
 
