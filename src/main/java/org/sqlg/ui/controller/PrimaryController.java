@@ -103,7 +103,6 @@ public class PrimaryController extends BaseController {
         viewTab.setClosable(false);
         this.tabPane.getTabs().add(viewTab);
 
-
         AnchorPane.setTopAnchor(this.tabPane, 0D);
         AnchorPane.setRightAnchor(this.tabPane, 0D);
         AnchorPane.setBottomAnchor(this.tabPane, 0D);
@@ -120,6 +119,7 @@ public class PrimaryController extends BaseController {
 
         Label memoryLabel = new Label("-");
         HBox memoryBox = new HBox(memoryLabel);
+        HBox.setMargin(memoryLabel, new Insets(0, 0, 0, 5));
         StackPane rootStackPane = new StackPane(memoryBox);
         rootStackPane.setMinWidth(300);
         rootStackPane.setMaxWidth(300);

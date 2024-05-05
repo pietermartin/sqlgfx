@@ -1,7 +1,6 @@
 package org.sqlg.ui.controller;
 
 import javafx.application.Platform;
-import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -10,9 +9,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.collections4.iterators.ArrayIterator;
@@ -104,16 +101,32 @@ public class GremlinQueryTab {
     }
 
     private Node prepareGremlinTab() {
-        HBox buttonHBox = new HBox(5);
-        buttonHBox.setAlignment(Pos.CENTER_LEFT);
-        buttonHBox.setPadding(new Insets(5, 5, 5, 5));
+        BorderPane borderPane = new BorderPane();
+
+        ToolBar toolBar = new ToolBar();
+        borderPane.setTop(toolBar);
         this.executeGremlin = new Button();
         this.executeGremlin.setGraphic(Fontawesome.PLAY.label(Solid, 15));
         Button cancelGremlin = new Button();
         cancelGremlin.setGraphic(Fontawesome.STOP.label(Solid, 15));
-        buttonHBox.getChildren().addAll(executeGremlin, cancelGremlin);
+        HBox space = new HBox();
+        HBox.setHgrow(space, Priority.ALWAYS);
+        Button queryHistory = new Button();
+        queryHistory.setGraphic(Fontawesome.RECTANGLE_HISTORY.label(Solid, 15));
+        toolBar.getItems().addAll(executeGremlin, cancelGremlin, space, queryHistory);
+
+        StackPane stackPane = new StackPane();
+        borderPane.setCenter(stackPane);
 
         VBox vBox = new VBox();
+        BorderPane queryHistoryPane = new BorderPane();
+        queryHistoryPane.setVisible(false);
+        queryHistory.setOnAction(ignore -> queryHistoryPane.setVisible(!queryHistoryPane.isVisible()));
+        queryHistoryPane.setMaxWidth(600);
+        queryHistoryPane.setStyle("-fx-background-color:#55555550");
+        stackPane.getChildren().addAll(vBox, queryHistoryPane);
+        StackPane.setAlignment(queryHistoryPane, Pos.CENTER_RIGHT);
+
         SplitPane splitPane = new SplitPane();
         splitPane.setOrientation(Orientation.VERTICAL);
         splitPane.setDividerPosition(0, 0.25D);
@@ -149,7 +162,7 @@ public class GremlinQueryTab {
         VirtualizedScrollPane<CodeArea> gremlinVirtualizedScrollPane = new VirtualizedScrollPane<>(this.gremlinCodeArea);
 
         VBox buttonAndCodeArea = new VBox();
-        buttonAndCodeArea.getChildren().addAll(buttonHBox, gremlinVirtualizedScrollPane);
+        buttonAndCodeArea.getChildren().addAll(gremlinVirtualizedScrollPane);
         VBox.setVgrow(gremlinVirtualizedScrollPane, Priority.ALWAYS);
 
         this.resultCodeArea = new CodeArea();
@@ -176,7 +189,7 @@ public class GremlinQueryTab {
                 thread.interrupt();
             }
         });
-        return vBox;
+        return borderPane;
     }
 
     private Traversal<?, ?> parseGremlin(GraphTraversalSource g, final String script) {

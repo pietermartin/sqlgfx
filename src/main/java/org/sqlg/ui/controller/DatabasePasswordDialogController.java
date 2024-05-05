@@ -35,7 +35,6 @@ public class DatabasePasswordDialogController extends BaseController {
         DialogPane graphConfigurationDialogPane = new DialogPane();
         graphConfigurationDialogPane.setMinWidth(630);
         graphConfigurationDialogPane.setMinHeight(195);
-//        this.graphConfigurationDialogPane.setStyle("-fx-background-color: red;");
         GridPane gridPane = new GridPane();
         gridPane.setHgap(5);
         gridPane.setVgap(5);

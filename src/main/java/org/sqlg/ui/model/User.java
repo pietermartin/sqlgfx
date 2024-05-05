@@ -51,6 +51,8 @@ public class User {
         for (GraphGroup graphGroup : this.graphGroups) {
             graphGroupArrayNode.add(graphGroup.toJson(objectMapper));
         }
+        ArrayNode queryHistoryArrayNode = objectMapper.createArrayNode();
+        userObjectNode.set("queryHistory", queryHistoryArrayNode);
         return userObjectNode;
     }
 
@@ -66,6 +68,10 @@ public class User {
                 this.getGraphGroups().add(graphGroup);
                 graphGroup.fromJson(graphGroupJson);
             }
+        }
+        ArrayNode queryHistoryArrayNode = (ArrayNode) userObjectNode.get("queryHistory");
+        for (JsonNode queryHistoryJson : queryHistoryArrayNode) {
+
         }
     }
 
