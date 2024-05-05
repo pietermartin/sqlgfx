@@ -199,7 +199,8 @@ public class GremlinQueryTab {
                         gremlinCodeArea.textProperty().getValue()
                 );
                 String result = traversalResultToString(traversal);
-                LOGGER.info("=== gremlin end ===, execution time: {}", stopWatch);
+                LOGGER.info("=== gremlin end ===");
+                LOGGER.info("execution time: {}", stopWatch);
                 Platform.runLater(() -> {
                     resultCodeArea.appendText(result);
                     executeGremlin.setGraphic(Fontawesome.PLAY.label(Solid, 15));

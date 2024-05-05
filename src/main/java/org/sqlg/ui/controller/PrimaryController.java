@@ -26,7 +26,9 @@ import org.umlg.sqlg.structure.topology.*;
 
 import java.util.ArrayList;
 import java.util.Optional;
-import java.util.concurrent.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class PrimaryController extends BaseController {
 
@@ -84,14 +86,16 @@ public class PrimaryController extends BaseController {
         toolbar.setMinHeight(40D);
         this.borderPane.setTop(toolbar);
 
+        SplitPane topBottomSplitPane = new SplitPane();
+        topBottomSplitPane.setDividerPosition(0, 0.85D);
+        topBottomSplitPane.setOrientation(Orientation.VERTICAL);
+        this.borderPane.setCenter(topBottomSplitPane);
+
         SplitPane splitPane = new SplitPane();
         splitPane.setDividerPosition(0, 0.25D);
-        this.borderPane.setCenter(splitPane);
         BorderPane borderPaneLeft = new BorderPane();
         AnchorPane anchorPaneRight = new AnchorPane();
         anchorPaneRight.setPadding(Insets.EMPTY);
-
-        SplitPane rightSplitPane = new SplitPane();
 
         this.tabPane = new TabPane();
         Tab viewTab = new Tab("View", null);
@@ -99,17 +103,15 @@ public class PrimaryController extends BaseController {
         viewTab.setClosable(false);
         this.tabPane.getTabs().add(viewTab);
 
-        AnchorPane.setTopAnchor(rightSplitPane, 0D);
-        AnchorPane.setRightAnchor(rightSplitPane, 0D);
-        AnchorPane.setBottomAnchor(rightSplitPane, 0D);
-        AnchorPane.setLeftAnchor(rightSplitPane, 0D);
-        anchorPaneRight.getChildren().add(rightSplitPane);
 
-        rightSplitPane.setDividerPosition(0, 0.95D);
-        rightSplitPane.setOrientation(Orientation.VERTICAL);
+        AnchorPane.setTopAnchor(this.tabPane, 0D);
+        AnchorPane.setRightAnchor(this.tabPane, 0D);
+        AnchorPane.setBottomAnchor(this.tabPane, 0D);
+        AnchorPane.setLeftAnchor(this.tabPane, 0D);
+        anchorPaneRight.getChildren().add(this.tabPane);
+
         VBox logVBox = new VBox();
-        rightSplitPane.getItems().addAll(this.tabPane, logVBox);
-
+        topBottomSplitPane.getItems().addAll(splitPane, logVBox);
         LogController logController = new LogController(logVBox);
         LogListener.INSTANCE.setLogController(logController);
 
@@ -131,7 +133,7 @@ public class PrimaryController extends BaseController {
         this.borderPane.setBottom(statusbar);
 
         this.scheduledExecutorService = Executors.newScheduledThreadPool(0, Thread.ofVirtual().factory());
-        Runnable scheduledRunnable= () -> {
+        Runnable scheduledRunnable = () -> {
             long maxMemory = Runtime.getRuntime().maxMemory();
             long totalMemory = Runtime.getRuntime().totalMemory();
             long freeMemory = Runtime.getRuntime().freeMemory();

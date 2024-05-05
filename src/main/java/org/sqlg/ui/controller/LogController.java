@@ -1,14 +1,21 @@
 package org.sqlg.ui.controller;
 
 import javafx.application.Platform;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.control.Label;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import org.apache.logging.log4j.core.Layout;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.apache.logging.log4j.spi.StandardLevel;
 import org.fxmisc.flowless.VirtualizedScrollPane;
-import org.fxmisc.richtext.LineNumberFactory;
+import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.StyleClassedTextArea;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
@@ -18,15 +25,28 @@ import org.reactfx.value.Val;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.function.IntFunction;
 
 public class LogController {
 
-    private final StyleClassedTextArea logCodeArea;
+    private final CodeArea logCodeArea;
     private final static int LOG_LENGTH = 1000;
+    private static final Background DEFAULT_BACKGROUND = new Background(new BackgroundFill(Color.web("#ddd"), null, null));
+    private static final Insets DEFAULT_INSETS = new Insets(0.0, 5.0, 0.0, 5.0);
 
     public LogController(VBox vBox) {
-        this.logCodeArea = new StyleClassedTextArea();
-        this.logCodeArea.setParagraphGraphicFactory(LineNumberFactory.get(this.logCodeArea));
+        this.logCodeArea = new CodeArea();
+        this.logCodeArea.setParagraphGraphicFactory(new IntFunction<Node>() {
+            @Override
+            public Node apply(int value) {
+                Label lineNo = new Label();
+//                lineNo.setBackground(DEFAULT_BACKGROUND);
+                lineNo.setAlignment(Pos.TOP_RIGHT);
+                lineNo.setText("  ");
+                return lineNo;
+            }
+        });
+//        this.logCodeArea.setParagraphGraphicFactory(LineNumberFactory.get(this.logCodeArea));
         VirtualizedScrollPane<StyleClassedTextArea> resultVirtualizedScrollPane = new VirtualizedScrollPane<>(this.logCodeArea);
         vBox.getChildren().addAll(resultVirtualizedScrollPane);
         VBox.setVgrow(resultVirtualizedScrollPane, Priority.ALWAYS);
