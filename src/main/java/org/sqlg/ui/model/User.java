@@ -12,6 +12,7 @@ public class User {
     private String username;
     private String password;
     private final ListOrderedSet<GraphGroup> graphGroups = new ListOrderedSet<>();
+    private final ListOrderedSet<QueryHistory> queryHistories = new ListOrderedSet<>();
 
     public User(Root root, String username, String password) {
         this.root = root;
@@ -43,6 +44,10 @@ public class User {
         return graphGroups;
     }
 
+    public ListOrderedSet<QueryHistory> getQueryHistories() {
+        return queryHistories;
+    }
+
     public ObjectNode toJson(ObjectMapper objectMapper) {
         ObjectNode userObjectNode = objectMapper.createObjectNode();
         userObjectNode.put("username", this.username);
@@ -53,6 +58,9 @@ public class User {
         }
         ArrayNode queryHistoryArrayNode = objectMapper.createArrayNode();
         userObjectNode.set("queryHistory", queryHistoryArrayNode);
+        for (QueryHistory queryHistory : this.queryHistories) {
+            queryHistoryArrayNode.add(queryHistory.toJson(objectMapper));
+        }
         return userObjectNode;
     }
 
@@ -70,8 +78,10 @@ public class User {
             }
         }
         ArrayNode queryHistoryArrayNode = (ArrayNode) userObjectNode.get("queryHistory");
-        for (JsonNode queryHistoryJson : queryHistoryArrayNode) {
+        if (queryHistoryArrayNode != null) {
+            for (JsonNode queryHistoryJson : queryHistoryArrayNode) {
 
+            }
         }
     }
 

@@ -29,11 +29,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sqlg.ui.Fontawesome;
 import org.sqlg.ui.model.GraphConfiguration;
+import org.sqlg.ui.model.QueryHistory;
+import org.sqlg.ui.model.User;
 import org.umlg.sqlg.structure.SqlgGraph;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -44,10 +47,12 @@ import java.util.regex.Pattern;
 
 import static org.sqlg.ui.Fontawesome.Type.Solid;
 
+@SuppressWarnings("RegExpDuplicateAlternationBranch")
 public class GremlinQueryTab {
 
     private final Logger LOGGER = LoggerFactory.getLogger(GremlinQueryTab.class);
     private final SqlgGraph sqlgGraph;
+    private final GraphConfiguration graphConfiguration;
 
     private final AtomicReference<Thread> atomicReference = new AtomicReference<>();
     private Button executeGremlin;
@@ -68,9 +73,9 @@ public class GremlinQueryTab {
             "g"
     };
 
-    private static final String KEYWORD_1_PATTERN = "\\b(" + String.join("|", KEYWORDS_1) + ")\\b";
-    private static final String KEYWORD_2_PATTERN = "\\b(" + String.join("|", KEYWORDS_2) + ")\\b";
-    private static final String KEYWORD_3_PATTERN = "\\b(" + String.join("|", KEYWORDS_3) + ")\\b";
+    private static final String KEYWORD_1_PATTERN = STR."\\b(\{String.join("|", KEYWORDS_1)})\\b";
+    private static final String KEYWORD_2_PATTERN = STR."\\b(\{String.join("|", KEYWORDS_2)})\\b";
+    private static final String KEYWORD_3_PATTERN = STR."\\b(\{String.join("|", KEYWORDS_3)})\\b";
     private static final String PAREN_PATTERN = "[()]";
     private static final String BRACE_PATTERN = "[{}]";
     private static final String BRACKET_PATTERN = "[\\[\\]]";
@@ -93,6 +98,7 @@ public class GremlinQueryTab {
 
     public GremlinQueryTab(TabPane tabPane, GraphConfiguration graphConfiguration) {
         assert graphConfiguration.isOpen() : "graphConfiguration must be open";
+        this.graphConfiguration = graphConfiguration;
         this.sqlgGraph = graphConfiguration.getSqlgGraph();
         Node node = prepareGremlinTab();
         Tab tab = new Tab(graphConfiguration.getName(), node);
@@ -135,16 +141,14 @@ public class GremlinQueryTab {
         // recompute the syntax highlighting for all text, 500 ms after user stops editing area
         // Note that this shows how it can be done but is not recommended for production with
         // large files as it does a full scan of ALL the text every time there is a change !
+        @SuppressWarnings("unused")
         Subscription cleanupWhenNoLongerNeedIt = this.gremlinCodeArea
-
                 // plain changes = ignore style changes that are emitted when syntax highlighting is reapplied
                 // multi plain changes = save computation by not rerunning the code multiple times
                 //   when making multiple changes (e.g. renaming a method at multiple parts in file)
                 .multiPlainChanges()
-
                 // do not emit an event until 500 ms have passed since the last emission of previous stream
                 .successionEnds(Duration.ofMillis(500))
-
                 // run the following code block when previous stream emits an event
                 .subscribe(ignore -> this.gremlinCodeArea.setStyleSpans(0, computeHighlighting(this.gremlinCodeArea.getText())));
 
@@ -180,9 +184,7 @@ public class GremlinQueryTab {
         this.progressIndicator.setMaxHeight(14);
         this.progressIndicator.setMaxWidth(14);
 
-        this.executeGremlin.setOnAction(ignore -> {
-            executeGremlin();
-        });
+        this.executeGremlin.setOnAction(ignore -> executeGremlin());
         cancelGremlin.setOnAction(ignore -> {
             Thread thread = this.atomicReference.get();
             if (thread != null) {
@@ -206,12 +208,21 @@ public class GremlinQueryTab {
             try {
                 StopWatch stopWatch = StopWatch.createStarted();
                 LOGGER.info("=== gremlin start ===");
-                LOGGER.debug(gremlinCodeArea.textProperty().getValue());
+                String gremlin = gremlinCodeArea.textProperty().getValue();
+                LOGGER.debug(gremlin);
                 Traversal<?, ?> traversal = parseGremlin(
                         sqlgGraph.traversal(),
-                        gremlinCodeArea.textProperty().getValue()
+                        gremlin
                 );
                 String result = traversalResultToString(traversal);
+                Thread.ofVirtual().start(() -> {
+                    User user = this.graphConfiguration.getGraphGroup().getUser();
+                    user.getQueryHistories().add(
+                            new QueryHistory(gremlin, LocalDateTime.now(), this.graphConfiguration.getName())
+                    );
+                    user.getRoot().persistConfig();
+                });
+                stopWatch.stop();
                 LOGGER.info("=== gremlin end ===");
                 LOGGER.info("execution time: {}", stopWatch);
                 Platform.runLater(() -> {
