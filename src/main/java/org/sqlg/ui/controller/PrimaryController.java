@@ -124,6 +124,7 @@ public class PrimaryController extends BaseController {
         rootStackPane.setMinWidth(300);
         rootStackPane.setMaxWidth(300);
         rootStackPane.setVisible(true);
+        rootStackPane.setStyle("-fx-background-color:#F1F7FF");
         StackPane leftstackPane = new StackPane();
         leftstackPane.setStyle("-fx-background-color:#55555550");
         leftstackPane.setVisible(true);
