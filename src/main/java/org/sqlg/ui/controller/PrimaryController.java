@@ -120,17 +120,20 @@ public class PrimaryController extends BaseController {
         Label memoryLabel = new Label("-");
         HBox memoryBox = new HBox(memoryLabel);
         HBox.setMargin(memoryLabel, new Insets(0, 0, 0, 5));
-        StackPane rootStackPane = new StackPane(memoryBox);
+
+        StackPane rootStackPane = new StackPane();
         rootStackPane.setMinWidth(300);
         rootStackPane.setMaxWidth(300);
         rootStackPane.setVisible(true);
-        rootStackPane.setStyle("-fx-background-color:#F1F7FF");
-        StackPane leftstackPane = new StackPane();
-        leftstackPane.setStyle("-fx-background-color:#55555550");
-        leftstackPane.setVisible(true);
-        rootStackPane.getChildren().addAll(leftstackPane);
+        rootStackPane.setStyle("-fx-background-color:#55555550");
+        StackPane middleStackPane = new StackPane();
+        middleStackPane.setStyle("-fx-background-color:#F1F7FF");
+        middleStackPane.setVisible(true);
+        StackPane topStackPane = new StackPane(memoryBox);
+        topStackPane.setVisible(true);
+        rootStackPane.getChildren().addAll(middleStackPane, topStackPane);
         statusbar.getRightItems().addAll(rootStackPane);
-        StackPane.setAlignment(leftstackPane, Pos.CENTER_LEFT);
+        StackPane.setAlignment(middleStackPane, Pos.CENTER_LEFT);
         this.borderPane.setBottom(statusbar);
 
         this.scheduledExecutorService = Executors.newScheduledThreadPool(0, Thread.ofVirtual().factory());
@@ -146,7 +149,7 @@ public class PrimaryController extends BaseController {
             double totalMemoryDouble = Long.valueOf(totalMemory).doubleValue();
             double maxMemoryDouble = Long.valueOf(maxMemory).doubleValue();
             double width = (usedMemoryDouble / maxMemoryDouble) * memoryLabel.getWidth();
-            leftstackPane.setMaxWidth(width);
+            middleStackPane.setMaxWidth(width);
             Platform.runLater(() -> {
                 memoryLabel.setText(STR."used: \{humanUsedMemory}, total: \{humanTotalMemory}, max: \{humanMaxMemory}");
             });
