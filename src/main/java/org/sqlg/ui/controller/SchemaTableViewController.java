@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sqlg.ui.model.GraphConfiguration;
 import org.sqlg.ui.model.SchemaUI;
+import org.umlg.sqlg.structure.SqlgGraph;
 
 public class SchemaTableViewController extends BaseController {
 
@@ -79,21 +80,45 @@ public class SchemaTableViewController extends BaseController {
         VBox.setVgrow(buttonBar, Priority.NEVER);
 
         save.disableProperty().bind(Bindings.createBooleanBinding(() -> !this.editToggleSwitch.selectedProperty().get(), this.editToggleSwitch.selectedProperty()));
-        save.setOnAction(x -> {
-
+        save.setOnAction(ignore -> {
+            save();
         });
-        cancel.setOnAction(x -> {
-
+        cancel.setOnAction(ignore -> {
+            cancel();
         });
         this.root.getChildren().add(vBox);
     }
 
     private void save() {
-
+        SqlgGraph sqlgGraph = this.graphConfiguration.getSqlgGraph();
+        try {
+            for (SchemaUI schemaUi : this.graphConfiguration.getSchemaUis()) {
+                if (schemaUi.isDelete()) {
+                    schemaUi.getSchema().remove();
+                }
+            }
+            sqlgGraph.tx().commit();
+            showDialog(
+                    Alert.AlertType.INFORMATION,
+                    "Success",
+                    "Saved Schemas"
+            );
+        } catch (Exception e) {
+            showDialog(
+                    Alert.AlertType.ERROR,
+                    "Error",
+                    "Failed to save Schemas",
+                    e,
+                    ignore1 -> {
+                    }
+            );
+        } finally {
+            sqlgGraph.tx().rollback();
+        }
     }
 
     private void cancel() {
-
+        LOGGER.debug("cancel");
     }
 
     public Parent getView() {

@@ -62,7 +62,8 @@ public class GremlinQueryTab {
 
     private static final String[] KEYWORDS_1 = new String[]{
             "V", "out", "in", "select",
-            "toList", "toSet", "hasLabel", "has"
+            "toList", "toSet", "hasLabel", "has",
+            "optional"
     };
 
     private static final String[] KEYWORDS_2 = new String[]{

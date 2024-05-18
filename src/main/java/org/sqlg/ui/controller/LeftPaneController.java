@@ -648,9 +648,11 @@ public class LeftPaneController {
         if (graphGroupTreeItem != null) {
             TreeItem<ISqlgTopologyUI> graphConfigurationTreeItem = search(graphGroupTreeItem, graphConfiguration.getName());
             if (graphConfigurationTreeItem != null) {
-                TreeItem<ISqlgTopologyUI> schemaTreeItem = search(graphConfigurationTreeItem, schema.getName());
+                TreeItem<ISqlgTopologyUI> schemaTreeItem = search(graphConfigurationTreeItem, STR."\{graphConfiguration.getName()}.\{schema.getName()}");
                 if (schemaTreeItem != null) {
+                    SchemaUI schemaUI = (SchemaUI) schemaTreeItem.getValue();
                     boolean success = schemaTreeItem.getParent().getChildren().remove(schemaTreeItem);
+                    graphConfiguration.getSchemaUis().remove(schemaUI);
                     LOGGER.info("deleteSchema from tree {}/{} with success = {}", graphGroup.getName(), schema.getName(), success);
                 }
             }

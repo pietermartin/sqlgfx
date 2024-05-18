@@ -121,14 +121,6 @@ public class VertexLabelTableViewController extends BaseController {
         this.root.getChildren().add(vBox);
     }
 
-    private void save() {
-
-    }
-
-    private void cancel() {
-
-    }
-
     public Parent getView() {
         return this.root;
     }

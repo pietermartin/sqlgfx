@@ -15,7 +15,6 @@ public class SchemaFormController extends BaseNameFormController {
     public SchemaFormController(LeftPaneController leftPaneController, SchemaUI schemaUI) {
         super(leftPaneController, schemaUI);
         this.schemaUI = schemaUI;
-        this.editToggleSwitch.setDisable(true);
     }
 
     @Override
@@ -26,6 +25,12 @@ public class SchemaFormController extends BaseNameFormController {
     @Override
     protected void rename() {
 
+    }
+
+    @Override
+    protected void delete() {
+        this.schemaUI.getGraphConfiguration().getSchemaUis().remove(this.schemaUI);
+        this.schemaUI.remove();
     }
 
     @Override

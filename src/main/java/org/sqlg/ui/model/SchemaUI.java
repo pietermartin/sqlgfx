@@ -91,6 +91,7 @@ public final class SchemaUI implements ISqlgTopologyUI {
     @Override
     public void remove() {
         getSchema().remove();
+        getGraphConfiguration().getSchemaUis().remove(this);
     }
 
     @Override
