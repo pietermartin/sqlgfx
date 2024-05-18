@@ -1,10 +1,13 @@
 package org.sqlg.ui.controller;
 
 import javafx.application.Platform;
+import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
@@ -13,6 +16,7 @@ import javafx.scene.layout.*;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.collections4.iterators.ArrayIterator;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinAntlrToJava;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinLexer;
@@ -29,7 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sqlg.ui.Fontawesome;
 import org.sqlg.ui.model.GraphConfiguration;
-import org.sqlg.ui.model.QueryHistory;
+import org.sqlg.ui.model.GremlinHistory;
+import org.sqlg.ui.model.QueryHistoryUI;
 import org.sqlg.ui.model.User;
 import org.umlg.sqlg.structure.SqlgGraph;
 
@@ -37,10 +42,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Map;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,6 +53,7 @@ import static org.sqlg.ui.Fontawesome.Type.Solid;
 @SuppressWarnings("RegExpDuplicateAlternationBranch")
 public class GremlinQueryTab {
 
+    public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
     private final Logger LOGGER = LoggerFactory.getLogger(GremlinQueryTab.class);
     private final SqlgGraph sqlgGraph;
     private final GraphConfiguration graphConfiguration;
@@ -134,6 +138,59 @@ public class GremlinQueryTab {
         stackPane.getChildren().addAll(vBox, queryHistoryPane);
         StackPane.setAlignment(queryHistoryPane, Pos.CENTER_RIGHT);
 
+        TableView<QueryHistoryUI> queryHistoryUITableView = new TableView<>();
+        queryHistoryUITableView.setEditable(false);
+        queryHistoryUITableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_LAST_COLUMN);
+        queryHistoryUITableView.setRowFactory(ignore -> {
+            TableRow<QueryHistoryUI> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && (!row.isEmpty())) {
+                    QueryHistoryUI rowData = row.getItem();
+                    gremlinCodeArea.appendText("\n");
+                    gremlinCodeArea.appendText(rowData.getGremlin());
+                }
+            });
+            return row;
+        });
+
+        TableColumn<QueryHistoryUI, String> queryColumn = new TableColumn<>("gremlin");
+        queryColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        queryColumn.setCellValueFactory(new PropertyValueFactory<>("gremlin"));
+
+        TableColumn<QueryHistoryUI, LocalDateTime> dateTimeColumn = new TableColumn<>("dateTime");
+        dateTimeColumn.setCellFactory(ignore -> new TableCell<>() {
+            @Override
+            protected void updateItem(LocalDateTime dateTime, boolean empty) {
+                super.updateItem(dateTime, empty);
+                if (empty) {
+                    setText("");
+                } else {
+                    setText(formatter.format(dateTime));
+                }
+            }
+        });
+        dateTimeColumn.setCellValueFactory(new PropertyValueFactory<>("dateTime"));
+        dateTimeColumn.setMaxWidth(150);
+
+        TableColumn<QueryHistoryUI, String> groupColumn = new TableColumn<>("group");
+        groupColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        groupColumn.setCellValueFactory(new PropertyValueFactory<>("group"));
+        groupColumn.setMaxWidth(70);
+
+        TableColumn<QueryHistoryUI, String> graphColumn = new TableColumn<>("graph");
+        graphColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        graphColumn.setCellValueFactory(new PropertyValueFactory<>("graph"));
+        graphColumn.setMaxWidth(70);
+
+        queryHistoryUITableView.getColumns().addAll(queryColumn, dateTimeColumn, groupColumn, graphColumn);
+        queryHistoryUITableView.setItems(this.graphConfiguration.getGraphGroup().getUser().getQueryHistoryUIS());
+
+        VBox queryHistoryVBox = new VBox(5, queryHistoryUITableView);
+        queryHistoryVBox.setPadding(new Insets(0, 0, 5, 0));
+        queryHistoryVBox.setVgrow(queryHistoryVBox, Priority.ALWAYS);
+        queryHistoryVBox.setVgrow(queryHistoryUITableView, Priority.ALWAYS);
+        queryHistoryPane.setCenter(queryHistoryVBox);
+
         SplitPane splitPane = new SplitPane();
         splitPane.setOrientation(Orientation.VERTICAL);
         splitPane.setDividerPosition(0, 0.25D);
@@ -209,7 +266,14 @@ public class GremlinQueryTab {
             try {
                 StopWatch stopWatch = StopWatch.createStarted();
                 LOGGER.info("=== gremlin start ===");
-                String gremlin = gremlinCodeArea.textProperty().getValue();
+
+                String selectedText = gremlinCodeArea.getText(gremlinCodeArea.getSelection());
+                String gremlin;
+                if (!StringUtils.isEmpty(selectedText.trim())) {
+                    gremlin = selectedText.trim();
+                } else {
+                    gremlin = gremlinCodeArea.textProperty().getValue().trim();
+                }
                 LOGGER.debug(gremlin);
                 Traversal<?, ?> traversal = parseGremlin(
                         sqlgGraph.traversal(),
@@ -218,8 +282,10 @@ public class GremlinQueryTab {
                 String result = traversalResultToString(traversal);
                 Thread.ofVirtual().start(() -> {
                     User user = this.graphConfiguration.getGraphGroup().getUser();
-                    user.getQueryHistories().add(
-                            new QueryHistory(gremlin, LocalDateTime.now(), this.graphConfiguration.getName())
+                    user.getQueryHistoryUIS().addFirst(
+                            new QueryHistoryUI(
+                                    new GremlinHistory(gremlin, LocalDateTime.now(), this.graphConfiguration.getGraphGroup().getName(), this.graphConfiguration.getName())
+                            )
                     );
                     user.getRoot().persistConfig();
                 });

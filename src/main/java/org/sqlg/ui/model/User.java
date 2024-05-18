@@ -4,7 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import org.apache.commons.collections4.set.ListOrderedSet;
+import org.sqlg.ui.controller.GremlinQueryTab;
+
+import java.time.LocalDateTime;
 
 public class User {
 
@@ -12,7 +17,8 @@ public class User {
     private String username;
     private String password;
     private final ListOrderedSet<GraphGroup> graphGroups = new ListOrderedSet<>();
-    private final ListOrderedSet<QueryHistory> queryHistories = new ListOrderedSet<>();
+    private final ObservableList<QueryHistoryUI> queryHistoryUIS = FXCollections.observableArrayList();
+    ;
 
     public User(Root root, String username, String password) {
         this.root = root;
@@ -44,8 +50,8 @@ public class User {
         return graphGroups;
     }
 
-    public ListOrderedSet<QueryHistory> getQueryHistories() {
-        return queryHistories;
+    public ObservableList<QueryHistoryUI> getQueryHistoryUIS() {
+        return queryHistoryUIS;
     }
 
     public ObjectNode toJson(ObjectMapper objectMapper) {
@@ -58,8 +64,13 @@ public class User {
         }
         ArrayNode queryHistoryArrayNode = objectMapper.createArrayNode();
         userObjectNode.set("queryHistory", queryHistoryArrayNode);
-        for (QueryHistory queryHistory : this.queryHistories) {
-            queryHistoryArrayNode.add(queryHistory.toJson(objectMapper));
+        int count = 1;
+        for (QueryHistoryUI queryHistoryUI : this.queryHistoryUIS) {
+            queryHistoryArrayNode.add(queryHistoryUI.getQueryHistory().toJson(objectMapper));
+            //only keep a 1000 gremlins
+            if (count++ > 1000) {
+                break;
+            }
         }
         return userObjectNode;
     }
@@ -80,7 +91,16 @@ public class User {
         ArrayNode queryHistoryArrayNode = (ArrayNode) userObjectNode.get("queryHistory");
         if (queryHistoryArrayNode != null) {
             for (JsonNode queryHistoryJson : queryHistoryArrayNode) {
-
+                String group = queryHistoryJson.get("group").asText();
+                String graph = queryHistoryJson.get("graph").asText();
+                String gremlin = queryHistoryJson.get("gremlin").asText();
+                LocalDateTime executionDateTime = LocalDateTime.from(
+                        GremlinQueryTab.formatter.parse(
+                                queryHistoryJson.get("executionDateTime").asText()
+                        )
+                );
+                GremlinHistory gremlinHistory = new GremlinHistory(gremlin, executionDateTime, group, graph);
+                getQueryHistoryUIS().add(new QueryHistoryUI(gremlinHistory));
             }
         }
     }
