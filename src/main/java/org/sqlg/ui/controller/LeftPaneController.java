@@ -45,6 +45,7 @@ public class LeftPaneController {
     private final BorderPane leftBorderPane;
     private final BreadCrumbBar<ISqlgTopologyUI> breadCrumbBar;
     private final Tab viewTab;
+    private final PgDumpTab pgDumpTab;
 
     private final int GRAPH_GROUP_INDEX = 1;
     private final int GRAPH_CONFIGURATION_INDEX = 2;
@@ -62,13 +63,26 @@ public class LeftPaneController {
             BreadCrumbBar<ISqlgTopologyUI> breadCrumbBar,
             ObservableList<GraphGroup> graphGroups,
             BorderPane leftBorderPane,
-            Tab viewTab) {
+            BorderPane viewBorderPane) {
 
         this.primaryController = primaryController;
         this.breadCrumbBar = breadCrumbBar;
         this.graphGroups = graphGroups;
         this.leftBorderPane = leftBorderPane;
-        this.viewTab = viewTab;
+
+        TabPane tabPane = new TabPane();
+        this.viewTab = new Tab("Schema", null);
+        this.viewTab.setGraphic(Fontawesome.WRENCH.label(Fontawesome.Type.Solid));
+        this.viewTab.setClosable(false);
+
+        Tab definitionTab = new Tab("Definition", null);
+        definitionTab.setGraphic(Fontawesome.GEARS.label(Fontawesome.Type.Solid));
+        definitionTab.setClosable(false);
+        this.pgDumpTab = new PgDumpTab(this.primaryController.getStage());
+        definitionTab.setContent(pgDumpTab.getView());
+
+        tabPane.getTabs().addAll(this.viewTab, definitionTab);
+        viewBorderPane.setCenter(tabPane);
     }
 
     private static ListChangeListener<GraphConfiguration> graphConfigurationListChangeListener(
@@ -345,9 +359,11 @@ public class LeftPaneController {
                             if (newValue.getValue() instanceof VertexLabelUI vertexLabelUI) {
                                 VertexLabelFormController vertexLabelFormController = new VertexLabelFormController(this, vertexLabelUI);
                                 view = vertexLabelFormController.getView();
+                                this.pgDumpTab.updateView(vertexLabelUI.getSchemaUI().getGraphConfiguration(), vertexLabelUI.getVertexLabel());
                             } else if (newValue.getValue() instanceof EdgeLabelUI edgeLabelUI) {
                                 EdgeLabelFormController edgeLabelFormController = new EdgeLabelFormController(this, edgeLabelUI);
                                 view = edgeLabelFormController.getView();
+                                this.pgDumpTab.updateView(edgeLabelUI.getSchemaUI().getGraphConfiguration(), edgeLabelUI.getEdgeLabel());
                             } else {
                                 throw new IllegalStateException(String.format("expected VertexLabelUI or EdgeLabelUI instead got '%s'", newValue.getValue().getClass().getSimpleName()));
                             }
@@ -1205,13 +1221,14 @@ public class LeftPaneController {
                         });
 
                         final ContextMenu contextMenu = new ContextMenu();
-                        MenuItem addGremlinTab = new MenuItem("Open query " + getTreeItem().getValue().getName());
+                        MenuItem addGremlinTab = new MenuItem(STR."Open query \{getTreeItem().getValue().getName()}");
                         addGremlinTab.setGraphic(Fontawesome.PLUS.label(Solid));
-                        contextMenu.getItems().add(addGremlinTab);
-                        setContextMenu(contextMenu);
                         addGremlinTab.setOnAction(ignore -> {
                             primaryController.addGremlinTab(graphConfiguration);
                         });
+
+                        contextMenu.getItems().add(addGremlinTab);
+                        setContextMenu(contextMenu);
                         setText(getItem().getName());
 
                     } else {

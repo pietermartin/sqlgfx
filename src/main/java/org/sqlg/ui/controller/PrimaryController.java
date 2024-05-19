@@ -99,9 +99,11 @@ public class PrimaryController extends BaseController {
 
         this.tabPane = new TabPane();
         Tab viewTab = new Tab("View", null);
-        viewTab.setGraphic(Fontawesome.GEAR.label(Fontawesome.Type.Solid));
+        viewTab.setGraphic(Fontawesome.STREET_VIEW.label(Fontawesome.Type.Solid));
         viewTab.setClosable(false);
         this.tabPane.getTabs().add(viewTab);
+        BorderPane viewTabBorderPane = new BorderPane();
+        viewTab.setContent(viewTabBorderPane);
 
         AnchorPane.setTopAnchor(this.tabPane, 0D);
         AnchorPane.setRightAnchor(this.tabPane, 0D);
@@ -125,7 +127,9 @@ public class PrimaryController extends BaseController {
         rootStackPane.setMinWidth(300);
         rootStackPane.setMaxWidth(300);
         rootStackPane.setVisible(true);
-        rootStackPane.setStyle("-fx-background-color:#55555550");
+
+//#55555550
+        rootStackPane.setStyle("-fx-background-color:#ccd8ee");
         StackPane middleStackPane = new StackPane();
         middleStackPane.setStyle("-fx-background-color:#F1F7FF");
         middleStackPane.setVisible(true);
@@ -176,7 +180,7 @@ public class PrimaryController extends BaseController {
                 breadCrumbBar,
                 this.graphGroups,
                 borderPaneLeft,
-                viewTab
+                viewTabBorderPane
         );
         this.leftPaneController.initialize();
 

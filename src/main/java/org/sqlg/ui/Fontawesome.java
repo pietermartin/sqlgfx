@@ -38,7 +38,10 @@ public enum Fontawesome {
     CIRCLE_INFO('\uf05a'),
     SQUARE_QUESTION('\uf2fd'),
     LINES_LEANING('\ue51e'),
-    RECTANGLE_HISTORY('\ue4a2');
+    RECTANGLE_HISTORY('\ue4a2'),
+    STREET_VIEW('\uf21d'),
+    WRENCH('\uf0ad'),
+    GEARS('\uf085');
     final char unicode;
 
     Fontawesome(char unicode) {
