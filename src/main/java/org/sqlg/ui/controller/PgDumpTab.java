@@ -76,7 +76,7 @@ public class PgDumpTab extends BaseController {
                     this.pgDumpResult.appendText("\n");
 
                 } else {
-                    this.pgDumpResult.appendText("Expected 4 parts, found, " + parts);
+                    this.pgDumpResult.appendText(STR."Expected 4 parts, found, \{parts}");
                 }
             }
         } catch (IOException | InterruptedException e) {
