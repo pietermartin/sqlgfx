@@ -1,6 +1,8 @@
 package org.sqlg.ui.controller;
 
 import javafx.application.Platform;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
@@ -13,16 +15,20 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
+import javafx.util.Callback;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.collections4.iterators.ArrayIterator;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinAntlrToJava;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinLexer;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinParser;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
+import org.apache.tinkerpop.gremlin.structure.Property;
+import org.controlsfx.control.ToggleSwitch;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.LineNumberFactory;
@@ -32,18 +38,20 @@ import org.reactfx.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sqlg.ui.Fontawesome;
-import org.sqlg.ui.model.GraphConfiguration;
-import org.sqlg.ui.model.GremlinHistory;
-import org.sqlg.ui.model.QueryHistoryUI;
-import org.sqlg.ui.model.User;
-import org.umlg.sqlg.structure.SqlgGraph;
+import org.sqlg.ui.model.*;
+import org.umlg.sqlg.structure.*;
+import org.umlg.sqlg.structure.topology.AbstractLabel;
+import org.umlg.sqlg.structure.topology.Schema;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -60,9 +68,14 @@ public class GremlinQueryTab {
 
     private final AtomicReference<Thread> atomicReference = new AtomicReference<>();
     private Button executeGremlin;
+    private ToggleSwitch topologyToggleSwitch;
     private ProgressIndicator progressIndicator;
     private CodeArea gremlinCodeArea;
+
+
+    private final TabPane resultTabPane = new TabPane();
     private CodeArea resultCodeArea;
+    private TableView<GremlinResultRow> resultAsGridTableView;
 
     private static final String[] KEYWORDS_1 = new String[]{
             "V", "out", "in", "select",
@@ -120,11 +133,16 @@ public class GremlinQueryTab {
         this.executeGremlin.setGraphic(Fontawesome.PLAY.label(Solid, 15));
         Button cancelGremlin = new Button();
         cancelGremlin.setGraphic(Fontawesome.STOP.label(Solid, 15));
+
+        this.topologyToggleSwitch = new ToggleSwitch("Topology");
+        this.topologyToggleSwitch.setLayoutX(70);
+        this.topologyToggleSwitch.setLayoutY(168);
+
         HBox space = new HBox();
         HBox.setHgrow(space, Priority.ALWAYS);
         Button queryHistory = new Button();
         queryHistory.setGraphic(Fontawesome.RECTANGLE_HISTORY.label(Solid, 15));
-        toolBar.getItems().addAll(executeGremlin, cancelGremlin, space, queryHistory);
+        toolBar.getItems().addAll(executeGremlin, cancelGremlin, space, topologyToggleSwitch, queryHistory);
 
         StackPane stackPane = new StackPane();
         borderPane.setCenter(stackPane);
@@ -187,8 +205,8 @@ public class GremlinQueryTab {
 
         VBox queryHistoryVBox = new VBox(5, queryHistoryUITableView);
         queryHistoryVBox.setPadding(new Insets(0, 0, 5, 0));
-        queryHistoryVBox.setVgrow(queryHistoryVBox, Priority.ALWAYS);
-        queryHistoryVBox.setVgrow(queryHistoryUITableView, Priority.ALWAYS);
+        VBox.setVgrow(queryHistoryVBox, Priority.ALWAYS);
+        VBox.setVgrow(queryHistoryUITableView, Priority.ALWAYS);
         queryHistoryPane.setCenter(queryHistoryVBox);
 
         SplitPane splitPane = new SplitPane();
@@ -227,6 +245,7 @@ public class GremlinQueryTab {
         buttonAndCodeArea.getChildren().addAll(gremlinVirtualizedScrollPane);
         VBox.setVgrow(gremlinVirtualizedScrollPane, Priority.ALWAYS);
 
+
         this.resultCodeArea = new CodeArea();
         this.resultCodeArea.setEditable(false);
 
@@ -234,7 +253,22 @@ public class GremlinQueryTab {
         this.resultCodeArea.setParagraphGraphicFactory(LineNumberFactory.get(this.resultCodeArea));
         VirtualizedScrollPane<CodeArea> resultVirtualizedScrollPane = new VirtualizedScrollPane<>(this.resultCodeArea);
 
-        splitPane.getItems().addAll(buttonAndCodeArea, resultVirtualizedScrollPane);
+        Tab resultCodeAreaTab = new Tab("Result as string", null);
+        Tab resultAsGridTab = new Tab("Result in a grid", null);
+        this.resultTabPane.getTabs().addAll(resultAsGridTab, resultCodeAreaTab);
+        resultCodeAreaTab.setContent(resultVirtualizedScrollPane);
+
+        this.resultAsGridTableView = new TableView<>();
+        this.resultAsGridTableView.setEditable(false);
+        this.resultAsGridTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_LAST_COLUMN);
+
+        VBox gremlinResultTableViewVBox = new VBox(5, this.resultAsGridTableView);
+        gremlinResultTableViewVBox.setPadding(new Insets(0, 0, 0, 0));
+        VBox.setVgrow(gremlinResultTableViewVBox, Priority.ALWAYS);
+        VBox.setVgrow(this.resultAsGridTableView, Priority.ALWAYS);
+        resultAsGridTab.setContent(gremlinResultTableViewVBox);
+
+        splitPane.getItems().addAll(buttonAndCodeArea, this.resultTabPane);
         vBox.getChildren().addAll(splitPane);
         VBox.setVgrow(splitPane, Priority.ALWAYS);
 
@@ -276,10 +310,18 @@ public class GremlinQueryTab {
                 }
                 LOGGER.debug(gremlin);
                 Traversal<?, ?> traversal = parseGremlin(
-                        sqlgGraph.traversal(),
+                        this.topologyToggleSwitch.isSelected() ? sqlgGraph.topology() : sqlgGraph.traversal(),
                         gremlin
                 );
-                String result = traversalResultToString(traversal);
+                Pair<String, GremlinResultGrid> result = traversalResult(traversal);
+                String resultAsString = result.getLeft();
+                GremlinResultGrid gremlinResultGrid = result.getRight();
+                Platform.runLater(() -> {
+                    this.resultAsGridTableView.getColumns().clear();
+                    this.resultAsGridTableView.getColumns().addAll(gremlinResultGrid.getHeaders());
+                    this.resultAsGridTableView.setItems(gremlinResultGrid.getRows());
+                });
+
                 Thread.ofVirtual().start(() -> {
                     User user = this.graphConfiguration.getGraphGroup().getUser();
                     user.getQueryHistoryUIS().addFirst(
@@ -293,7 +335,7 @@ public class GremlinQueryTab {
                 LOGGER.info("=== gremlin end ===");
                 LOGGER.info("execution time: {}", stopWatch);
                 Platform.runLater(() -> {
-                    resultCodeArea.appendText(result);
+                    resultCodeArea.appendText(resultAsString);
                     executeGremlin.setGraphic(Fontawesome.PLAY.label(Solid, 15));
                 });
             } catch (Exception e) {
@@ -311,14 +353,76 @@ public class GremlinQueryTab {
         }));
     }
 
-    public String traversalResultToString(Object traversal) {
+    private Pair<String, GremlinResultGrid> traversalResult(Object traversal) {
+        GremlinResultGrid gremlinResultGrid = new GremlinResultGrid();
+
+        TableColumn<GremlinResultRow, Object> idColumn = new TableColumn<>("id");
+        idColumn.setMaxWidth(250);
+        idColumn.setCellFactory(new Callback<TableColumn<GremlinResultRow, Object>, TableCell<GremlinResultRow, Object>>() {
+            @Override
+            public TableCell<GremlinResultRow, Object> call(TableColumn<GremlinResultRow, Object> param) {
+                return new PropertyDefinitionCell();
+            }
+        });
+        idColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<GremlinResultRow, Object>, ObservableValue<Object>>() {
+            public ObservableValue<Object> call(TableColumn.CellDataFeatures<GremlinResultRow, Object> p) {
+                return p.getValue().idProperty();
+            }
+        });
+
+        gremlinResultGrid.getHeaders().add(idColumn);
+
         Iterator<?> tempIterator = Collections.emptyIterator();
+        boolean first = true;
         StringBuilder sb = new StringBuilder();
         label:
         while (true) {
             if (tempIterator.hasNext()) {
                 while (tempIterator.hasNext()) {
                     final Object object = tempIterator.next();
+                    String label;
+                    String id;
+                    GremlinResultRow gremlinResultRow = new GremlinResultRow();
+                    if (object instanceof SqlgElement sqlgElement) {
+                        label = sqlgElement.label();
+                        SchemaTable schemaTable = sqlgElement.getSchemaTable();
+                        Schema schema = sqlgGraph.getTopology().getSchema(schemaTable.getSchema()).orElseThrow();
+                        AbstractLabel abstractLabel;
+                        if (sqlgElement instanceof SqlgEdge sqlgEdge) {
+                            abstractLabel = schema.getEdgeLabel(schemaTable.getTable()).orElseThrow();
+                        } else if (sqlgElement instanceof SqlgVertex sqlgVertex) {
+                            abstractLabel = schema.getVertexLabel(schemaTable.getTable()).orElseThrow();
+                        } else {
+                            throw new IllegalStateException("Unknown sqlgElement " + sqlgElement.getClass().getSimpleName());
+                        }
+                        id = sqlgElement.id().toString();
+                        gremlinResultRow.setLabel(label);
+                        gremlinResultRow.setId(id);
+                        Iterator<? extends Property<?>> iterator = sqlgElement.properties();
+                        while (iterator.hasNext()) {
+                            Property<?> p = iterator.next();
+                            String key = p.key();
+                            Object value = p.value();
+                            gremlinResultRow.add(key, value);
+                            if (first) {
+                                TableColumn<GremlinResultRow, Object> column = new TableColumn<>(p.key());
+                                column.setCellFactory(new Callback<TableColumn<GremlinResultRow, Object>, TableCell<GremlinResultRow, Object>>() {
+                                    @Override
+                                    public TableCell<GremlinResultRow, Object> call(TableColumn<GremlinResultRow, Object> param) {
+                                        return new PropertyDefinitionCell();
+                                    }
+                                });
+                                column.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<GremlinResultRow, Object>, ObservableValue<Object>>() {
+                                    public ObservableValue<Object> call(TableColumn.CellDataFeatures<GremlinResultRow, Object> p) {
+                                        return p.getValue().get(key);
+                                    }
+                                });
+                                gremlinResultGrid.getHeaders().add(column);
+                            }
+                        }
+                        first = false;
+                        gremlinResultGrid.getRows().add(gremlinResultRow);
+                    }
                     sb.append(((null == object) ? null : object.toString()));
                     if (tempIterator.hasNext()) {
                         sb.append("\n");
@@ -350,7 +454,31 @@ public class GremlinQueryTab {
                 }
             }
         }
-        return sb.toString();
+        return Pair.of(sb.toString(), gremlinResultGrid);
+    }
+
+    private <V> Callback<TableColumn.CellDataFeatures<GremlinResultRow, V>, ObservableValue<V>> cellFactoryForPropertyColumn(PropertyType propertyType, String key, V value) {
+//        switch (propertyType.ordinal()) {
+//            case PropertyType.STRING_ORDINAL:
+//                Callback<TableColumn.CellDataFeatures<GremlinResultRow, String>, ObservableValue<String>> callback = new Callback<TableColumn.CellDataFeatures<GremlinResultRow, String>, ObservableValue<String>>() {
+//                    public ObservableValue<String> call(TableColumn.CellDataFeatures<GremlinResultRow, String> p) {
+//                        return new ReadOnlyObjectWrapper<>((String)value);
+//                    }
+//                };
+//                return callback;
+//            case PropertyType.SHORT_ORDINAL:
+//            case PropertyType.INTEGER_ORDINAL:
+//            case PropertyType.LONG_ORDINAL:
+//            case PropertyType.FLOAT_ORDINAL:
+//            case PropertyType.DOUBLE_ORDINAL:
+//            default:
+//        }
+        Callback<TableColumn.CellDataFeatures<GremlinResultRow, V>, ObservableValue<V>> callback = new Callback<TableColumn.CellDataFeatures<GremlinResultRow, V>, ObservableValue<V>>() {
+            public ObservableValue<V> call(TableColumn.CellDataFeatures<GremlinResultRow, V> p) {
+                return new ReadOnlyObjectWrapper<>(value);
+            }
+        };
+        return callback;
     }
 
     private StyleSpans<Collection<String>> computeHighlighting(String text) {
