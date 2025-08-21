@@ -73,12 +73,12 @@ public final class PartitionUI implements ISqlgTopologyUI {
     @Override
     public String getQualifiedName() {
         if (this.parentPartitionUI != null) {
-            return STR."\{this.parentPartitionUI.getQualifiedName()}.\{name.get()}";
+            return this.parentPartitionUI.getQualifiedName() + "." + name.get();
         } else {
             if (getVertexLabelUI()!= null) {
-                return STR."\{getVertexLabelUI().getQualifiedName()}.\{name.get()}";
+                return getVertexLabelUI().getQualifiedName() + "." + name.get();
             } else {
-                return STR."\{getEdgeLabelUI().getQualifiedName()}.\{name.get()}";
+                return getEdgeLabelUI().getQualifiedName() + "." + name.get();
             }
         }
     }

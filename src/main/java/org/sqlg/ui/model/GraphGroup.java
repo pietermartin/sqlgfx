@@ -84,7 +84,7 @@ public final class GraphGroup implements ISqlgTopologyUI {
 
     @Override
     public String toString() {
-        return STR."GraphGroup{name=\{name.get()}\{'}'}";
+        return "GraphGroup{name=" + name.get() + "}";
     }
 
     public ObjectNode toJson(ObjectMapper objectMapper) {

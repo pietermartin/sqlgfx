@@ -270,7 +270,7 @@ public final class GraphConfiguration implements ISqlgTopologyUI {
 
     @Override
     public String toString() {
-        return STR."GraphConfiguration{name=\{name.get()}, url=\{url.get()}, username=\{jdbcUser.get()}\{'}'}";
+        return "GraphConfiguration{name=" + name.get() + ", url=" + url.get() + ", username=" + jdbcUser.get() + "}'}";
     }
 
     public ObjectNode toJson(ObjectMapper objectMapper) {

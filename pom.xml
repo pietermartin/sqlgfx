@@ -5,38 +5,38 @@
     <artifactId>sqlgfx</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 
-    <repositories>
-        <repository>
-            <id>snapshots.sonata.org</id>
-            <name>Sonata Snapshot Repository</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>always</updatePolicy>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>apache</id>
-            <name>Apache Snapshots</name>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>always</updatePolicy>
-                <checksumPolicy>fail</checksumPolicy>
-            </snapshots>
-            <url>https://repository.apache.org/content/groups/snapshots</url>
-            <layout>default</layout>
-        </repository>
-    </repositories>
+<!--    <repositories>-->
+<!--        <repository>-->
+<!--            <id>snapshots.sonata.org</id>-->
+<!--            <name>Sonata Snapshot Repository</name>-->
+<!--            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>-->
+<!--            <releases>-->
+<!--                <enabled>false</enabled>-->
+<!--            </releases>-->
+<!--            <snapshots>-->
+<!--                <enabled>true</enabled>-->
+<!--                <updatePolicy>always</updatePolicy>-->
+<!--            </snapshots>-->
+<!--        </repository>-->
+<!--        <repository>-->
+<!--            <id>apache</id>-->
+<!--            <name>Apache Snapshots</name>-->
+<!--            <snapshots>-->
+<!--                <enabled>true</enabled>-->
+<!--                <updatePolicy>always</updatePolicy>-->
+<!--                <checksumPolicy>fail</checksumPolicy>-->
+<!--            </snapshots>-->
+<!--            <url>https://repository.apache.org/content/groups/snapshots</url>-->
+<!--            <layout>default</layout>-->
+<!--        </repository>-->
+<!--    </repositories>-->
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
-        <sqlg.version>3.1.1</sqlg.version>
-        <controlsfx.version>11.2.1</controlsfx.version>
+        <maven.compiler.source>24</maven.compiler.source>
+        <maven.compiler.target>24</maven.compiler.target>
+        <sqlg.version>3.1.5</sqlg.version>
+        <controlsfx.version>11.2.2</controlsfx.version>
         <antlr4.version>4.9.1</antlr4.version>
         <log4j.version>2.20.0</log4j.version>
     </properties>
@@ -44,7 +44,7 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>22.0.1</version>
+            <version>25-ea+20</version>
         </dependency>
         <dependency>
             <groupId>org.controlsfx</groupId>
@@ -64,7 +64,7 @@
         <dependency>
             <groupId>net.synedra</groupId>
             <artifactId>validatorfx</artifactId>
-            <version>0.4.2</version>
+            <version>0.6.1</version>
         </dependency>
 
         <dependency>
@@ -122,7 +122,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <release>21</release>
+                    <release>24</release>
                     <compilerArgs>
                         <arg>--enable-preview</arg>
                     </compilerArgs>

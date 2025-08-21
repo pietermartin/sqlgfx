@@ -41,9 +41,9 @@ public final class EdgeRoleUI implements ISqlgTopologyUI {
     @Override
     public String getQualifiedName() {
         if (getVertexLabelUI() != null) {
-            return STR."\{getVertexLabelUI().getQualifiedName()}.\{this.name.get()}";
+            return getVertexLabelUI().getQualifiedName() + "." + this.name.get();
         } else {
-            return STR."\{getEdgeLabelUI().getQualifiedName()}.\{this.name.get()}";
+            return getEdgeLabelUI().getQualifiedName() + "." + this.name.get();
         }
     }
 

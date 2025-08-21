@@ -103,7 +103,7 @@ public class LogController {
             case TRACE -> {
                 return "log-trace";
             }
-            default -> throw new IllegalStateException(STR."Unhandled standardLevel \{standardLevel.name()}");
+            default -> throw new IllegalStateException("Unhandled standardLevel " + standardLevel.name());
         }
     }
 

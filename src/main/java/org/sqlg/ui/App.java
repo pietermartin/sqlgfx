@@ -92,9 +92,12 @@ public class App extends Application {
         scene.getStylesheets().add(App.class.getResource("styles.css").toExternalForm());
         scene.getStylesheets().add(App.class.getResource("keyword.css").toExternalForm());
         stage.setScene(scene);
-        //noinspection DataFlowIssue
-//        stage.getIcons().add(new Image("/home/pieter/Projects/sqlgfx/sqlgfx/src/main/resources/org/sqlg/ui/sqlg.png"));
-        stage.getIcons().add(new Image(App.class.getResourceAsStream("/org/sqlg/ui/sqlg.png")));
+
+//        InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("sqlg.png");
+//        stage.getIcons().add(new Image(inputStream));
+        String file = App.class.getResource("keyword.css").toExternalForm();
+        stage.getIcons().add(new Image(file));
+
         stage.setTitle("Sqlg");
         stage.setOnCloseRequest(ignore -> this.primaryController.close());
         stage.show();

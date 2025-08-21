@@ -52,7 +52,7 @@ public class EdgeRoleFormController extends AbstractLabelControllerName {
             showDialog(
                     Alert.AlertType.INFORMATION,
                     "Success",
-                    STR."Deleted EdgeRole '\{this.sqlgTreeDataFormNameTxt.getText()}'"
+                    "Deleted EdgeRole '" + this.sqlgTreeDataFormNameTxt.getText() + "'"
             );
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
@@ -60,7 +60,7 @@ public class EdgeRoleFormController extends AbstractLabelControllerName {
             showDialog(
                     Alert.AlertType.ERROR,
                     "Error",
-                    STR."Failed to delete EdgeRole '\{this.sqlgTreeDataFormNameTxt.getText()}'",
+                    "Failed to delete EdgeRole '" + this.sqlgTreeDataFormNameTxt.getText() + "'",
                     e,
                     ignore -> {
                         System.out.println("asd");

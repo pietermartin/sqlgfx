@@ -92,9 +92,9 @@ public final class IndexUI implements ISqlgTopologyUI {
     @Override
     public String getQualifiedName() {
         if (getVertexLabelUI() != null) {
-            return STR."\{getVertexLabelUI().getQualifiedName()}.\{getIndex().getName()}";
+            return getVertexLabelUI().getQualifiedName() + "." + getIndex().getName();
         } else {
-            return STR."\{getEdgeLabelUI().getQualifiedName()}.\{getIndex().getName()}";
+            return getEdgeLabelUI().getQualifiedName() + "." + getIndex().getName();
         }
     }
 

@@ -50,7 +50,7 @@ public class PropertyColumnFormController extends BaseNameFormController {
             showDialog(
                     Alert.AlertType.INFORMATION,
                     "Success",
-                    STR."Deleted PropertyColumn '\{this.sqlgTreeDataFormNameTxt.getText()}'"
+                    "Deleted PropertyColumn '" + this.sqlgTreeDataFormNameTxt.getText()
             );
         } catch (Exception e) {
             getSqlgGraph().tx().rollback();
@@ -58,7 +58,7 @@ public class PropertyColumnFormController extends BaseNameFormController {
             showDialog(
                     Alert.AlertType.ERROR,
                     "Error",
-                    STR."Failed to delete PropertyColumn '\{this.sqlgTreeDataFormNameTxt.getText()}'",
+                    "Failed to delete PropertyColumn '" + this.sqlgTreeDataFormNameTxt.getText() + "'",
                     e,
                     ignore -> {
                         System.out.println("asd");
@@ -104,14 +104,14 @@ public class PropertyColumnFormController extends BaseNameFormController {
             showDialog(
                     Alert.AlertType.INFORMATION,
                     "Success",
-                    STR."Renamed PropertyColumn to '\{this.sqlgTreeDataFormNameTxt.getText()}'"
+                    "Renamed PropertyColumn to '" + this.sqlgTreeDataFormNameTxt.getText() + "'"
             );
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
             showDialog(
                     Alert.AlertType.ERROR,
                     "Error",
-                    STR."Failed to renamed PropertyColumn to '\{this.sqlgTreeDataFormNameTxt.getText()}'",
+                    "Failed to renamed PropertyColumn to '" + this.sqlgTreeDataFormNameTxt.getText() + "'",
                     e,
                     ignore -> this.sqlgTreeDataFormNameTxt.setText(this.propertyColumnUI.getPropertyColumn().getName())
             );

@@ -155,7 +155,7 @@ public class PrimaryController extends BaseController {
             double width = (usedMemoryDouble / maxMemoryDouble) * memoryLabel.getWidth();
             middleStackPane.setMaxWidth(width);
             Platform.runLater(() -> {
-                memoryLabel.setText(STR."used: \{humanUsedMemory}, total: \{humanTotalMemory}, max: \{humanMaxMemory}");
+                memoryLabel.setText("used: " + humanUsedMemory + ", total: " + humanTotalMemory + ", max: " + humanMaxMemory);
             });
         };
         this.scheduledExecutorService.scheduleAtFixedRate(scheduledRunnable, 1, 1, TimeUnit.SECONDS);

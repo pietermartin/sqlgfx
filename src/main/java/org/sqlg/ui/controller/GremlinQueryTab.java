@@ -91,9 +91,9 @@ public class GremlinQueryTab {
             "g"
     };
 
-    private static final String KEYWORD_1_PATTERN = STR."\\b(\{String.join("|", KEYWORDS_1)})\\b";
-    private static final String KEYWORD_2_PATTERN = STR."\\b(\{String.join("|", KEYWORDS_2)})\\b";
-    private static final String KEYWORD_3_PATTERN = STR."\\b(\{String.join("|", KEYWORDS_3)})\\b";
+    private static final String KEYWORD_1_PATTERN = "\\b(" + String.join("|", KEYWORDS_1) + ")\\b";
+    private static final String KEYWORD_2_PATTERN = "\\b(" + String.join("|", KEYWORDS_2) + ")\\b";
+    private static final String KEYWORD_3_PATTERN = "\\b(" + String.join("|", KEYWORDS_3) + ")\\b";
     private static final String PAREN_PATTERN = "[()]";
     private static final String BRACE_PATTERN = "[{}]";
     private static final String BRACKET_PATTERN = "[\\[\\]]";
@@ -298,46 +298,52 @@ public class GremlinQueryTab {
         executeGremlin.setGraphic(progressIndicator);
         atomicReference.set(Thread.startVirtualThread(() -> {
             try {
-                StopWatch stopWatch = StopWatch.createStarted();
                 LOGGER.info("=== gremlin start ===");
 
                 String selectedText = gremlinCodeArea.getText(gremlinCodeArea.getSelection());
-                String gremlin;
-                if (!StringUtils.isEmpty(selectedText.trim())) {
-                    gremlin = selectedText.trim();
-                } else {
-                    gremlin = gremlinCodeArea.textProperty().getValue().trim();
-                }
-                LOGGER.debug(gremlin);
-                Traversal<?, ?> traversal = parseGremlin(
-                        this.topologyToggleSwitch.isSelected() ? sqlgGraph.topology() : sqlgGraph.traversal(),
-                        gremlin
-                );
-                Pair<String, GremlinResultGrid> result = traversalResult(traversal);
-                String resultAsString = result.getLeft();
-                GremlinResultGrid gremlinResultGrid = result.getRight();
-                Platform.runLater(() -> {
-                    this.resultAsGridTableView.getColumns().clear();
-                    this.resultAsGridTableView.getColumns().addAll(gremlinResultGrid.getHeaders());
-                    this.resultAsGridTableView.setItems(gremlinResultGrid.getRows());
-                });
 
-                Thread.ofVirtual().start(() -> {
-                    User user = this.graphConfiguration.getGraphGroup().getUser();
-                    user.getQueryHistoryUIS().addFirst(
-                            new QueryHistoryUI(
-                                    new GremlinHistory(gremlin, LocalDateTime.now(), this.graphConfiguration.getGraphGroup().getName(), this.graphConfiguration.getName())
-                            )
+                String[] parts = selectedText.split(";");
+                for (String part: parts) {
+                    
+                    StopWatch stopWatch = StopWatch.createStarted();
+                    String gremlin;
+                    if (!StringUtils.isEmpty(part.trim())) {
+                        gremlin = part.trim();
+                    } else {
+                        gremlin = gremlinCodeArea.textProperty().getValue().trim();
+                    }
+                    LOGGER.debug(gremlin);
+                    Traversal<?, ?> traversal = parseGremlin(
+                            this.topologyToggleSwitch.isSelected() ? sqlgGraph.topology() : sqlgGraph.traversal(),
+                            gremlin
                     );
-                    user.getRoot().persistConfig();
-                });
-                stopWatch.stop();
-                LOGGER.info("=== gremlin end ===");
-                LOGGER.info("execution time: {}", stopWatch);
-                Platform.runLater(() -> {
-                    resultCodeArea.appendText(resultAsString);
-                    executeGremlin.setGraphic(Fontawesome.PLAY.label(Solid, 15));
-                });
+                    Pair<String, GremlinResultGrid> result = traversalResult(traversal);
+                    String resultAsString = result.getLeft();
+                    GremlinResultGrid gremlinResultGrid = result.getRight();
+                    Platform.runLater(() -> {
+                        this.resultAsGridTableView.getColumns().clear();
+                        this.resultAsGridTableView.getColumns().addAll(gremlinResultGrid.getHeaders());
+                        this.resultAsGridTableView.setItems(gremlinResultGrid.getRows());
+                    });
+
+                    Thread.ofVirtual().start(() -> {
+                        User user = this.graphConfiguration.getGraphGroup().getUser();
+                        user.getQueryHistoryUIS().addFirst(
+                                new QueryHistoryUI(
+                                        new GremlinHistory(gremlin, LocalDateTime.now(), this.graphConfiguration.getGraphGroup().getName(), this.graphConfiguration.getName())
+                                )
+                        );
+                        user.getRoot().persistConfig();
+                    });
+                    stopWatch.stop();
+                    LOGGER.info("=== gremlin end ===");
+                    LOGGER.info("execution time: {}", stopWatch);
+                    Platform.runLater(() -> {
+                        resultCodeArea.appendText(resultAsString);
+                        executeGremlin.setGraphic(Fontawesome.PLAY.label(Solid, 15));
+                    });
+                }
+
             } catch (Exception e) {
                 Platform.runLater(() -> {
                     executeGremlin.setGraphic(Fontawesome.PLAY.label(Solid, 15));
@@ -358,17 +364,8 @@ public class GremlinQueryTab {
 
         TableColumn<GremlinResultRow, Object> idColumn = new TableColumn<>("id");
         idColumn.setMaxWidth(250);
-        idColumn.setCellFactory(new Callback<TableColumn<GremlinResultRow, Object>, TableCell<GremlinResultRow, Object>>() {
-            @Override
-            public TableCell<GremlinResultRow, Object> call(TableColumn<GremlinResultRow, Object> param) {
-                return new PropertyDefinitionCell();
-            }
-        });
-        idColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<GremlinResultRow, Object>, ObservableValue<Object>>() {
-            public ObservableValue<Object> call(TableColumn.CellDataFeatures<GremlinResultRow, Object> p) {
-                return p.getValue().idProperty();
-            }
-        });
+        idColumn.setCellFactory(param -> new PropertyDefinitionCell());
+        idColumn.setCellValueFactory(p -> p.getValue().idProperty());
 
         gremlinResultGrid.getHeaders().add(idColumn);
 
@@ -406,17 +403,8 @@ public class GremlinQueryTab {
                             gremlinResultRow.add(key, value);
                             if (first) {
                                 TableColumn<GremlinResultRow, Object> column = new TableColumn<>(p.key());
-                                column.setCellFactory(new Callback<TableColumn<GremlinResultRow, Object>, TableCell<GremlinResultRow, Object>>() {
-                                    @Override
-                                    public TableCell<GremlinResultRow, Object> call(TableColumn<GremlinResultRow, Object> param) {
-                                        return new PropertyDefinitionCell();
-                                    }
-                                });
-                                column.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<GremlinResultRow, Object>, ObservableValue<Object>>() {
-                                    public ObservableValue<Object> call(TableColumn.CellDataFeatures<GremlinResultRow, Object> p) {
-                                        return p.getValue().get(key);
-                                    }
-                                });
+                                column.setCellFactory(param -> new PropertyDefinitionCell());
+                                column.setCellValueFactory(p1 -> p1.getValue().get(key));
                                 gremlinResultGrid.getHeaders().add(column);
                             }
                         }
