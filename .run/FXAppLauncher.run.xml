@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="FXAppLauncher" type="Application" factoryName="Application" nameIsGenerated="true">
+    <option name="MAIN_CLASS_NAME" value="org.sqlg.ui.FXAppLauncher" />
+    <module name="sqlgfx" />
+    <option name="VM_PARAMETERS" value="--enable-preview --add-opens=javafx.controls/javafx.scene.control.skin=ALL-UNNAMED --add-opens=javafx.controls/javafx.scene.control.skin=ALL-UNNAMED --add-exports=javafx.base/com.sun.javafx.event=ALL-UNNAMED -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:8001" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="org.sqlg.ui.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
