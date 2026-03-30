@@ -1,5 +1,8 @@
 package org.sqlg.ui.controller;
 
+import groovy.lang.Binding;
+import groovy.lang.GroovyShell;
+import groovy.lang.Script;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ObservableValue;
@@ -16,18 +19,16 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.util.Callback;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.collections4.iterators.ArrayIterator;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinAntlrToJava;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinLexer;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinParser;
+import org.apache.tinkerpop.gremlin.process.traversal.Path;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.structure.Property;
+import org.codehaus.groovy.control.CompilerConfiguration;
+import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.controlsfx.control.ToggleSwitch;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
@@ -48,10 +49,7 @@ import java.io.StringWriter;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -260,7 +258,8 @@ public class GremlinQueryTab {
 
         this.resultAsGridTableView = new TableView<>();
         this.resultAsGridTableView.setEditable(false);
-        this.resultAsGridTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_LAST_COLUMN);
+//        this.resultAsGridTableView.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
+        this.resultAsGridTableView.setFixedCellSize(50);
 
         VBox gremlinResultTableViewVBox = new VBox(5, this.resultAsGridTableView);
         gremlinResultTableViewVBox.setPadding(new Insets(0, 0, 0, 0));
@@ -287,10 +286,31 @@ public class GremlinQueryTab {
     }
 
     private Traversal<?, ?> parseGremlin(GraphTraversalSource g, final String script) {
-        final GremlinLexer lexer = new GremlinLexer(CharStreams.fromString(script));
-        final GremlinParser parser = new GremlinParser(new CommonTokenStream(lexer));
-        final GremlinParser.QueryContext ctx = parser.query();
-        return (Traversal<?, ?>) new GremlinAntlrToJava(g).visitQuery(ctx);
+
+
+        CompilerConfiguration config = new CompilerConfiguration();
+        ImportCustomizer importCustomizer = new ImportCustomizer();
+        importCustomizer.addImports(
+                "org.apache.tinkerpop.gremlin.process.traversal.P",
+                "org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__",
+                "org.apache.tinkerpop.gremlin.structure.T"
+        );
+//        importCustomizer.addStarImports("org.apache.tinkerpop.gremlin.process.traversal.P");
+        config.addCompilationCustomizers(importCustomizer);
+
+        GroovyShell groovyShell = new GroovyShell(config);
+        Script groovyScript = groovyShell.parse(script);
+        Map<String, Object> bindings = new HashMap<>();
+        Binding groovyBinding = new Binding(bindings);
+        bindings.put("g", this.sqlgGraph.traversal());
+        groovyScript.setBinding(groovyBinding);
+        Object result = groovyScript.run();
+        return (DefaultSqlgTraversal<?, ?>) result;
+
+//        final GremlinLexer lexer = new GremlinLexer(CharStreams.fromString(script));
+//        final GremlinParser parser = new GremlinParser(new CommonTokenStream(lexer));
+//        final GremlinParser.QueryContext ctx = parser.query();
+//        return (Traversal<?, ?>) new GremlinAntlrToJava(g).visitQuery(ctx);
     }
 
     private void executeGremlin() {
@@ -303,8 +323,8 @@ public class GremlinQueryTab {
                 String selectedText = gremlinCodeArea.getText(gremlinCodeArea.getSelection());
 
                 String[] parts = selectedText.split(";");
-                for (String part: parts) {
-                    
+                for (String part : parts) {
+
                     StopWatch stopWatch = StopWatch.createStarted();
                     String gremlin;
                     if (!StringUtils.isEmpty(part.trim())) {
@@ -321,6 +341,7 @@ public class GremlinQueryTab {
                     String resultAsString = result.getLeft();
                     GremlinResultGrid gremlinResultGrid = result.getRight();
                     Platform.runLater(() -> {
+                        this.resultAsGridTableView.setFixedCellSize(50);
                         this.resultAsGridTableView.getColumns().clear();
                         this.resultAsGridTableView.getColumns().addAll(gremlinResultGrid.getHeaders());
                         this.resultAsGridTableView.setItems(gremlinResultGrid.getRows());
@@ -363,7 +384,7 @@ public class GremlinQueryTab {
         GremlinResultGrid gremlinResultGrid = new GremlinResultGrid();
 
         TableColumn<GremlinResultRow, Object> idColumn = new TableColumn<>("id");
-        idColumn.setMaxWidth(250);
+        idColumn.setMaxWidth(300);
         idColumn.setCellFactory(param -> new PropertyDefinitionCell());
         idColumn.setCellValueFactory(p -> p.getValue().idProperty());
 
@@ -409,6 +430,40 @@ public class GremlinQueryTab {
                             }
                         }
                         first = false;
+                        gremlinResultGrid.getRows().add(gremlinResultRow);
+                    } else if (object instanceof Path path) {
+                        StringBuilder pathToString = new StringBuilder();
+                        for (int i = 0; i < path.size(); i++) {
+                            Object o = path.get(i);
+                            if (o instanceof SqlgElement sqlgElement) {
+                                Property<String> p = sqlgElement.property("deviceName");
+                                if (p.isPresent()) {
+                                    pathToString.append(p.value());
+                                } else {
+                                    pathToString.append(o);
+                                }
+                            } else {
+                                pathToString.append(o);
+                            }
+                            if (first) {
+                                TableColumn<GremlinResultRow, Object> columnPath = new TableColumn<>("path");
+                                columnPath.setCellFactory(param -> new PropertyDefinitionCell());
+                                columnPath.setCellValueFactory(p1 -> p1.getValue().get("path"));
+                                gremlinResultGrid.getHeaders().add(columnPath);
+
+                                TableColumn<GremlinResultRow, Object> columnHop = new TableColumn<>("hops");
+                                columnHop.setCellFactory(param -> new PropertyDefinitionCell());
+                                columnHop.setCellValueFactory(p1 -> p1.getValue().get("hops"));
+                                gremlinResultGrid.getHeaders().add(columnHop);
+
+                            }
+                            first = false;
+                            if (i < path.size() - 1) {
+                                pathToString.append("->");
+                            }
+                        }
+                        gremlinResultRow.add("path", pathToString.toString());
+                        gremlinResultRow.add("hops", path.size() - 1);
                         gremlinResultGrid.getRows().add(gremlinResultRow);
                     }
                     sb.append(((null == object) ? null : object.toString()));
